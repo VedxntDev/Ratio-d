@@ -74,6 +74,11 @@ function injectRatiodBanner(targetElement, data) {
       color: #FFFFFF;
     }
 
+    .tag-promo_clutter {
+      background-color: #E8720C;
+      color: #FFFFFF;
+    }
+
     .tag-suspicious {
       background-color: #E8720C;
       color: #FFFFFF;
@@ -134,6 +139,11 @@ function injectRatiodBanner(targetElement, data) {
 
     .ratiod-btn-primary {
       background-color: #EA3E2B;
+      color: #FFFFFF;
+    }
+
+    .ratiod-btn-unsub {
+      background-color: #E8720C;
       color: #FFFFFF;
     }
 
@@ -209,10 +219,12 @@ function injectRatiodBanner(targetElement, data) {
 
   const totalMasked = (privacy.phones_masked || 0) + (privacy.emails_masked || 0) + (privacy.otp_masked || 0);
 
+  const displayVerdictLabel = verdict === "promo_clutter" ? "PROMO CLUTTER" : verdict.toUpperCase();
+
   container.innerHTML = `
     <div class="ratiod-header">
       <div class="ratiod-badge-group">
-        <span class="ratiod-tag tag-${verdict}">[ RATIO'D · ${verdict.toUpperCase()} ]</span>
+        <span class="ratiod-tag tag-${verdict}">[ RATIO'D · ${displayVerdictLabel} ]</span>
         <span class="ratiod-score">RISK SCORE: ${score}/100</span>
       </div>
       <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">
@@ -223,8 +235,8 @@ function injectRatiodBanner(targetElement, data) {
     <div class="ratiod-body">
       <div class="ratiod-explanation">${explanation}</div>
       <div class="ratiod-actions">
-        <button class="ratiod-btn ratiod-btn-primary" id="toggle-drawer">[ SEE THREAT DETAILS ]</button>
-        <button class="ratiod-btn" id="toggle-checklist">[ RECOVERY CHECKLIST ]</button>
+        <button class="ratiod-btn ratiod-btn-primary" id="toggle-drawer">[ SEE DETAILS ]</button>
+        <button class="ratiod-btn ratiod-btn-unsub" id="btn-one-unsub">[ 🔕 ONE-CLICK UNSUBSCRIBE ]</button>
         <button class="ratiod-btn ratiod-btn-spam" id="btn-move-spam">[ 🚫 MOVE TO SPAM ]</button>
       </div>
 
@@ -258,7 +270,7 @@ function injectRatiodBanner(targetElement, data) {
 
   // Event handlers
   const toggleBtn = shadowRoot.getElementById("toggle-drawer");
-  const checklistBtn = shadowRoot.getElementById("toggle-checklist");
+  const unsubBtn = shadowRoot.getElementById("btn-one-unsub");
   const spamBtn = shadowRoot.getElementById("btn-move-spam");
   const drawer = shadowRoot.getElementById("analysis-drawer");
 
@@ -268,27 +280,48 @@ function injectRatiodBanner(targetElement, data) {
     });
   }
 
-  if (checklistBtn && drawer) {
-    checklistBtn.addEventListener("click", () => {
-      drawer.classList.add("open");
-      drawer.scrollIntoView({ behavior: "smooth" });
+  // 1. One-Click Unsubscribe Handler
+  if (unsubBtn) {
+    unsubBtn.addEventListener("click", () => {
+      // Find Gmail native Unsubscribe link next to sender name
+      const nativeUnsub = document.querySelector('.aBn, span[role="link"]:contains("Unsubscribe"), [data-tooltip*="Unsubscribe"]');
+      if (nativeUnsub) {
+        nativeUnsub.click();
+        unsubBtn.textContent = "[ 🔕 UNSUBSCRIBE TRIGGERED ]";
+        unsubBtn.style.backgroundColor = "#8A8B5C";
+        return;
+      }
+
+      // Find Unsubscribe anchor link inside email body
+      const unsubLink = Array.from(document.querySelectorAll('a')).find(a => 
+        (a.innerText && a.innerText.toLowerCase().includes('unsubscribe')) ||
+        (a.href && a.href.toLowerCase().includes('unsubscribe'))
+      );
+
+      if (unsubLink && unsubLink.href) {
+        window.open(unsubLink.href, '_blank');
+        unsubBtn.textContent = "[ 🔕 UNSUBSCRIBE LINK OPENED ]";
+        unsubBtn.style.backgroundColor = "#8A8B5C";
+      } else {
+        unsubBtn.textContent = "[ 🔕 NO UNSUB LINK FOUND ]";
+        alert("No direct unsubscribe link detected in this email.");
+      }
     });
   }
 
+  // 2. Move to Spam Handler
   if (spamBtn) {
     spamBtn.addEventListener("click", () => {
-      // 1. Try clicking Gmail's native Report Spam button in toolbar
       const gmailSpamBtn = document.querySelector(
         'div[aria-label*="Spam"], div[act="9"], div[data-tooltip*="Spam"], button[aria-label*="Spam"]'
       );
       if (gmailSpamBtn) {
         gmailSpamBtn.click();
-        spamBtn.textContent = "[ 🚫 SENT TO GMAIL SPAM ]";
+        spamBtn.textContent = "[ 🚫 SENT TO SPAM ]";
         spamBtn.style.backgroundColor = "#8A8B5C";
       } else {
         spamBtn.textContent = "[ 🚫 FLAGGED AS SPAM ]";
         spamBtn.style.backgroundColor = "#8A8B5C";
-        alert("Email flagged as spam. Please click the Report Spam (exclamation mark) icon in Gmail's top toolbar.");
       }
     });
   }
