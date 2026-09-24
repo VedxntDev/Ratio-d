@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ratio'd — Scam Risk Analyzer (Cybersecurity & Defense)</title>
+  
+  <!-- GSAP Library for Live Pipeline Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header class="header">
+    <div class="container nav-wrapper">
+      <div class="logo-group">
+        <span class="logo-mark">[ R ]</span>
+        <h1 class="brand-title">Ratio'd</h1>
+        <span class="mono-tag" style="background: #EFECE6; padding: 4px 8px; border: 1.5px solid #121212; border-radius: 4px; margin-left: 8px;">[ DEFENSE · V1.0 ]</span>
+      </div>
+
+      <ul class="nav-links">
+        <li><a href="#console" class="nav-link">ANALYZE</a></li>
+        <li><a href="#pipeline" class="nav-link">HOW IT WORKS</a></li>
+        <li><a href="#features" class="nav-link">FEATURES</a></li>
+        <li><a href="#tiers" class="nav-link">DEPLOYMENT</a></li>
+      </ul>
+
+      <div class="channel-selector">
+        <button class="channel-tab active" id="tab-email">[ EMAIL ]</button>
+        <button class="channel-tab" id="tab-sms">[ SMS ]</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h1 class="hero-headline">
+        CHECK THE MESSAGE, <br>
+        <span class="italic-accent">not your luck.</span>
+      </h1>
+
+      <div class="hero-subtitle-box">
+        <p class="hero-subtitle">
+          A privacy-first cybersecurity tool analyzing suspicious emails & SMS messages. Real-time client-side PII redaction, deterministic threat rule engine, and grounded incident response checklists.
+        </p>
+      </div>
+
+      <div class="hero-cta-group">
+        <a href="#console" class="btn btn-primary tactile">[ ANALYZE THREAT MESSAGE → ]</a>
+        <button class="btn btn-secondary tactile" id="preset-phishing">[ LOAD SAMPLE PHISHING REPORT ]</button>
+      </div>
+
+      <div class="system-status-banner tactile">
+        <div>
+          <span class="status-pulse"></span>
+          <span id="status-banner-text">[ SYSTEM ALERT: AIR-GAPPED CLIENT REDACTION ACTIVE ]</span>
+        </div>
+        <span class="mono-tag">[ ZERO DATA STORED ]</span>
+      </div>
+    </section>
+
+    <!-- Pipeline Section -->
+    <section id="pipeline" style="margin-bottom: 48px;">
+      <span class="section-header-tag">[ PIPELINE ]</span>
+      <h2>Live 4-Stage Security Verification</h2>
+      <p style="color: #555555; margin-top: 4px;">Deterministic client-side inspection pipeline running before any external model invocation.</p>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-card tactile" id="stage-0">
+          <div class="stage-num">01 / STAGE</div>
+          <h3 class="stage-title">Observe</h3>
+          <p class="stage-desc">Raw message capture & immediate client-side PII masking (phones, emails, OTPs).</p>
+        </div>
+
+        <div class="pipeline-card tactile" id="stage-1">
+          <div class="stage-num">02 / STAGE</div>
+          <h3 class="stage-title">Detect</h3>
+          <p class="stage-desc">Deterministic rule checks for lookalike domains, link mismatches, & urgency triggers.</p>
+        </div>
+
+        <div class="pipeline-card tactile" id="stage-2">
+          <div class="stage-num">03 / STAGE</div>
+          <h3 class="stage-title">Explain</h3>
+          <p class="stage-desc">In-context threat span highlighting with grounded plain-language risk explanations.</p>
+        </div>
+
+        <div class="pipeline-card tactile" id="stage-3">
+          <div class="stage-num">04 / STAGE</div>
+          <h3 class="stage-title">Respond</h3>
+          <p class="stage-desc">Tactile risk score reveal (0–100) & prioritized incident recovery action checklist.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Control Console Grid -->
+    <section id="console" class="console-grid">
+      
+      <!-- Left Pane: Telemetry Input Terminal -->
+      <div class="console-pane tactile">
+        <div class="pane-title">
+          <span>[ TELEMETRY INPUT ]</span>
+          <span class="mono-tag" style="background-color: var(--color-surface-muted); padding: 4px 8px; border: 1.5px solid var(--color-ink); border-radius: 4px;">PASTE ZONE</span>
+        </div>
+
+        <div class="preset-bar">
+          <span class="mono-tag" style="align-self: center; margin-right: 4px;">TEST PRESETS:</span>
+          <button class="btn-preset" id="preset-phishing">[ PHISHING EMAIL ]</button>
+          <button class="btn-preset" id="preset-sms">[ URGENT SMS ]</button>
+          <button class="btn-preset" id="preset-legit">[ SAFE NOTICE ]</button>
+        </div>
+
+        <div class="telemetry-input-group">
+          <textarea id="telemetry-input" class="telemetry-textarea" placeholder="Paste email header, subject line, and body text here..."></textarea>
+        </div>
+
+        <div class="privacy-toggle-row">
+          <span id="privacy-counts">✓ Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
+          <button class="btn-preset" id="btn-clear">[ CLEAR ]</button>
+        </div>
+
+        <button class="btn btn-primary tactile" id="btn-analyze" style="width: 100%; margin-top: 8px; font-size: 1rem;">
+          [ RUN RISK ANALYSIS PAYLOAD (CMD+ENTER) → ]
+        </button>
+
+        <div class="privacy-card">
+          <div style="font-weight: 800; margin-bottom: 4px;">[ PRIVACY GUARANTEE ]</div>
+          Phone numbers, email addresses, and verification codes are redacted client-side before rule processing. No message content is ever written to logs or disk.
+        </div>
+      </div>
+
+      <!-- Right Pane: Live Analysis Center -->
+      <div class="console-pane tactile">
+        <div class="pane-title">
+          <span>[ LIVE ANALYSIS CENTER ]</span>
+          <span class="mono-tag" style="background-color: var(--color-surface-muted); padding: 4px 8px; border: 1.5px solid var(--color-ink); border-radius: 4px;">SECURITY OUTPUT</span>
+        </div>
+
+        <!-- Risk Verdict Display -->
+        <div class="verdict-box">
+          <div class="gauge-svg-container">
+            <svg width="90" height="90" viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="36" fill="none" stroke="#EFECE6" stroke-width="9" />
+              <circle id="gauge-arc" cx="45" cy="45" r="36" fill="none" stroke="#EA3E2B" stroke-width="9" 
+                      stroke-linecap="round" stroke-dasharray="226.19" stroke-dashoffset="226.19" 
+                      transform="rotate(-90 45 45)" />
+            </svg>
+          </div>
+
+          <div class="verdict-info">
+            <span class="verdict-badge verdict-safe" id="verdict-badge">[ VERDICT · READY ]</span>
+            <div class="verdict-score-num">
+              <span id="score-num">0</span><span style="font-size: 1.1rem; color: #666666;"> / 100</span>
+            </div>
+            <p id="verdict-explanation" style="font-size: 0.88rem; color: #333333; margin-top: 4px;">
+              Awaiting message payload analysis...
+            </p>
+          </div>
+        </div>
+
+        <!-- Threat Inspector -->
+        <div style="margin-bottom: 8px;" class="mono-tag">[ ANNOTATED THREAT INSPECTOR ]</div>
+        <div class="threat-inspector-box" id="threat-inspector">
+          <span style="color: #888888;">Paste a message and click Analyze to view threat breakdown.</span>
+        </div>
+
+        <!-- Remediation Action Checklist -->
+        <div class="checklist-box">
+          <div class="checklist-title">[ ACTIONABLE RECOVERY CHECKLIST ]</div>
+          <ul class="checklist-items" id="checklist-items">
+            <li><span class="check-bullet">•</span> Awaiting threat analysis report.</li>
+          </ul>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Feature Grid -->
+    <section id="features" style="margin-bottom: 48px;">
+      <span class="section-header-tag">[ FEATURES ]</span>
+      <h2>System Capabilities</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card tactile">
+          <div class="card-tag">*[ CLIENT-SIDE · STABLE ]*</div>
+          <h3>Local PII Redaction</h3>
+          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
+            Phone numbers, email addresses, and OTP sequences are stripped in browser memory before any telemetry processing. Zero storage.
+          </p>
+        </div>
+
+        <div class="feature-card tactile">
+          <div class="card-tag">*[ RULES + LAYA ]*</div>
+          <h3>Hybrid Threat Engine</h3>
+          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
+            Combines deterministic domain lookalike & urgency rules with local classifier scoring for high-precision fraud detection.
+          </p>
+        </div>
+
+        <div class="feature-card tactile">
+          <div class="card-tag">*[ SMS · EMAIL ]*</div>
+          <h3>Multi-Channel Support</h3>
+          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
+            One unified backend API supporting both paste web console telemetry and real-time Gmail Chrome extension injection.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deployment Tiers Section -->
+    <section id="tiers" style="margin-bottom: 48px;">
+      <span class="section-header-tag">[ DEPLOYMENT TIERS ]</span>
+      <h2>Release Roadmap & Architecture</h2>
+
+      <div class="tier-grid">
+        <div class="tier-card tactile">
+          <div class="card-tag">[ DEMO · CURRENT ]</div>
+          <h3>Hackathon Prototype</h3>
+          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
+            Client-side redaction, local Express rule server, GSAP pipeline, and Chrome Manifest V3 Gmail extension.
+          </p>
+        </div>
+
+        <div class="tier-card tactile">
+          <div class="card-tag">[ PILOT · UPCOMING ]</div>
+          <h3>Campus Pilot</h3>
+          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
+            Custom domain lookalike database, organizational phishing alerts, and standalone Laya container integration.
+          </p>
+        </div>
+
+        <div class="tier-card tactile">
+          <div class="card-tag">[ PRODUCTION · FUTURE ]</div>
+          <h3>Public Release</h3>
+          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
+            Zero-knowledge encrypted telemetry API, multi-browser extensions, and enterprise security dashboard.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer container">
+    <div>
+      <strong>Ratio'd</strong> // Scam Risk Analyzer · Team Skill Issue
+    </div>
+    <div style="color: #666666;">
+      Built with Playful Neo-Brutalist Utility Design System
+    </div>
+  </footer>
+
+  <!-- App Scripts -->
+  <script src="js/redactor.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/pipeline.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

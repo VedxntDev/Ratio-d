@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Ratio'd — Gmail Scam Risk Analyzer",
+  "version": "1.0.0",
+  "description": "Privacy-first scam risk analyzer for Gmail. Redacts PII client-side and injects real-time threat analysis.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png",
+    "512": "icons/icon512.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png",
+      "512": "icons/icon512.png"
+    },
+    "default_title": "Ratio'd Scam Risk Analyzer"
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "http://127.0.0.1:3000/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://mail.google.com/*"
+      ],
+      "js": [
+        "banner.js",
+        "content-script.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
