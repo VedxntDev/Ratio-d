@@ -378,14 +378,15 @@ function injectRatiodBanner(targetElement, data) {
       // 2. Launch 45-Particle Glitter & Confetti Burst Effect
       launchGlitterBurst(shadowRoot, unsubBtn);
 
-      // 3. Robust Multi-Selector Unsubscribe Click & Link Action
+      // 3. Ultra-Robust Multi-Strategy Unsubscribe Handler
       let unsubSuccess = false;
 
-      // Strategy A: Native Gmail Header Unsubscribe Button (span.aBn or aria-label/data-tooltip containing Unsubscribe)
-      const allButtons = Array.from(document.querySelectorAll('span, div, a, button'));
-      const nativeGmailUnsub = allButtons.find(el => {
-        const txt = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('data-tooltip') || '').toLowerCase();
-        return (txt.includes('unsubscribe') || txt.includes('opt out')) && el !== unsubBtn;
+      // Strategy A: Native Gmail Header Unsubscribe Action
+      const allElements = Array.from(document.querySelectorAll('span, div, a, button, [role="button"], [role="link"]'));
+      const nativeGmailUnsub = allElements.find(el => {
+        if (el === unsubBtn || unsubBtn.contains(el)) return false;
+        const txt = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('data-tooltip') || el.getAttribute('title') || '').toLowerCase();
+        return txt.includes('unsubscribe') || txt.includes('opt out') || txt.includes('opt-out');
       });
 
       if (nativeGmailUnsub) {
@@ -399,16 +400,22 @@ function injectRatiodBanner(targetElement, data) {
         }
       }
 
-      // Strategy B: Search for anchor links inside email body containing 'unsubscribe'
+      // Strategy B: Body Anchor Links (Unsubscribe / Opt-out / Manage Preferences)
       if (!unsubSuccess) {
         const unsubAnchors = Array.from(document.querySelectorAll('a')).filter(a => {
           const href = (a.href || '').toLowerCase();
-          const txt = (a.innerText || '').toLowerCase();
-          return href.includes('unsubscribe') || txt.includes('unsubscribe') || href.includes('optout');
+          const txt = (a.innerText || a.getAttribute('aria-label') || '').toLowerCase();
+          return href.includes('unsubscribe') || href.includes('optout') || href.includes('opt-out') ||
+                 txt.includes('unsubscribe') || txt.includes('opt out') || txt.includes('opt-out') ||
+                 txt.includes('manage preferences') || txt.includes('email preferences');
         });
 
         if (unsubAnchors.length > 0 && unsubAnchors[0].href) {
-          window.open(unsubAnchors[0].href, '_blank');
+          try {
+            unsubAnchors[0].click();
+          } catch (err) {
+            window.open(unsubAnchors[0].href, '_blank');
+          }
           unsubSuccess = true;
           unsubBtn.textContent = "[ ✨ UNSUB LINK OPENED! ]";
           unsubBtn.style.backgroundColor = "#8A8B5C";
@@ -416,7 +423,7 @@ function injectRatiodBanner(targetElement, data) {
       }
 
       if (!unsubSuccess) {
-        unsubBtn.textContent = "[ ✨ UNSUB INTENT SENT ]";
+        unsubBtn.textContent = "[ ✨ UNSUB INTENT DISPATCHED ]";
         unsubBtn.style.backgroundColor = "#8A8B5C";
       }
     });
