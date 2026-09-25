@@ -87,14 +87,16 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  if (req.method === "GET" && (pathname === "/ratiod-extension.zip" || pathname === "/web/ratiod-extension.zip")) {
+  if (req.method === "GET" && pathname.includes("ratiod-extension.zip")) {
     const zipPath = path.join(__dirname, "../web/ratiod-extension.zip");
-    if (fs.existsSync(zipPath)) {
+    const rootZipPath = path.join(__dirname, "../ratiod-extension.zip");
+    const targetZip = fs.existsSync(zipPath) ? zipPath : (fs.existsSync(rootZipPath) ? rootZipPath : null);
+    if (targetZip) {
       res.writeHead(200, {
         "Content-Type": "application/zip",
         "Content-Disposition": 'attachment; filename="ratiod-extension.zip"'
       });
-      res.end(fs.readFileSync(zipPath));
+      res.end(fs.readFileSync(targetZip));
       return;
     }
   }
