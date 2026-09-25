@@ -96,9 +96,23 @@ function scanAndAnalyzeGmail() {
         window.injectRatiodBanner(emailBodyElem, data);
       }
     })
-    .catch(err => {
-      // Direct local browser fallback engine if server offline
-      renderFallbackAnalysis(emailBodyElem, redactedText);
+    .catch(() => {
+      // Fallback 1: Try Vercel deployed backend endpoint
+      fetch("https://ratio-d.vercel.app/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: redactedText, channel: "email" })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (window.injectRatiodBanner) {
+            window.injectRatiodBanner(emailBodyElem, data);
+          }
+        })
+        .catch(() => {
+          // Fallback 2: Client-side local fallback engine
+          renderFallbackAnalysis(emailBodyElem, redactedText);
+        });
     });
 }
 
