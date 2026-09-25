@@ -4,6 +4,8 @@
  */
 const http = require("http");
 const url = require("url");
+const fs = require("fs");
+const path = require("path");
 const { handleAnalyze } = require("./routes/analyze");
 
 const PORT = process.env.PORT || 3000;
@@ -56,6 +58,33 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
+  }
+
+  if (req.method === "GET" && (pathname === "/privacy" || pathname === "/privacy.html")) {
+    const privacyPath = path.join(__dirname, "../privacy.html");
+    if (fs.existsSync(privacyPath)) {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(fs.readFileSync(privacyPath));
+      return;
+    }
+  }
+
+  if (req.method === "GET" && (pathname === "/" || pathname === "/index.html")) {
+    const indexPath = path.join(__dirname, "../web/index.html");
+    if (fs.existsSync(indexPath)) {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(fs.readFileSync(indexPath));
+      return;
+    }
+  }
+
+  if (req.method === "GET" && pathname === "/styles.css") {
+    const cssPath = path.join(__dirname, "../web/styles.css");
+    if (fs.existsSync(cssPath)) {
+      res.writeHead(200, { "Content-Type": "text/css; charset=utf-8" });
+      res.end(fs.readFileSync(cssPath));
+      return;
+    }
   }
 
   // Fallback 404
