@@ -34,13 +34,16 @@ async function handleAnalyze(reqBody) {
   const privacyStats = computePrivacyStatsFromText(text);
 
   // 2. Evaluate Rule Engine
-  const { ruleScore, flags } = evaluateRules(text, validChannel);
+  const { ruleScore, flags, isPromoClutter } = evaluateRules(text, validChannel);
 
   // 3. Evaluate Laya Model (Stating transparently whether heuristic fallback or container)
   const layaResult = await evaluateLayaModel(text, flags);
 
   // 4. Combine Scores & Build Next Steps
-  const { score, verdict, next_steps } = combineScore(ruleScore, layaResult, validChannel, flags);
+  // isPromoClutter is forwarded deliberately: the engine already decided
+  // promo-clutter using a 2+ signal threshold and a low-score cap. Recomputing
+  // it here from "any promo flag" labelled ordinary newsletters as clutter.
+  const { score, verdict, next_steps } = combineScore(ruleScore, layaResult, validChannel, flags, isPromoClutter);
 
   // 5. Generate Grounded Explanation.
   // Deterministic by default; uses the LLM prompt only when a key is configured,

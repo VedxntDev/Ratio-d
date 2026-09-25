@@ -64,7 +64,9 @@ function runTests() {
   for (const tc of TEST_CASES) {
     const { ruleScore, flags, isPromoClutter } = evaluateRules(tc.text, "email");
     const layaMock = { probability: ruleScore >= 70 ? 0.9 : 0.1 };
-    const { score, verdict, next_steps } = combineScore(ruleScore, layaMock, "email", flags);
+    // Forward isPromoClutter exactly as the API route does, so this exercises
+    // the real code path rather than the fallback.
+    const { score, verdict, next_steps } = combineScore(ruleScore, layaMock, "email", flags, isPromoClutter);
 
     let isSuccess = false;
     if (tc.expectedVerdict === "high_risk") {

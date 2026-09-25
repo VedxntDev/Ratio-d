@@ -3,10 +3,28 @@
  * Enforces rule-engine domain spoofing / brand impersonation disqualification (min score 80, verdict high_risk).
  */
 
-function combineScore(ruleScore, layaModel, channel = "email", flags = []) {
+function combineScore(ruleScore, layaModel, channel = "email", flags = [], enginePromoClutter = null) {
   const layaScore = Math.round((layaModel?.probability || 0) * 100);
 
   let rawFinalScore = Math.round((ruleScore * 0.70) + (layaScore * 0.30));
+
+  // Whether this is bulk marketing rather than a threat.
+  //
+  // The rule engine already makes this call correctly, and it requires TWO OR
+  // MORE promotional signals on a low-scoring message. Trust that result.
+  //
+  // The fallback counts signals rather than testing for any single one, because
+  // "unsubscribe" appears in almost every legitimate newsletter: treating one
+  // promo flag as sufficient tagged ordinary bulk mail as clutter, so a clearly
+  // safe message at 8/100 was still labelled PROMO CLUTTER with a warning
+  // colour, directly contradicting its own "LOW RISK / consistent with
+  // legitimate mail" explanation.
+  const promoFlagCount = flags.filter(f =>
+    f.type === "promo" || f.reason.includes("Promotional") || f.reason.includes("Unsubscribe")
+  ).length;
+  const hasPromoClutter = enginePromoClutter !== null && enginePromoClutter !== undefined
+    ? Boolean(enginePromoClutter)
+    : promoFlagCount >= 2;
 
   const hasSevereDomainSpoof = flags.some(f =>
     f.reason.toLowerCase().includes("homoglyph") ||
@@ -20,8 +38,6 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = []) {
     f.reason.includes("Link mismatch") ||
     f.reason.includes("suspicious domain")
   );
-
-  const hasPromoClutter = flags.some(f => f.type === "promo" || f.reason.includes("Promotional") || f.reason.includes("Unsubscribe"));
 
   // Domain spoofing or brand impersonation alone is disqualifying (minimum score 80, high_risk)
   if (hasSevereDomainSpoof) {
