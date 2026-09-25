@@ -1,17 +1,12 @@
 {
   "version": 2,
+  "public": true,
   "cleanUrls": true,
-  "routes": [
-    { "src": "/analyze", "dest": "/api/index.js" },
-    { "src": "/api/analyze", "dest": "/api/index.js" },
-    { "src": "/health", "dest": "/api/index.js" },
-    { "src": "/api/health", "dest": "/api/index.js" },
-    { "src": "/privacy.html", "dest": "/web/privacy.html" },
-    { "src": "/privacy", "dest": "/web/privacy.html" },
-    { "src": "/ratiod-extension.zip", "dest": "/web/ratiod-extension.zip" },
-    { "src": "/js/(.*)", "dest": "/web/js/$1" },
-    { "src": "/styles.css", "dest": "/web/styles.css" },
-    { "src": "/index.html", "dest": "/web/index.html" },
-    { "src": "/", "dest": "/web/index.html" }
+  "rewrites": [
+    { "source": "/analyze", "destination": "/api/index.js" },
+    { "source": "/api/analyze", "destination": "/api/index.js" },
+    { "source": "/health", "destination": "/api/index.js" },
+    { "source": "/api/health", "destination": "/api/index.js" },
+    { "source": "/privacy", "destination": "/privacy.html" }
   ]
 }
