@@ -113,5 +113,40 @@ check("install appears before features in page order",
 check("install section is inside <main>",
   html.indexOf('id="install"') < html.indexOf("</main>"));
 
+/* ---- ShapeWaves hero background ---- */
+const wavesJs = fs.readFileSync(path.join(ROOT, "js", "shape-waves.js"), "utf8");
+
+check("hero canvas present", /<canvas id="shape-waves"/.test(html));
+check("shape-waves.js loaded", /js\/shape-waves\.js/.test(html));
+check("canvas is inside the hero section",
+  /<section class="hero-section">[\s\S]{0,200}?id="shape-waves"/.test(html));
+check("canvas is decorative", /id="shape-waves"[^>]*aria-hidden="true"/.test(html));
+
+// Zero new dependencies: the effect must be hand-rolled, not npm installed.
+// (The word "React" appears in this file's own explanatory comments, so test
+// for real imports/calls rather than the literal word.)
+check("no bundler introduced", !/node_modules/.test(wavesJs) && !/\brequire\(/.test(wavesJs));
+check("no react import or hook usage",
+  !/from\s+["']react["']/.test(wavesJs) &&
+  !/require\(\s*["']react["']/.test(wavesJs) &&
+  !/\bReact\./.test(wavesJs) &&
+  !/\buse(State|Effect|Ref|Memo|Callback)\s*\(/.test(wavesJs));
+
+// Fallback behaviour is the whole point: without WebGPU the hero is untouched.
+check("bails when WebGPU missing", /"gpu" in navigator/.test(wavesJs));
+check("removes canvas on failure", /parentNode\.removeChild/.test(wavesJs));
+check("honours reduced motion", /prefers-reduced-motion/.test(wavesJs));
+
+// Shader + pipeline integrity.
+check("WGSL scene shader present", /fn fs_main/.test(wavesJs) && /shapeDistance/.test(wavesJs));
+check("text cutout mask rendered", /fillText/.test(wavesJs));
+check("glow blur passes present", /blurPipe/.test(wavesJs) && /compPipe/.test(wavesJs));
+check("css layers the canvas behind content",
+  /\.shape-waves \{[\s\S]*?z-index: 0/.test(css) && /\.hero-section > \.hero-copy[\s\S]*?z-index: 2/.test(css));
+check("canvas hidden until first frame", /\.shape-waves \{[\s\S]*?opacity: 0/.test(css));
+check("canvas never blocks clicks", /\.shape-waves \{[\s\S]*?pointer-events: none/.test(css));
+check("uses the brand palette",
+  wavesJs.includes("#F6F1E7") && wavesJs.includes("#EA3E2B") && wavesJs.includes("#121212"));
+
 console.log(failures === 0 ? "\nALL STATIC CHECKS PASSED" : `\n${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

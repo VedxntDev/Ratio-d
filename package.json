@@ -11,6 +11,7 @@
     "test:spec": "node server/test-spec-rules.js && node server/test-spec-sanity.js",
     "test:fp": "node server/test-false-positives.js",
     "test:ext": "node server/test-extension-package.js",
-    "test:all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-ui-static.js && node server/test-extension-package.js && node test-ui-contract.js"
+    "test:fx": "node server/test-shape-waves.js",
+    "test:all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-ui-static.js && node server/test-extension-package.js && node server/test-shape-waves.js && node test-ui-contract.js"
   }
 }

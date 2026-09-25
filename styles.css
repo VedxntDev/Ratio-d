@@ -438,6 +438,27 @@ h1, h2, h3, h4 {
 /* Modifier is redundant with the base rule but keeps the markup self-describing. */
 .starburst-yellow { background: var(--color-yellow); }
 .hero-copy { min-width: 0; }
+
+/* ── ShapeWaves hero background (vanilla WebGPU) ──────────────────────────
+   The canvas renders the site's paper colour opaquely, so the dot-grid
+   texture is re-applied above it as an overlay. Without WebGPU the canvas
+   is removed by JS and the hero falls back to exactly this appearance. */
+.hero-section { position: relative; isolation: isolate; }
+.shape-waves {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+  background: var(--color-bg);
+  opacity: 0; transition: opacity 800ms ease;
+}
+.shape-waves[data-ready='true'] { opacity: 1; }
+.hero-section::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image: radial-gradient(rgba(18, 18, 18, 0.16) 1.4px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+.hero-section > .hero-copy,
+.hero-section > .hero-visual { position: relative; z-index: 2; }
+.hero-blob { z-index: 2; }
 .starburst {
   position: absolute;
   top: -26px; right: -26px;
