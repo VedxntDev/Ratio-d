@@ -67,6 +67,7 @@ async function handleAnalyze(reqBody) {
       model_source: layaResult.source,
       model_label: layaResult.label,
       model_probability: layaResult.probability,
+      model_signals: layaResult.signals || [],
       model_note: layaResult.note,
       explain: "grounded-in-flags",
       explain_source: explainSource,

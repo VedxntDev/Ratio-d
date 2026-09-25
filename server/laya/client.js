@@ -1,8 +1,38 @@
 /**
  * Ratio'd Laya Client Module (Local Typed-Decision Classifier Interface)
- * HARD RULE: Never fabricate a model score. Explicitly state whether the live standalone container 
+ * HARD RULE: Never fabricate a model score. Explicitly state whether the live standalone container
  * is connected or running local typed-decision heuristic fallback.
  */
+
+/**
+ * High-precision structural signals.
+ *
+ * These are deliberately narrow. Every pattern here is something a legitimate
+ * transactional or marketing email essentially never contains, so they can
+ * raise the probability without dragging ordinary newsletters and receipts
+ * toward "high risk" (see test-false-positives.js, which guards that).
+ */
+const STRUCTURAL_SIGNALS = [
+  // Punycode / IDN host: "xn--" is the ASCII encoding of a unicode domain and is
+  // a standard way to make a lookalike domain survive a copy-paste.
+  { name: "punycode_host", weight: 0.34, test: (t) => /https?:\/\/[^\s/]*xn--/i.test(t) },
+  // Bare IP literal in a link: legitimate services use named hosts.
+  { name: "ip_literal_link", weight: 0.34, test: (t) => /https?:\/\/\d{1,3}(?:\.\d{1,3}){3}/.test(t) },
+  // data: URI, used to smuggle a payload past a mail gateway.
+  { name: "data_uri", weight: 0.30, test: (t) => /data:(text\/html|application\/javascript|;base64)/i.test(t) },
+  // Long base64 blob: a common way to hide an attachment or a redirect.
+  { name: "base64_blob", weight: 0.24, test: (t) => /[A-Za-z0-9+/]{120,}={0,2}/.test(t) },
+  // Credential prompt aimed at a well-known brand, or a crypto/wire demand.
+  { name: "credential_or_wire", weight: 0.20, test: (t) =>
+      /(verify|confirm|update|validate|secure)\s+(your\s+)?(account|password|credentials|details|information)/i.test(t)
+      || /(gift\s?card|bitcoin|crypto|wire\s+transfer|western\s+union|money\s+gram)/i.test(t) },
+  // Many distinct outbound hosts in one short message.
+  { name: "link_farm", weight: 0.18, test: (t) => {
+      const hosts = new Set((t.match(/https?:\/\/([^\s/?#]+)/gi) || [])
+        .map((u) => u.replace(/^https?:\/\//i, "").toLowerCase()));
+      return hosts.size >= 5;
+  } },
+];
 
 async function evaluateLayaModel(text, ruleFlags) {
   if (!text || typeof text !== "string") {
@@ -26,6 +56,26 @@ async function evaluateLayaModel(text, ruleFlags) {
   }
   threatSignal += tokenMatches * 0.15;
 
+  // Structural layer: named, weighted, and reported so the score is auditable
+  // rather than an unexplained number.
+  const signals = [];
+  for (const sig of STRUCTURAL_SIGNALS) {
+    try {
+      if (sig.test(text)) {
+        signals.push(sig.name);
+        threatSignal += sig.weight;
+      }
+    } catch (e) {
+      // A malformed pattern must never take the analyser down.
+    }
+  }
+
+  // Diminishing returns: a message that trips five structural signals is not
+  // five times as bad as one that trips a single signal.
+  if (signals.length > 2) {
+    threatSignal -= (signals.length - 2) * 0.06;
+  }
+
   const probability = Math.min(0.99, Math.max(0.02, parseFloat(threatSignal.toFixed(2))));
 
   let label = "safe";
@@ -39,7 +89,8 @@ async function evaluateLayaModel(text, ruleFlags) {
     label,
     probability,
     source: "laya_stub_heuristic",
-    note: "Local typed-decision fallback model active (laya container offline)."
+    note: "Local typed-decision fallback model active (laya container offline).",
+    signals
   };
 }
 

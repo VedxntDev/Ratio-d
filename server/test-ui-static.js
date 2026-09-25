@@ -140,6 +140,38 @@ check("credit links open safely in a new tab",
 check("stickers used as links drop the underline",
   /a\.sticker \{[^}]*text-decoration: none/.test(css));
 
+/* ---- brand logo / favicon ---- */
+// Without these the tab shows a generic globe and /favicon.ico 404s, which was
+// a real, previously-unfixed gap on this site.
+const head = html.match(/<head[\s\S]*?<\/head>/i)?.[0] || "";
+check("page declares a favicon", /<link rel="icon"/.test(head));
+check("page declares an SVG + ICO favicon",
+  /rel="icon" href="assets\/favicon\.ico"/.test(head) &&
+  /type="image\/svg\+xml" href="assets\/favicon\.svg"/.test(head));
+check("page declares an apple-touch-icon", /rel="apple-touch-icon"/.test(head));
+check("privacy page declares a favicon too",
+  /<link rel="icon"/.test(fs.readFileSync(path.join(ROOT, "privacy.html"), "utf8")));
+
+["assets/favicon.ico", "assets/favicon.svg", "assets/apple-touch-icon.png",
+ "assets/favicon-16x16.png", "assets/favicon-32x32.png", "assets/logo.svg"]
+  .forEach((f) => check(`${f} exists and is not empty`,
+    fs.existsSync(path.join(ROOT, f)) && fs.statSync(path.join(ROOT, f)).size > 100));
+// A real .ico starts with the ICONDIR magic: reserved=0 (uint16), type=1
+// (uint16). A renamed PNG does not. Checked as uint16s, not raw bytes, because
+// the magic is 00 00 01 00 - reading it byte-by-byte in the wrong order looks
+// like 00 01 00 01 and never matches.
+const ico = fs.readFileSync(path.join(ROOT, "assets/favicon.ico"));
+check("favicon.ico is a real ICONDIR, not a renamed PNG",
+  ico.readUInt16LE(0) === 0 && ico.readUInt16LE(2) === 1);
+check("favicon.ico packs more than one size",
+  ico.readUInt16LE(4) >= 2, `${ico.readUInt16LE(4)} entries`);
+["assets/favicon-16x16.png", "assets/apple-touch-icon.png", "assets/logo.svg"]
+  .forEach((f) => {
+    const b = fs.readFileSync(path.join(ROOT, f));
+    check(`${f} is a real image`, b.length > 100 &&
+      (b.subarray(1, 4).toString() === "PNG" || /<svg/.test(b.subarray(0, 200).toString())));
+  });
+
 // The install flow must sit above the roadmap, not after it.
 const order = [...html.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1]);
 check("install appears before features in page order",

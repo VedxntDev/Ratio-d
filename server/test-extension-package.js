@@ -61,6 +61,61 @@ check(`all ${referenced.length} manifest-referenced files packaged`, missing.len
 const manifestInZip = execFileSync("unzip", ["-p", ZIP, "manifest.json"], { encoding: "utf8" });
 check("zip manifest matches source", manifestInZip === fs.readFileSync(path.join(ROOT, "extension", "manifest.json"), "utf8"));
 
+// ---------------------------------------------------------------------------
+// Banner hardening + branding.
+// The banner is a content script on mail.google.com that interpolates
+// email-controlled text, so these are security properties, not cosmetics.
+// ---------------------------------------------------------------------------
+const bannerJs = fs.readFileSync(path.join(ROOT, "extension", "banner.js"), "utf8");
+
+check("banner escapes HTML before interpolating into innerHTML",
+  /function escapeHtml/.test(bannerJs));
+// Every attacker-influenced field must be escaped at the point of use.
+["explanation", "f.span", "f.reason", "step"].forEach((field) => {
+  check(`banner escapes ${field}`,
+    new RegExp(`escapeHtml\\(${field}\\)`).test(bannerJs));
+});
+// A raw interpolation of any of those fields would reintroduce the hole.
+check("no unescaped interpolation of email-controlled fields",
+  !/\$\{(explanation|f\.span|f\.reason|step)\}/.test(bannerJs));
+
+check("banner shows the brand logo", /class="ratiod-logo"/.test(bannerJs));
+check("banner logo is loaded from a packaged icon",
+  /chrome\.runtime\.getURL\("icons\/icon\d+\.png"\)/.test(bannerJs));
+check("banner logo is web-accessible to mail.google.com",
+  (manifest.web_accessible_resources || []).some((r) =>
+    (r.resources || []).some((x) => x.startsWith("icons/")) && (r.matches || []).includes("https://mail.google.com/*")));
+
+check("banner credits Vedant with a GitHub link",
+  /href="https:\/\/github\.com\/VedxntDev"[^>]*rel="noopener noreferrer"/.test(bannerJs));
+check("banner credit link is not rel=opener-only unsafe",
+  /href="https:\/\/github\.com\/VedxntDev"/.test(bannerJs));
+
+// UX: a banner the user cannot remove trains people to ignore every banner.
+check("banner can be dismissed", /id="btn-dismiss"/.test(bannerJs));
+check("banner can be collapsed", /id="btn-collapse"/.test(bannerJs));
+check("dismiss actually removes the host", /removeChild\(host\)/.test(bannerJs));
+
+// Accessibility: icon-only buttons need a name, toggles need state.
+check("icon-only buttons carry screen-reader text", /class="sr-only"/.test(bannerJs));
+check("drawer toggle syncs aria-expanded", /setAttribute\("aria-expanded"/.test(bannerJs));
+check("buttons declare type=button", !/<button(?![^>]*type=)/.test(bannerJs));
+check("reduced motion is respected",
+  /prefers-reduced-motion/.test(bannerJs) && /prefersReducedMotion\(\)/.test(bannerJs));
+
+// The banner must not imply it verified anything it did not.
+check("banner keeps the honest privacy wording",
+  /Zero message text stored/.test(bannerJs));
+
+// ---------------------------------------------------------------------------
+// Icons: they must be real PNGs at the exact sizes Chrome requires.
+// ---------------------------------------------------------------------------
+[16, 48, 128, 512].forEach((size) => {
+  const f = path.join(ROOT, "extension", "icons", `icon${size}.png`);
+  const ok = fs.existsSync(f) && fs.readFileSync(f).subarray(1, 4).toString() === "PNG";
+  check(`icon${size}.png is a real PNG`, ok);
+});
+
 console.log(failures === 0
   ? "\nEXTENSION PACKAGE IS LOADABLE"
   : `\n${failures} PACKAGING PROBLEM(S) FOUND`);

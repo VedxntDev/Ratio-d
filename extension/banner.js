@@ -7,6 +7,32 @@
  * - Glitter & Confetti Canvas Burst Particle System
  */
 
+/** True when the OS requests reduced motion. */
+function prefersReducedMotion() {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Escape text before it goes anywhere near innerHTML.
+ *
+ * The banner runs inside a content script on mail.google.com and interpolates
+ * attacker-controlled data: `flags[].span` is a substring of the email body,
+ * and `explanation` can be LLM-generated. Without escaping, an email
+ * containing markup would execute in the user's Gmail session.
+ */
+function escapeHtml(value) {
+  return String(value === undefined || value === null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function playUnsubscribeSparkleSound() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -207,6 +233,73 @@ function injectRatiodBanner(targetElement, data) {
     .tag-suspicious { background-color: #E8720C; color: #FFFFFF; }
     .tag-safe { background-color: #8A8B5C; color: #FFFFFF; }
 
+    /* Brand mark, matching the site logo (neo-brutalist R badge). */
+    .ratiod-logo {
+      border-radius: 6px;
+      border: 1.5px solid #121212;
+      box-shadow: 2px 2px 0 #121212;
+      flex: 0 0 auto;
+      display: block;
+    }
+
+    /* Visually hidden text for screen readers on icon-only buttons. */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .ratiod-header-actions { display: flex; align-items: center; gap: 6px; }
+
+    .ratiod-iconbtn {
+      display: inline-grid;
+      place-items: center;
+      width: 26px; height: 26px;
+      padding: 0;
+      border-radius: 6px;
+      border: 1.5px solid #121212;
+      background-color: #FFFFFF;
+      color: #121212;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .ratiod-iconbtn:hover { background-color: #EFE9DC; }
+    .ratiod-iconbtn:focus-visible,
+    .ratiod-btn:focus-visible,
+    .ratiod-cred:focus-visible {
+      outline: 3px solid #EA3E2B;
+      outline-offset: 2px;
+    }
+
+    /* Collapsed state: keep the score visible, hide the advice + actions. */
+    .ratiod-body.collapsed { display: none; }
+
+    /* Author credit, mirroring the site footer. */
+    .ratiod-credit {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed #121212;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #4A4741;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .ratiod-cred { color: #121212; font-weight: 700; text-decoration: underline; }
+    .ratiod-cred:hover { color: #EA3E2B; }
+
+    /* Respect the OS "reduce motion" setting: no confetti, no sound surprises. */
+    @media (prefers-reduced-motion: reduce) {
+      .ratiod-container, .ratiod-btn { transition: none; }
+    }
+
     .ratiod-score {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
@@ -314,39 +407,51 @@ function injectRatiodBanner(targetElement, data) {
   container.innerHTML = `
     <div class="ratiod-header">
       <div class="ratiod-badge-group">
-        <span class="ratiod-tag tag-${verdict}">[ RATIO'D · ${displayVerdictLabel} ]</span>
-        <span class="ratiod-score">RISK SCORE: ${score}/100</span>
+        <img class="ratiod-logo" src="${chrome.runtime.getURL("icons/icon48.png")}" alt="" width="28" height="28">
+        <span class="ratiod-tag tag-${escapeHtml(verdict)}">[ ${escapeHtml(displayVerdictLabel)} ]</span>
+        <span class="ratiod-score">RISK SCORE: ${escapeHtml(score)}/100</span>
       </div>
-      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">
-        [ PRIVACY · ${totalMasked} REDACTED · AIR-GAPPED ]
+      <div class="ratiod-header-actions">
+        <button class="ratiod-iconbtn" id="btn-collapse" type="button" aria-expanded="true" aria-controls="ratiod-body" title="Collapse">
+          <span aria-hidden="true">&#9662;</span><span class="sr-only">Collapse analysis</span>
+        </button>
+        <button class="ratiod-iconbtn" id="btn-dismiss" type="button" title="Dismiss Ratio'd for this email">
+          <span aria-hidden="true">&#10005;</span><span class="sr-only">Dismiss Ratio'd</span>
+        </button>
       </div>
     </div>
 
-    <div class="ratiod-body">
-      <div class="ratiod-explanation">${explanation}</div>
+    <div class="ratiod-body" id="ratiod-body">
+      <div class="ratiod-explanation">${escapeHtml(explanation)}</div>
       <div class="ratiod-actions">
-        <button class="ratiod-btn ratiod-btn-primary" id="toggle-drawer">[ SEE DETAILS ]</button>
-        <button class="ratiod-btn ratiod-btn-unsub" id="btn-one-unsub">[ ✨ ONE-CLICK UNSUBSCRIBE ]</button>
-        <button class="ratiod-btn ratiod-btn-spam" id="btn-move-spam">[ 🚫 MOVE TO SPAM ]</button>
+        <button class="ratiod-btn ratiod-btn-primary" id="toggle-drawer" type="button" aria-expanded="false" aria-controls="analysis-drawer">[ SEE DETAILS ]</button>
+        <button class="ratiod-btn ratiod-btn-unsub" id="btn-one-unsub" type="button">[ &#10024; UNSUBSCRIBE ]</button>
+        <button class="ratiod-btn ratiod-btn-spam" id="btn-move-spam" type="button">[ &#128683; REPORT SPAM ]</button>
       </div>
 
-      <div class="ratiod-drawer" id="analysis-drawer">
-        <div class="drawer-section-title">[ DETECTED THREAT & PROMOTIONAL SPANS ]</div>
+      <div class="ratiod-drawer" id="analysis-drawer" role="region" aria-label="Full Ratio'd analysis">
+        <div class="drawer-section-title">[ DETECTED THREAT &amp; PROMOTIONAL SPANS ]</div>
         ${flags.length > 0 ? flags.map(f => `
           <div class="flag-item">
-            <span class="flag-span">${f.span}</span> — ${f.reason}
+            <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
           </div>
         `).join('') : '<div class="flag-item">No explicit rule flags triggered.</div>'}
 
         <div class="drawer-section-title" style="margin-top: 12px;">[ RECOMMENDED ACTION CHECKLIST ]</div>
         <ul class="checklist-list">
-          ${nextSteps.map(step => `<li><strong>•</strong> ${step}</li>`).join('')}
+          ${nextSteps.map(step => `<li><strong>&bull;</strong> ${escapeHtml(step)}</li>`).join('')}
         </ul>
 
         <div class="privacy-footnote">
-          ✓ Real-time PII redaction active: ${privacy.phones_masked || 0} phone(s), ${privacy.emails_masked || 0} email(s) masked before analysis. Zero message text stored.
+          &#10003; Real-time PII redaction active: ${escapeHtml(privacy.phones_masked || 0)} phone(s), ${escapeHtml(privacy.emails_masked || 0)} email(s), ${escapeHtml(privacy.otp_masked || 0)} code(s) &mdash; ${escapeHtml(totalMasked)} item(s) masked before analysis. Zero message text stored.
         </div>
       </div>
+    </div>
+
+    <div class="ratiod-credit">
+      <span>Ratio'd &middot; developed by
+        <a class="ratiod-cred" href="https://github.com/VedxntDev" target="_blank" rel="noopener noreferrer">Vedant</a>
+      </span>
     </div>
   `;
 
@@ -362,10 +467,35 @@ function injectRatiodBanner(targetElement, data) {
   const unsubBtn = shadowRoot.getElementById("btn-one-unsub");
   const spamBtn = shadowRoot.getElementById("btn-move-spam");
   const drawer = shadowRoot.getElementById("analysis-drawer");
+  const collapseBtn = shadowRoot.getElementById("btn-collapse");
+  const dismissBtn = shadowRoot.getElementById("btn-dismiss");
+  const body = shadowRoot.getElementById("ratiod-body");
 
   if (toggleBtn && drawer) {
     toggleBtn.addEventListener("click", () => {
-      drawer.classList.toggle("open");
+      const open = drawer.classList.toggle("open");
+      // Keep the accessible state in sync, otherwise screen readers announce
+      // the drawer as collapsed while it is visibly open.
+      toggleBtn.setAttribute("aria-expanded", String(open));
+      toggleBtn.textContent = open ? "[ HIDE DETAILS ]" : "[ SEE DETAILS ]";
+    });
+  }
+
+  // Collapse: keep the score badge on screen, hide the advice and actions.
+  if (collapseBtn && body) {
+    collapseBtn.addEventListener("click", () => {
+      const collapsed = body.classList.toggle("collapsed");
+      collapseBtn.setAttribute("aria-expanded", String(!collapsed));
+      collapseBtn.title = collapsed ? "Expand" : "Collapse";
+      collapseBtn.querySelector("[aria-hidden]").innerHTML = collapsed ? "&#9652;" : "&#9662;";
+    });
+  }
+
+  // Dismiss: the user is not going to read this banner for this message, and a
+  // banner they cannot get rid of trains people to ignore every banner.
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", () => {
+      if (host.parentElement) host.parentElement.removeChild(host);
     });
   }
 
@@ -373,10 +503,15 @@ function injectRatiodBanner(targetElement, data) {
   if (unsubBtn) {
     unsubBtn.addEventListener("click", () => {
       // 1. Play Web Audio API Sparkle Chime Sound Effect
-      playUnsubscribeSparkleSound();
+      // (skipped when the OS asks for reduced motion - the burst is the same
+      // kind of unsolicited animation, and a chime can be startling in a
+      // shared or screen-shared environment)
+      if (!prefersReducedMotion()) {
+        playUnsubscribeSparkleSound();
 
-      // 2. Launch 45-Particle Glitter & Confetti Burst Effect
-      launchGlitterBurst(shadowRoot, unsubBtn);
+        // 2. Launch 45-Particle Glitter & Confetti Burst Effect
+        launchGlitterBurst(shadowRoot, unsubBtn);
+      }
 
       // 3. Ultra-Robust Multi-Strategy Unsubscribe Handler
       let unsubSuccess = false;

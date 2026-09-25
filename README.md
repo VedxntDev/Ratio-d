@@ -30,6 +30,68 @@
 
 ---
 
+## 🔷 Brand Logo
+
+`assets/logo.svg` is the single source of truth for the mark. Everything else is
+generated from it — there are no hand-drawn PNGs to drift out of sync:
+
+```bash
+node tools/render-logo.js   # SVG -> favicon-16/32, apple-touch-180, extension 48/128/512
+node tools/build-ico.js     # PNGs -> multi-size assets/favicon.ico (16/32/48)
+cp assets/favicon.ico favicon.ico
+```
+
+The site declares the `.ico`, an SVG icon, PNG fallbacks, an `apple-touch-icon`,
+a `mask-icon`, and Open Graph/Twitter cards. `favicon.ico` is also served from
+the repository root because browsers probe `/favicon.ico` by default even when a
+`<link rel="icon">` is present — without it the tab logs a 404.
+
+The same mark is the Chrome extension icon and appears in the injected Gmail
+banner (exposed via `web_accessible_resources`).
+
+---
+
+## 🧩 Chrome Extension
+
+| Area | Detail |
+| --- | --- |
+| Verdict | Rendered from the API's `verdict` field, not re-derived from the score, so all four verdicts (`safe` / `suspicious` / `high_risk` / `promo_clutter`) label correctly |
+| Escaping | `flags[].span` is a verbatim slice of the email body and `explanation` can be LLM-written. Both are passed through `escapeHtml()` before touching `innerHTML`, so a hostile email cannot execute script in the user's Gmail session |
+| Controls | **Dismiss** removes the banner, **Collapse** hides the body but keeps the score visible, and the drawer toggle keeps `aria-expanded` in sync |
+| Accessibility | Icon-only buttons carry `.sr-only` labels, all buttons are `type="button"`, and `prefers-reduced-motion: reduce` disables the confetti burst and chime |
+| Credit | Banner footer links to the author's GitHub, matching the site |
+
+Verify the real banner in a browser (not just by regex):
+
+```bash
+node tools/verify-banner.js
+```
+
+---
+
+## 🧠 Detection Model
+
+The rule engine contributes 70% of the score and the local Laya model 30%. The
+model layers named, weighted **structural signals** on top of its existing token
+and flag counts:
+
+| Signal | Weight | Why |
+| --- | --- | --- |
+| `punycode_host` | 0.34 | `xn--` IDN hosts survive a copy-paste lookalike |
+| `ip_literal_link` | 0.34 | Legitimate services use named hosts, not bare IPs |
+| `data_uri` | 0.30 | Smuggles a payload past a mail gateway |
+| `base64_blob` | 0.24 | Hides an attachment or redirect |
+| `credential_or_wire` | 0.20 | Brand credential prompt, or a gift-card/crypto demand |
+| `link_farm` | 0.18 | Five or more distinct outbound hosts in one message |
+
+Signals past the second are damped, so a message tripping many of them is not
+scored as many times as bad. Every signal name is returned in
+`engine.model_signals` so the score is auditable rather than an unexplained
+number, and `test-model-signals.js` pins both the attacks each signal must catch
+and the benign traffic it must never touch.
+
+---
+
 ## 📁 Repository Structure
 
 ```
@@ -37,7 +99,12 @@
 ├── index.html                     # Web console (single source of truth)
 ├── styles.css                     # Playful Neo-Brutalist stylesheet
 ├── js/                            # Redactor, presets, API client, GSAP pipeline
-├── assets/                        # Hero mascot artwork
+├── assets/                        # Brand logo + favicons + hero mascot artwork
+├── favicon.ico                    # Root copy: browsers probe /favicon.ico by default
+├── tools/                         # Build-time asset/verification scripts
+│   ├── render-logo.js             # assets/logo.svg -> every PNG size (headless Chrome)
+│   ├── build-ico.js               # PNGs -> multi-size .ico
+│   └── verify-banner.js           # Renders the real extension banner in a browser
 ├── server.js                      # Universal entrypoint: HTTP server locally,
 │                                  # (req,res) handler on Vercel
 ├── extension/                     # Gmail Chrome extension (Manifest V3)
@@ -45,7 +112,7 @@
 │   ├── content-script.js          # Gmail DOM scanner & client-side redactor
 │   ├── banner.js                  # Isolated Shadow DOM banner injector
 │   ├── background.js              # Service worker proxy
-│   └── icons/                     # Modern 16px, 48px, 128px, 512px icons
+│   └── icons/                     # Brand icons: 16px, 48px, 128px, 512px
 ├── server/                        # Analysis pipeline (shared by both runtimes)
 │   ├── routes/analyze.js          # POST /analyze handler
 │   ├── rules/engine.js            # Deterministic threat rules (homoglyph, Levenshtein, shorteners)

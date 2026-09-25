@@ -51,6 +51,9 @@ const ALLOWED_ENTRIES = new Set([
   "privacy.html",
   "styles.css",
   "robots.txt",
+  // Browsers probe /favicon.ico by default even when a <link rel="icon"> is
+  // present, so the root copy must be servable or the tab shows a 404.
+  "favicon.ico",
   "ratiod-extension.zip",
   "ratiod-full-project.zip",
   "js",
