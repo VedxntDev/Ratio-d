@@ -28,17 +28,14 @@
       <nav aria-label="Primary">
         <ul class="nav-links">
           <li><a href="#console" class="nav-link">Analyze</a></li>
+          <li><a href="#install" class="nav-link">Get Extension</a></li>
+          <li><a href="#architecture" class="nav-link">Architecture</a></li>
           <li><a href="#pipeline" class="nav-link">How it works</a></li>
           <li><a href="#features" class="nav-link">Features</a></li>
-          <li><a href="#install" class="nav-link">Get Extension</a></li>
           <li><a href="#tiers" class="nav-link">Roadmap</a></li>
+          <li><a href="privacy.html" class="nav-link">Privacy Policy</a></li>
         </ul>
       </nav>
-
-      <div class="channel-selector" role="group" aria-label="Message channel">
-        <button class="channel-tab active" id="tab-email" type="button">Email</button>
-        <button class="channel-tab" id="tab-sms" type="button">SMS</button>
-      </div>
     </div>
   </header>
 
@@ -157,6 +154,36 @@
       </div>
     </section>
 
+    <!-- Architecture Flowchart Section -->
+    <section id="architecture" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Architecture</span>
+        <h2 class="section-title">Every stage of the <span class="marker marker-blue">pipeline</span></h2>
+        <p class="section-sub">Ten stages from the Gmail tab to the verdict banner. Stages 1&ndash;3 and 10 run in your browser &mdash; your phone numbers, email addresses and OTP codes are masked <em>before</em> anything crosses the network boundary.</p>
+      </div>
+
+      <div class="arch-controls">
+        <div class="arch-lens" role="group" aria-label="View lens">
+          <button class="channel-tab active" id="arch-lens-components" type="button" aria-pressed="true">Components</button>
+          <button class="channel-tab" id="arch-lens-data" type="button" aria-pressed="false">Data</button>
+        </div>
+        <div class="arch-transport">
+          <button class="btn btn-secondary btn-sm tactile" id="arch-prev" type="button" aria-label="Previous stage">&#8592; Prev</button>
+          <button class="btn btn-primary btn-sm tactile" id="arch-play" type="button" aria-pressed="false" aria-label="Play through the pipeline">&#9654; Play</button>
+          <button class="btn btn-secondary btn-sm tactile" id="arch-next" type="button" aria-label="Next stage">Next &#8594;</button>
+        </div>
+        <p class="arch-status" id="arch-status" role="status" aria-live="polite">Stage 01 / 10</p>
+      </div>
+
+      <div class="arch-board" id="arch-board">
+        <noscript>
+          <p class="section-sub">The interactive chart needs JavaScript. The ten stages are: 1) the user opens the email, 2) the content script activates, 3) client-side PII redaction, 4) redacted text is sent to the backend, 5) the rule engine and 6) the Laya local model run in parallel, 7) the score combiner merges them, 8) the LLM writes the explanation, 9) the response is returned, and 10) the Shadow DOM banner is rendered in Gmail.</p>
+        </noscript>
+      </div>
+
+      <div class="arch-detail tactile" id="arch-detail" aria-live="polite"></div>
+    </section>
+
     <!-- Control Console Grid -->
     <section id="console" class="console-grid">
 
@@ -171,6 +198,14 @@
         </div>
 
         <div class="pane-body">
+          <div class="channel-row">
+            <span class="preset-label">Channel:</span>
+            <div class="channel-selector" role="group" aria-label="Message channel">
+              <button class="channel-tab active" id="tab-email" type="button">Email</button>
+              <button class="channel-tab" id="tab-sms" type="button">SMS</button>
+            </div>
+          </div>
+
           <div class="preset-bar">
             <span class="preset-label">Try a sample:</span>
             <button class="btn-preset" id="preset-phishing" type="button">Phishing email</button>
@@ -506,6 +541,7 @@
         <a href="privacy.html" class="nav-link">Privacy</a>
         <a href="#install" class="nav-link">Get Extension</a>
         <a href="#pipeline" class="nav-link">How it works</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
         <a href="#console" class="nav-link">Analyze</a>
       </div>
       <div class="footer-muted">Playful Neo-Brutalist Utility Design System</div>
@@ -523,6 +559,7 @@
   <script src="js/presets.js"></script>
   <script src="js/api.js"></script>
   <script src="js/pipeline.js"></script>
+  <script src="js/architecture.js"></script>
   <script src="js/install.js"></script>
   <script src="js/shape-waves.js"></script>
   <script src="js/app.js"></script>

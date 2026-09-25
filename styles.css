@@ -296,6 +296,14 @@ h1, h2, h3, h4 {
   color: var(--color-yellow);
   border-color: var(--color-ink);
 }
+/* The Email/SMS selector moved out of the site header (it was navigation
+   furniture for a control that actually belongs to the analyzer) and into the
+   telemetry pane, where it now labels the textarea it changes. */
+.channel-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.channel-row .preset-label { margin: 0; }
 
 /* Ticker */
 .ticker {
@@ -1143,16 +1151,21 @@ h1, h2, h3, h4 {
 }
 .promo-close:hover { background: var(--color-primary); color: #fff; transform: rotate(90deg); }
 
-/* ---- floating download button ---- */
+/* ---- floating download button ----
+   Pinned bottom-LEFT (not right) and visible from first paint at every
+   breakpoint. The visible state is the DEFAULT so the button can never be
+   missing if JS is blocked or slow; .is-visible is kept as a no-op-compatible
+   hook. Bottom-left avoids the browser's right-edge controls and the corner
+   where the mobile promo-bar actions stack up. */
 .dl-fab {
-  position: fixed; right: 22px; bottom: 22px; z-index: 80;
+  position: fixed; left: 22px; bottom: 22px; z-index: 80;
   display: inline-flex; align-items: center; gap: 9px;
   background: var(--color-primary); color: #fff;
   font-family: var(--font-display); font-size: 0.92rem; font-weight: 800;
   text-decoration: none; padding: 13px 20px;
   border: var(--bw) solid var(--color-ink); border-radius: 999px;
   box-shadow: 5px 5px 0 var(--color-ink);
-  opacity: 0; visibility: hidden; transform: translateY(16px) scale(0.94);
+  opacity: 1; visibility: visible; transform: none;
   transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.25s;
 }
 .dl-fab.is-visible { opacity: 1; visibility: visible; transform: none; }
@@ -1163,13 +1176,176 @@ h1, h2, h3, h4 {
   .promo-text { order: 3; width: 100%; }
   .promo-actions { margin-left: auto; }
   .dl-fab-text { display: none; }
-  .dl-fab { padding: 14px; right: 16px; bottom: 16px; }
+  .dl-fab { padding: 14px; left: 16px; bottom: 16px; }
 }
 
 .faq-item kbd {
   font-family: var(--font-mono); font-size: 0.78em; font-weight: 700;
   background: var(--color-surface-muted); border: 1px solid var(--color-ink);
   border-radius: 4px; padding: 1px 5px;
+}
+
+/* ── Architecture flowchart ───────────────────────────────────────────────
+   The 10-stage board is data-driven (see js/architecture.js). Layout is a
+   flex track of nodes joined by connectors, which rotate to vertical at the
+   992px breakpoint. Every colour, radius, border and shadow below comes from
+   the tokens at the top of this file - no new palette is introduced. */
+.arch-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  margin-bottom: 26px;
+}
+.arch-lens {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+  background: var(--color-surface);
+  border: var(--bw) solid var(--color-ink);
+  border-radius: 999px;
+  box-shadow: var(--shadow-hard-sm);
+}
+.arch-transport { display: flex; align-items: center; gap: 8px; }
+.arch-status {
+  font-family: var(--font-mono); font-size: 0.75rem; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-left: auto; color: var(--color-text-muted); white-space: nowrap;
+}
+
+.arch-board {
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard);
+  padding: 20px 24px 24px;
+}
+.arch-zone { padding: 22px 0; }
+.arch-zone + .arch-zone,
+.arch-boundary + .arch-zone { border-top: var(--bw) dashed rgba(18, 18, 18, 0.3); }
+.arch-zone-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.arch-zone-note { font-size: 0.85rem; color: var(--color-text-muted); }
+/* Centre rather than stretch: the 5/6 fork is twice as tall, and stretching
+   every other node to match left huge empty boxes beside it. */
+.arch-track { display: flex; align-items: center; }
+
+.arch-node {
+  position: relative;
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  text-align: left; cursor: pointer;
+  padding: 16px 14px;
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hard-sm);
+  font-family: var(--font-body); color: var(--color-ink);
+  transition: transform 0.16s cubic-bezier(.34,1.56,.64,1), box-shadow 0.16s ease, background-color 0.16s ease;
+}
+.arch-node:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--color-ink); }
+.arch-node:focus-visible { outline: var(--bw) solid var(--color-primary); outline-offset: 3px; }
+.arch-node-num { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; color: var(--color-primary); }
+.arch-node-title { font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; line-height: 1.15; letter-spacing: -0.01em; }
+.arch-node-lens { font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-text-muted); word-break: break-word; }
+.arch-node-tag {
+  font-family: var(--font-mono); font-size: 0.58rem; font-weight: 800;
+  letter-spacing: 0.08em; padding: 2px 6px;
+  border: 2px solid var(--color-ink); border-radius: 999px;
+  background: var(--color-surface);
+}
+.arch-node.is-done .arch-node-num { color: var(--color-badge-alt); }
+/* The 5/6 pair get an olive shadow so the fork reads as distinct from the
+   straight-line stages even before the PARALLEL tag is noticed. */
+.arch-node.is-parallel { box-shadow: 3px 3px 0 var(--color-badge-alt); }
+.arch-node.is-parallel:hover { box-shadow: 5px 5px 0 var(--color-ink); }
+.arch-node.is-parallel.is-active { box-shadow: 7px 7px 0 var(--color-primary); }
+.arch-node.is-active {
+  background: var(--color-yellow);
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0 var(--color-primary);
+}
+.arch-node.is-active .arch-node-num { color: var(--color-ink); }
+/* Connectors are plain 3px rules with a CSS arrowhead, and carry a packet
+   element that GSAP animates from 0% to 100% along the active axis. */
+.arch-conn {
+  position: relative;
+  flex: 0 0 38px; align-self: center;
+  height: 3px; background: var(--color-ink);
+}
+.arch-conn::after {
+  content: ''; position: absolute; right: -2px; top: 50%;
+  transform: translateY(-50%);
+  border-left: 10px solid var(--color-ink);
+  border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+}
+.arch-packet {
+  position: absolute; top: 50%; left: 0;
+  width: 13px; height: 13px; margin-top: -6.5px;
+  border-radius: 50%; background: var(--color-primary);
+  border: 2px solid var(--color-ink); opacity: 0;
+}
+
+/* Stages 5 and 6 run side by side. The ::after bar is the merge bracket: it
+   sits at the vertical midpoint of the pair so the outgoing connector reads
+   as a genuine convergence into stage 7. */
+.arch-parallel {
+  position: relative; flex: 1.35 1 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.arch-parallel::after {
+  content: ''; position: absolute; right: -19px; top: 25%; bottom: 25%;
+  width: 3px; background: var(--color-ink);
+}
+.arch-parallel-tag {
+  position: absolute; top: -14px; left: 0;
+  font-family: var(--font-mono); font-size: 0.58rem; font-weight: 800;
+  letter-spacing: 0.08em; color: var(--color-text-muted);
+}
+.arch-branch { display: flex; align-items: center; }
+.arch-branch .arch-node { flex: 1 1 0; }
+.arch-branch .arch-conn { flex: 0 0 19px; }
+
+.arch-boundary { display: flex; align-items: center; gap: 12px; margin: 4px 0; }
+.arch-boundary-line { flex: 1 1 0; height: 0; border-top: var(--bw) dashed var(--color-ink); }
+.arch-boundary-label {
+  font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+  padding: 6px 12px; border: var(--bw) solid var(--color-ink);
+  border-radius: 999px; background: var(--color-primary); color: #fff;
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.arch-detail { margin-top: 26px; padding: 24px; background: var(--color-surface); }
+.arch-detail-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.arch-detail-title { font-size: 1.3rem; }
+.arch-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.arch-field-label {
+  display: block; font-family: var(--font-mono); font-size: 0.66rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--color-primary); margin-bottom: 6px;
+}
+.arch-field-text { font-size: 0.88rem; color: var(--color-text-muted); }
+.arch-example {
+  display: block; font-family: var(--font-mono); font-size: 0.74rem; line-height: 1.55;
+  background: var(--color-ink); color: var(--color-yellow);
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  white-space: pre-wrap; word-break: break-word; overflow-x: auto;
+}
+.arch-detail-note {
+  margin-top: 16px; font-size: 0.9rem; color: var(--color-text-muted);
+  border-left: var(--bw) solid var(--color-yellow); padding-left: 14px;
+}
+
+/* Hover tooltips, CSS-only so there is no extra JS and no layout thrash.
+   Nodes use ::after; connectors use ::before because ::after is the arrowhead.
+   Gated behind (hover: hover) so they never appear on touch devices. */
+@media (hover: hover) {
+  .arch-node[data-tip]:hover::after,
+  .arch-conn[data-tip]:hover::before {
+    content: attr(data-tip);
+    position: absolute; left: 50%; bottom: calc(100% + 10px);
+    transform: translateX(-50%);
+    z-index: 20; width: max-content; max-width: 250px;
+    font-family: var(--font-body); font-size: 0.78rem; font-weight: 500;
+    line-height: 1.4; color: #fff; background: var(--color-ink);
+    border: 2px solid var(--color-ink); border-radius: var(--radius-sm);
+    padding: 8px 10px; text-align: left; pointer-events: none;
+    box-shadow: 4px 4px 0 var(--color-primary);
+  }
 }
 
 /* Responsive */
@@ -1188,6 +1364,26 @@ h1, h2, h3, h4 {
   .console-grid { grid-template-columns: 1fr; }
   .install-grid { grid-template-columns: 1fr; }
   .nav-links { display: none; }
+  /* Architecture board collapses to a single vertical column; connectors
+     rotate 90 degrees and the merge bracket is dropped because "converge"
+     has no meaning once the branches are stacked. */
+  .arch-track { flex-direction: column; align-items: stretch; }
+  .arch-node { flex: 0 0 auto; }
+  .arch-conn { flex: 0 0 30px; width: 3px; height: 30px; }
+  .arch-conn::after {
+    right: auto; top: auto; bottom: -2px; left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent; border-right: 7px solid transparent;
+    border-top: 10px solid var(--color-ink); border-bottom: 0;
+  }
+  .arch-packet { top: 0; left: 50%; margin-top: 0; margin-left: -6.5px; }
+  .arch-parallel { flex: 0 0 auto; }
+  .arch-parallel::after { display: none; }
+  .arch-parallel-tag { position: static; display: block; margin-bottom: 8px; }
+  .arch-branch { flex-direction: column; align-items: stretch; }
+  .arch-branch .arch-conn { flex: 0 0 24px; }
+  .arch-status { margin-left: 0; }
+  .arch-detail { padding: 20px; }
 }
 
 @media (max-width: 600px) {
@@ -1205,6 +1401,12 @@ h1, h2, h3, h4 {
   .istep { padding: 15px; gap: 11px; }
   .steps-head { gap: 10px; }
   .copy-row { flex-wrap: wrap; }
+  .arch-board { padding: 16px 14px 20px; }
+  .arch-transport { width: 100%; }
+  .arch-transport .btn { flex: 1 1 auto; }
+  .arch-lens { width: 100%; justify-content: center; }
+  .arch-detail-grid { grid-template-columns: 1fr; }
+  .arch-boundary-label { font-size: 0.58rem; padding: 5px 9px; }
 }
 
 /* Reduced motion */
@@ -1215,5 +1417,5 @@ h1, h2, h3, h4 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .tactile:hover, .tactile:active, .pipeline-card, .feature-card, .mascot-card { transform: none !important; }
+  .tactile:hover, .tactile:active, .pipeline-card, .feature-card, .mascot-card, .arch-node.is-active { transform: none !important; }
 }
