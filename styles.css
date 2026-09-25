@@ -1173,7 +1173,10 @@ h1, h2, h3, h4 {
 .dl-fab-icon { font-size: 1.05rem; }
 @media (max-width: 600px) {
   .promo-inner { flex-wrap: wrap; gap: 10px; }
-  .promo-text { order: 3; width: 100%; }
+  /* flex-basis:100% is required: the base rule sets `flex:1` (basis 0), so a
+     bare `width:100%` is ignored and the copy gets squeezed into a 1-word
+     column that overflows the viewport. */
+  .promo-text { order: 3; flex: 1 0 100%; width: 100%; }
   .promo-actions { margin-left: auto; }
   .dl-fab-text { display: none; }
   .dl-fab { padding: 14px; left: 16px; bottom: 16px; }
