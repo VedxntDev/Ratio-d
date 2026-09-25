@@ -1,6 +1,7 @@
 /**
  * Ratio'd Security Backend Server
  * Express-compatible & zero-dependency HTTP server meeting Part A.3 & A.5 API Contract.
+ * Includes universal static asset serving for Vercel Serverless Functions.
  */
 const http = require("http");
 const url = require("url");
@@ -16,6 +17,21 @@ function setCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
+function resolveFile(relativePath) {
+  const candidates = [
+    path.join(__dirname, relativePath),
+    path.join(__dirname, "..", relativePath),
+    path.join(__dirname, "web", relativePath),
+    path.join(__dirname, "../web", relativePath)
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
 const server = http.createServer((req, res) => {
   setCorsHeaders(res);
 
@@ -28,6 +44,7 @@ const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
+  // 1. Health Endpoint
   if (req.method === "GET" && pathname === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
@@ -39,7 +56,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "POST" && pathname === "/analyze") {
+  // 2. Threat Analysis Endpoint
+  if (req.method === "POST" && (pathname === "/analyze" || pathname === "/api/analyze")) {
     let body = "";
     req.on("data", chunk => {
       body += chunk.toString();
@@ -60,44 +78,55 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "GET" && (pathname === "/privacy" || pathname === "/privacy.html")) {
-    const privacyPath = path.join(__dirname, "../privacy.html");
-    if (fs.existsSync(privacyPath)) {
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      res.end(fs.readFileSync(privacyPath));
-      return;
+  // 3. Static File Routes
+  if (req.method === "GET") {
+    if (pathname === "/" || pathname === "/index.html") {
+      const file = resolveFile("index.html") || resolveFile("web/index.html");
+      if (file) {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(fs.readFileSync(file));
+        return;
+      }
     }
-  }
 
-  if (req.method === "GET" && (pathname === "/" || pathname === "/index.html")) {
-    const indexPath = path.join(__dirname, "../web/index.html");
-    if (fs.existsSync(indexPath)) {
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      res.end(fs.readFileSync(indexPath));
-      return;
+    if (pathname === "/privacy" || pathname === "/privacy.html") {
+      const file = resolveFile("privacy.html") || resolveFile("web/privacy.html");
+      if (file) {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(fs.readFileSync(file));
+        return;
+      }
     }
-  }
 
-  if (req.method === "GET" && pathname === "/styles.css") {
-    const cssPath = path.join(__dirname, "../web/styles.css");
-    if (fs.existsSync(cssPath)) {
-      res.writeHead(200, { "Content-Type": "text/css; charset=utf-8" });
-      res.end(fs.readFileSync(cssPath));
-      return;
+    if (pathname === "/styles.css" || pathname.endsWith(".css")) {
+      const file = resolveFile("styles.css") || resolveFile("web/styles.css");
+      if (file) {
+        res.writeHead(200, { "Content-Type": "text/css; charset=utf-8" });
+        res.end(fs.readFileSync(file));
+        return;
+      }
     }
-  }
 
-  if (req.method === "GET" && pathname.includes("ratiod-extension.zip")) {
-    const zipPath = path.join(__dirname, "../web/ratiod-extension.zip");
-    const rootZipPath = path.join(__dirname, "../ratiod-extension.zip");
-    const targetZip = fs.existsSync(zipPath) ? zipPath : (fs.existsSync(rootZipPath) ? rootZipPath : null);
-    if (targetZip) {
-      res.writeHead(200, {
-        "Content-Type": "application/zip",
-        "Content-Disposition": 'attachment; filename="ratiod-extension.zip"'
-      });
-      res.end(fs.readFileSync(targetZip));
-      return;
+    if (pathname.includes("ratiod-extension.zip")) {
+      const file = resolveFile("ratiod-extension.zip") || resolveFile("web/ratiod-extension.zip");
+      if (file) {
+        res.writeHead(200, {
+          "Content-Type": "application/zip",
+          "Content-Disposition": 'attachment; filename="ratiod-extension.zip"'
+        });
+        res.end(fs.readFileSync(file));
+        return;
+      }
+    }
+
+    if (pathname.startsWith("/js/")) {
+      const relPath = pathname.substring(1);
+      const file = resolveFile(relPath) || resolveFile(`web/${relPath}`);
+      if (file) {
+        res.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8" });
+        res.end(fs.readFileSync(file));
+        return;
+      }
     }
   }
 
