@@ -132,6 +132,19 @@ const INTERACT = `(() => {
   check("collapse hides the body and re-expands", i.collapsed === true && i.reExpanded === true);
   check("dismiss removes the banner from the DOM", i.gone === true);
 
+  await send("Page.navigate", { url: "https://ratio-d.vercel.app/" });
+  await sleep(4500);
+  const live = await ev(`(() => ({
+    title: document.title,
+    icons: Array.from(document.querySelectorAll('link[rel*=icon], link[rel="apple-touch-icon"], link[rel="mask-icon"]'))
+      .map(l => l.getAttribute('href')),
+    og: !!document.querySelector('meta[property="og:image"]'),
+    credit: !!Array.from(document.querySelectorAll('a')).find(a => a.href === 'https://github.com/VedxntDev' && a.textContent.trim() === 'Developed by Vedant')
+  }))()`);
+  console.log("LIVE:", JSON.stringify(live, null, 1));
+  const liveShot = await send("Page.captureScreenshot", { format: "png" });
+  fs.writeFileSync("/tmp/live_top.png", Buffer.from(liveShot.result.data, "base64"));
+
   console.log(failures === 0 ? "\nBANNER RENDERS AND ESCAPES CORRECTLY" : `\n${failures} BANNER PROBLEM(S)`);
   ws.close(); chrome.kill();
   process.exit(failures === 0 ? 0 : 1);
