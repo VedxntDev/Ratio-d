@@ -42,6 +42,22 @@
     </div>
   </header>
 
+  <!-- Extension promo bar (dismissible, remembered) -->
+  <div class="promo-bar" id="promo-bar" hidden>
+    <div class="container promo-inner">
+      <span class="promo-badge">NEW</span>
+      <p class="promo-text">
+        <strong>Get the Gmail extension</strong> &mdash; a live risk verdict inside every
+        email you open. No account, nothing stored.
+      </p>
+      <div class="promo-actions">
+        <a href="ratiod-extension.zip" download="ratiod-extension.zip" class="btn btn-primary btn-sm">&#11015; Download</a>
+        <a href="#install" class="btn btn-secondary btn-sm">How to install</a>
+      </div>
+      <button class="promo-close" id="promo-close" type="button" aria-label="Dismiss this message">&#215;</button>
+    </div>
+  </div>
+
   <!-- Marquee Ticker -->
   <div class="ticker" aria-hidden="true">
     <div class="ticker-track">
@@ -246,78 +262,6 @@
 
     </section>
 
-    <!-- Feature Grid -->
-    <section id="features" class="section">
-      <div class="section-head">
-        <span class="section-header-tag">Features</span>
-        <h2 class="section-title">Built <span class="marker marker-pink">chunky</span>, built careful</h2>
-        <p class="section-sub">Everything that touches your message happens where you can see it.</p>
-      </div>
-
-      <div class="feature-grid">
-        <article class="feature-card tactile">
-          <div class="feature-icon feature-icon-yellow" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.5"/></svg>
-          </div>
-          <div class="card-tag">Client-side · Stable</div>
-          <h3>Local PII redaction</h3>
-          <p>Phone numbers, email addresses, and OTP sequences are stripped in browser memory before any telemetry processing. Zero storage.</p>
-        </article>
-
-        <article class="feature-card tactile">
-          <div class="feature-icon feature-icon-blue" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
-          </div>
-          <div class="card-tag">Rules + Laya</div>
-          <h3>Hybrid threat engine</h3>
-          <p>Combines deterministic domain lookalike & urgency rules with local classifier scoring for high-precision fraud detection.</p>
-        </article>
-
-        <article class="feature-card tactile">
-          <div class="feature-icon feature-icon-pink" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
-          </div>
-          <div class="card-tag">SMS · Email</div>
-          <h3>Multi-channel support</h3>
-          <p>One unified backend API supporting both the paste console and real-time Gmail Chrome extension injection.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- Deployment Tiers Section -->
-    <section id="tiers" class="section">
-      <div class="section-head">
-        <span class="section-header-tag">Roadmap</span>
-        <h2 class="section-title">Release <span class="marker marker-green">roadmap</span> & architecture</h2>
-      </div>
-
-      <div class="tier-grid">
-        <article class="tier-card tactile tier-current">
-          <span class="sticker sticker-red sticker-corner">CURRENT</span>
-          <div class="tier-step">01</div>
-          <div class="card-tag">Demo</div>
-          <h3>Hackathon prototype</h3>
-          <p>Client-side redaction, local Express rule server, GSAP pipeline, and Chrome Manifest V3 Gmail extension.</p>
-        </article>
-
-        <article class="tier-card tactile">
-          <div class="tier-step">02</div>
-          <div class="card-tag">Pilot · Upcoming</div>
-          <h3>Campus pilot</h3>
-          <p>Custom domain lookalike database, organizational phishing alerts, and standalone Laya container integration.</p>
-        </article>
-
-        <article class="tier-card tactile">
-          <div class="tier-step">03</div>
-          <div class="card-tag">Production · Future</div>
-          <h3>Public release</h3>
-          <p>Zero-knowledge encrypted telemetry API, multi-browser extensions, and enterprise security dashboard.</p>
-        </article>
-      </div>
-    </section>
-
-  </main>
-
   <!-- Extension Install -->
   <section id="install" class="section install-section">
     <div class="container">
@@ -476,6 +420,78 @@
     </div>
   </section>
 
+    <!-- Feature Grid -->
+    <section id="features" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Features</span>
+        <h2 class="section-title">Built <span class="marker marker-pink">chunky</span>, built careful</h2>
+        <p class="section-sub">Everything that touches your message happens where you can see it.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-yellow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.5"/></svg>
+          </div>
+          <div class="card-tag">Client-side · Stable</div>
+          <h3>Local PII redaction</h3>
+          <p>Phone numbers, email addresses, and OTP sequences are stripped in browser memory before any telemetry processing. Zero storage.</p>
+        </article>
+
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-blue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
+          </div>
+          <div class="card-tag">Rules + Laya</div>
+          <h3>Hybrid threat engine</h3>
+          <p>Combines deterministic domain lookalike & urgency rules with local classifier scoring for high-precision fraud detection.</p>
+        </article>
+
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-pink" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+          </div>
+          <div class="card-tag">SMS · Email</div>
+          <h3>Multi-channel support</h3>
+          <p>One unified backend API supporting both the paste console and real-time Gmail Chrome extension injection.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Deployment Tiers Section -->
+    <section id="tiers" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Roadmap</span>
+        <h2 class="section-title">Release <span class="marker marker-green">roadmap</span> & architecture</h2>
+      </div>
+
+      <div class="tier-grid">
+        <article class="tier-card tactile tier-current">
+          <span class="sticker sticker-red sticker-corner">CURRENT</span>
+          <div class="tier-step">01</div>
+          <div class="card-tag">Demo</div>
+          <h3>Hackathon prototype</h3>
+          <p>Client-side redaction, local Express rule server, GSAP pipeline, and Chrome Manifest V3 Gmail extension.</p>
+        </article>
+
+        <article class="tier-card tactile">
+          <div class="tier-step">02</div>
+          <div class="card-tag">Pilot · Upcoming</div>
+          <h3>Campus pilot</h3>
+          <p>Custom domain lookalike database, organizational phishing alerts, and standalone Laya container integration.</p>
+        </article>
+
+        <article class="tier-card tactile">
+          <div class="tier-step">03</div>
+          <div class="card-tag">Production · Future</div>
+          <h3>Public release</h3>
+          <p>Zero-knowledge encrypted telemetry API, multi-browser extensions, and enterprise security dashboard.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container footer-inner">
@@ -494,6 +510,12 @@
       <div class="footer-muted">Playful Neo-Brutalist Utility Design System</div>
     </div>
   </footer>
+
+  <!-- Floating download button: appears only while the install section is off-screen -->
+  <a href="#install" class="dl-fab" id="dl-fab" aria-label="Jump to the extension download">
+    <span class="dl-fab-icon" aria-hidden="true">&#11015;</span>
+    <span class="dl-fab-text">Get Extension</span>
+  </a>
 
   <!-- App Scripts -->
   <script src="js/redactor.js"></script>

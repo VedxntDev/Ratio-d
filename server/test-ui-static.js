@@ -94,5 +94,24 @@ check("clipboard has fallback", /execCommand/.test(installJs));
 check("step ids match markup",
   [...html.matchAll(/data-step="(\d)"/g)].map((m) => m[1]).join(",") === "1,2,3,4,5");
 
+/* ---- prominence of the install flow ---- */
+check("dismissible promo bar present", /id="promo-bar"/.test(html) && /id="promo-close"/.test(html));
+check("promo bar starts hidden (shown by JS only)", /id="promo-bar"[^>]*hidden/.test(html));
+check("promo dismissal remembered", /ratiod\.promo\.dismissed/.test(installJs));
+check("floating download button present", /id="dl-fab"/.test(html));
+check("fab hides while install section is on screen", /installVisible/.test(installJs));
+check("fab only shows past the hero", /pastHero/.test(installJs));
+check("promo bar has a download link", /id="promo-bar"[\s\S]{0,600}?ratiod-extension\.zip/.test(html));
+check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.dl-fab \{/.test(css));
+check("promo bar responsive", /@media \(max-width: 600px\)[\s\S]*?\.promo-inner/.test(css));
+
+// The install flow must sit above the roadmap, not after it.
+const order = [...html.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1]);
+check("install appears before features in page order",
+  order.indexOf("install") > -1 && order.indexOf("install") < order.indexOf("features"),
+  order.join(" -> "));
+check("install section is inside <main>",
+  html.indexOf('id="install"') < html.indexOf("</main>"));
+
 console.log(failures === 0 ? "\nALL STATIC CHECKS PASSED" : `\n${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);
