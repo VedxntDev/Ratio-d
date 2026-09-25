@@ -21,11 +21,12 @@
 
 ## 🎨 Design System & Tokens (Playful Neo-Brutalist Utility)
 
-- **Canvas & Card**: `#F8F7F2` (Warm Canvas), `#FFFFFF` (Surface Card), `#121212` (Ink Border & Text)
+- **Canvas & Card**: `#F6F1E7` (Warm paper canvas with dot grid), `#FFFFFF` (Surface Card), `#121212` (Ink Border & Text)
 - **Primary Accent**: `#EA3E2B` (Orange-Red)
-- **Secondary Status Badge**: `#8A8B5C` (Muted Olive)
+- **Sticker Accents**: `#FFD23F` (Yellow), `#5DBBFF` (Blue), `#FF8FB1` (Pink), `#9BE86D` (Green)
+- **Status Badges**: `#8A8B5C` (Muted Olive · Safe), `#E8720C` (Amber · Suspicious), `#EA3E2B` (Red · High Risk)
 - **Typography**: `Plus Jakarta Sans` (Display/Headings), `Instrument Serif` (Italic Accent Words), `Inter` (Body), `JetBrains Mono` (System Telemetry & Brackets)
-- **Tactile UI System**: `2px` solid ink borders, `4px 4px 0px #121212` hard physical shadows with press interaction (`translate(2px, 2px)`).
+- **Tactile UI System**: `3px` solid ink borders, `6px 6px 0 #121212` hard physical shadows with press interaction (`translate(2px, 2px)`).
 
 ---
 
@@ -33,43 +34,62 @@
 
 ```
 .
-├── web/                          # SMS/paste web app console (HTML/CSS/JS + GSAP)
-│   ├── index.html
-│   ├── styles.css                # Playful Neo-Brutalist stylesheet
-│   └── js/                       # Redactor, presets, API client, GSAP pipeline
-├── extension/                    # Gmail Chrome extension (Manifest V3)
+├── index.html                     # Web console (single source of truth)
+├── styles.css                     # Playful Neo-Brutalist stylesheet
+├── js/                            # Redactor, presets, API client, GSAP pipeline
+├── assets/                        # Hero mascot artwork
+├── extension/                     # Gmail Chrome extension (Manifest V3)
 │   ├── manifest.json
-│   ├── content-script.js         # Gmail DOM scanner & client-side redactor
-│   ├── banner.js                 # Isolated Shadow DOM banner injector
-│   ├── background.js             # Service worker proxy
-│   └── icons/                    # Modern 16px, 48px, 128px, 512px icons
-├── server/                       # Backend Express-compatible security API
-│   ├── server.js                 # HTTP service on port 3000
-│   ├── routes/analyze.js         # POST /analyze route handler
-│   ├── rules/engine.js           # Deterministic threat & promo rules
-│   └── laya/client.js            # Model classifier fallback
-└── docs/                         # Project report & audit documentation
+│   ├── content-script.js          # Gmail DOM scanner & client-side redactor
+│   ├── banner.js                  # Isolated Shadow DOM banner injector
+│   ├── background.js              # Service worker proxy
+│   └── icons/                     # Modern 16px, 48px, 128px, 512px icons
+├── server/                        # Backend security API
+│   ├── server.js                  # HTTP service on port 3000 (also serves the console)
+│   ├── routes/analyze.js          # POST /analyze route handler
+│   ├── rules/engine.js            # Deterministic threat rules (homoglyph, Levenshtein, shorteners)
+│   ├── laya/client.js             # Model classifier fallback
+│   ├── llm/explain.js             # Grounded explanation generator
+│   ├── combine/score.js           # Score + verdict + next-steps builder
+│   ├── privacy/log.js             # Zero-persistence privacy telemetry
+│   └── test-phishing.js           # Regression suite (5 cases)
+├── api/index.js                   # Vercel serverless entry (shares the same pipeline)
+├── vercel.json                    # Routing: /analyze, /health -> api/index.js
+└── docs/                          # Project report & audit documentation
 ```
+
+> **Note:** The frontend is served from the repository root by both the local
+> server and Vercel. There is intentionally only **one** copy — earlier
+> duplicated copies under `web/` caused localhost and production to drift apart.
 
 ---
 
 ## 🛠️ Getting Started
 
-### 1. Start the Security Backend Service
+### 1. Start the Service (API + Web Console)
 ```bash
-cd server
-node server.js
+npm start
 ```
-*Runs locally on http://localhost:3000.*
+*or:* `node server/server.js`
 
-### 2. Run the Web Application Console
+This single process serves **both** the API and the web console:
+- Console: **http://localhost:3000**
+- API: `POST http://localhost:3000/analyze`, `GET http://localhost:3000/health`
+
+### 2. (Optional) Serve the console on a separate port
 ```bash
-cd web
 python3 -m http.server 8999
 ```
-*Open http://localhost:8999 in your browser.*
+*Run from the repository root, then open http://localhost:8999. The console will
+still reach the analysis API on port 3000.*
 
-### 3. Load Chrome Extension in Gmail
+### 3. Run the Phishing Regression Suite
+```bash
+node server/test-phishing.js
+```
+*Expected: `Summary: 5/5 Tests Passed`.*
+
+### 4. Load Chrome Extension in Gmail
 1. Open Chrome and go to `chrome://extensions/`.
 2. Enable **Developer mode** (top-right).
 3. Click **Load unpacked** and select the `extension/` folder.

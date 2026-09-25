@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FFD23F">
+  <meta name="description" content="Ratio'd is a privacy-first scam risk analyzer for emails and SMS. Client-side PII redaction, a deterministic threat engine, and a 0–100 risk score with recovery steps.">
   <title>Ratio'd — Scam Risk Analyzer (Cybersecurity & Defense)</title>
-  
+
   <!-- GSAP Library for Live Pipeline Animations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,297 +17,319 @@
   <!-- Header Navigation -->
   <header class="header">
     <div class="container nav-wrapper">
-      <div class="logo-group">
-        <span class="logo-mark">[ R ]</span>
-        <h1 class="brand-title">Ratio'd</h1>
-        <span class="mono-tag" style="background: #EFECE6; padding: 4px 8px; border: 1.5px solid #121212; border-radius: 4px; margin-left: 8px;">[ DEFENSE · V1.0 ]</span>
-      </div>
+      <a href="#top" class="logo-group" aria-label="Ratio'd home">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <span class="brand-title">Ratio&rsquo;d</span>
+        <span class="sticker sticker-yellow sticker-tilt-left">DEFENSE · V1.0</span>
+      </a>
 
-      <ul class="nav-links">
-        <li><a href="#console" class="nav-link">ANALYZE</a></li>
-        <li><a href="#pipeline" class="nav-link">HOW IT WORKS</a></li>
-        <li><a href="#features" class="nav-link">FEATURES</a></li>
-        <li><a href="#tiers" class="nav-link">DEPLOYMENT</a></li>
-      </ul>
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="#console" class="nav-link">Analyze</a></li>
+          <li><a href="#pipeline" class="nav-link">How it works</a></li>
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#tiers" class="nav-link">Roadmap</a></li>
+        </ul>
+      </nav>
 
-      <div class="channel-selector">
-        <button class="channel-tab active" id="tab-email">[ EMAIL ]</button>
-        <button class="channel-tab" id="tab-sms">[ SMS ]</button>
+      <div class="channel-selector" role="group" aria-label="Message channel">
+        <button class="channel-tab active" id="tab-email" type="button">Email</button>
+        <button class="channel-tab" id="tab-sms" type="button">SMS</button>
       </div>
     </div>
   </header>
 
-  <main class="container">
+  <!-- Marquee Ticker -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>// ZERO DATA STORED</span><span>// CLIENT-SIDE PII REDACTION</span><span>// 4-STAGE PIPELINE</span><span>// 0–100 RISK SCORE</span><span>// GMAIL EXTENSION</span><span>// RULES + LAYA ENGINE</span>
+      <span>// ZERO DATA STORED</span><span>// CLIENT-SIDE PII REDACTION</span><span>// 4-STAGE PIPELINE</span><span>// 0–100 RISK SCORE</span><span>// GMAIL EXTENSION</span><span>// RULES + LAYA ENGINE</span>
+    </div>
+  </div>
+
+  <main class="container" id="top">
 
     <!-- Hero Section -->
     <section class="hero-section">
-      <h1 class="hero-headline">
-        CHECK THE MESSAGE, <br>
-        <span class="italic-accent">not your luck.</span>
-      </h1>
+      <div class="hero-copy">
+        <div class="hero-kicker">
+          <span class="sticker sticker-blue">SCAM RISK ANALYZER</span>
+          <span class="sticker sticker-white sticker-tilt-right">TEAM SKILL ISSUE</span>
+        </div>
 
-      <div class="hero-subtitle-box">
+        <h1 class="hero-headline">
+          Check the <span class="marker">message,</span><br>
+          <span class="italic-accent">not your luck.</span>
+        </h1>
+
         <p class="hero-subtitle">
-          A privacy-first cybersecurity tool analyzing suspicious emails & SMS messages. Real-time client-side PII redaction, deterministic threat rule engine, and grounded incident response checklists.
+          Paste a sketchy email or text. Ratio&rsquo;d scrubs your personal info in the browser, runs it through a deterministic threat engine, and hands you a plain-language verdict with a recovery checklist.
         </p>
-      </div>
 
-      <div class="hero-cta-group">
-        <a href="#console" class="btn btn-primary tactile">[ ANALYZE THREAT MESSAGE → ]</a>
-        <a href="https://raw.githubusercontent.com/VedxntDev/Ratio-d/main/ratiod-extension.zip" download="ratiod-extension.zip" class="btn btn-primary tactile" style="background: #EA3E2B; color: #FFFFFF; text-decoration: none;">[ ⚡ DOWNLOAD GMAIL EXTENSION (.ZIP) ]</a>
-        <a href="#extension-guide" class="btn btn-secondary tactile" style="text-decoration: none;">[ 📖 EXTENSION INSTALL GUIDE ]</a>
-      </div>
-
-      <div class="system-status-banner tactile">
-        <div>
-          <span class="status-pulse"></span>
-          <span id="status-banner-text">[ SYSTEM ALERT: AIR-GAPPED CLIENT REDACTION ACTIVE ]</span>
-        </div>
-        <span class="mono-tag">[ ZERO DATA STORED ]</span>
-      </div>
-    </section>
-
-    <!-- Chrome Extension Download & Installation Section -->
-    <section id="extension-guide" style="margin-bottom: 48px;">
-      <div class="extension-install-card tactile" style="background: #FFFFFF; border: 2.5px solid #121212; border-radius: 12px; padding: 28px; box-shadow: 5px 5px 0px #121212;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-          <div>
-            <span class="mono-tag" style="background-color: #EA3E2B; color: #FFFFFF; border: 1.5px solid #121212; padding: 4px 10px; border-radius: 6px; font-weight: 700;">[ DIRECT INSTALLATION AVAILABLE ]</span>
-            <h2 style="font-size: 1.8rem; margin-top: 8px;">Install Ratio'd Gmail Chrome Extension</h2>
-            <p style="color: #444444; font-size: 0.95rem; margin-top: 4px;">While our official Web Store listing is under review, you can install Ratio'd directly in Developer Mode in under 60 seconds.</p>
-          </div>
-          <div>
-            <a href="https://raw.githubusercontent.com/VedxntDev/Ratio-d/main/ratiod-extension.zip" download="ratiod-extension.zip" class="btn btn-primary tactile" style="background: #EA3E2B; color: #FFFFFF; padding: 14px 22px; font-size: 1rem; text-decoration: none; display: inline-block;">
-              [ ⚡ DOWNLOAD EXTENSION PACKAGE (.ZIP) ]
-            </a>
-          </div>
+        <div class="hero-cta-group">
+          <a href="#console" class="btn btn-primary btn-lg tactile">Analyze a message
+            <span class="btn-arrow" aria-hidden="true">→</span>
+          </a>
+          <button class="btn btn-secondary btn-lg tactile" id="hero-preset-phishing" type="button">Load sample phish</button>
         </div>
 
-        <!-- Step-by-Step Grid -->
-        <div class="install-steps-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px;">
-          
-          <div class="install-step-card" style="background: #F8F7F2; border: 2px solid #121212; border-radius: 8px; padding: 16px; position: relative;">
-            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; background: #121212; color: #FFFFFF; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;">STEP 01</div>
-            <h4 style="font-size: 1.05rem; margin-bottom: 6px;">Download & Unzip</h4>
-            <p style="font-size: 0.88rem; color: #555555; line-height: 1.45;">Click the red download button above to save <code>ratiod-extension.zip</code> to your computer, then extract/unzip the file.</p>
+        <div class="system-status-banner tactile">
+          <div class="status-left">
+            <span class="status-pulse" aria-hidden="true"></span>
+            <span id="status-banner-text">[ SYSTEM ALERT: AIR-GAPPED CLIENT REDACTION ACTIVE ]</span>
           </div>
-
-          <div class="install-step-card" style="background: #F8F7F2; border: 2px solid #121212; border-radius: 8px; padding: 16px; position: relative;">
-            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; background: #121212; color: #FFFFFF; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;">STEP 02</div>
-            <h4 style="font-size: 1.05rem; margin-bottom: 6px;">Open Extensions</h4>
-            <p style="font-size: 0.88rem; color: #555555; line-height: 1.45;">Open Google Chrome and type <code>chrome://extensions/</code> into your browser address bar.</p>
-          </div>
-
-          <div class="install-step-card" style="background: #F8F7F2; border: 2px solid #121212; border-radius: 8px; padding: 16px; position: relative;">
-            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; background: #EA3E2B; color: #FFFFFF; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;">STEP 03</div>
-            <h4 style="font-size: 1.05rem; margin-bottom: 6px;">Developer Mode</h4>
-            <p style="font-size: 0.88rem; color: #555555; line-height: 1.45;">Toggle the <strong>Developer mode</strong> switch in the top-right corner of the Extensions page to <strong>ON</strong>.</p>
-          </div>
-
-          <div class="install-step-card" style="background: #F8F7F2; border: 2px solid #121212; border-radius: 8px; padding: 16px; position: relative;">
-            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; background: #8A8B5C; color: #FFFFFF; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;">STEP 04</div>
-            <h4 style="font-size: 1.05rem; margin-bottom: 6px;">Load Unpacked</h4>
-            <p style="font-size: 0.88rem; color: #555555; line-height: 1.45;">Click <strong>Load unpacked</strong> at the top left and select the unzipped extension directory.</p>
-          </div>
-
-          <div class="install-step-card" style="background: #F8F7F2; border: 2px solid #121212; border-radius: 8px; padding: 16px; position: relative;">
-            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; background: #121212; color: #FFFFFF; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;">STEP 05</div>
-            <h4 style="font-size: 1.05rem; margin-bottom: 6px;">Test in Gmail</h4>
-            <p style="font-size: 0.88rem; color: #555555; line-height: 1.45;">Open <a href="https://mail.google.com" target="_blank" style="color: #EA3E2B; font-weight: 700;">Gmail</a>, click any email, and watch Ratio'd inject real-time threat banners with sparkle audio & glitter!</p>
-          </div>
-
+          <span class="sticker sticker-yellow">ZERO DATA STORED</span>
         </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="mascot-card tactile">
+          <div class="mascot-card-bar">
+            <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
+            <span class="mascot-card-title">agent_ratiod.png</span>
+          </div>
+          <img src="assets/mascot.jpg" alt="" class="mascot-img" width="360" height="360">
+          <span class="starburst starburst-yellow">100%<br>LOCAL</span>
+          <span class="sticker sticker-red sticker-float-1">PHISH SPOTTED</span>
+          <span class="sticker sticker-blue sticker-float-2">OTP · MASKED</span>
+        </div>
+        <div class="hero-blob hero-blob-yellow"></div>
+        <div class="hero-blob hero-blob-blue"></div>
       </div>
     </section>
 
     <!-- Pipeline Section -->
-    <section id="pipeline" style="margin-bottom: 48px;">
-      <span class="section-header-tag">[ PIPELINE ]</span>
-      <h2>Live 4-Stage Security Verification</h2>
-      <p style="color: #555555; margin-top: 4px;">Deterministic client-side inspection pipeline running before any external model invocation.</p>
+    <section id="pipeline" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Pipeline</span>
+        <h2 class="section-title">Live <span class="marker marker-blue">4-stage</span> verification</h2>
+        <p class="section-sub">A deterministic client-side inspection pipeline that runs before any external model is ever invoked.</p>
+      </div>
 
       <div class="pipeline-grid">
-        <div class="pipeline-card tactile" id="stage-0">
-          <div class="stage-num">01 / STAGE</div>
+        <div class="pipeline-card tactile card-tint-yellow" id="stage-0">
+          <div class="stage-badge">01</div>
+          <div class="stage-num">Stage / Observe</div>
           <h3 class="stage-title">Observe</h3>
           <p class="stage-desc">Raw message capture & immediate client-side PII masking (phones, emails, OTPs).</p>
         </div>
 
-        <div class="pipeline-card tactile" id="stage-1">
-          <div class="stage-num">02 / STAGE</div>
+        <div class="pipeline-card tactile card-tint-blue" id="stage-1">
+          <div class="stage-badge">02</div>
+          <div class="stage-num">Stage / Detect</div>
           <h3 class="stage-title">Detect</h3>
-          <p class="stage-desc">Deterministic rule checks for lookalike domains, link mismatches, & urgency triggers.</p>
+          <p class="stage-desc">Deterministic rule checks for lookalike domains, link mismatches & urgency triggers.</p>
         </div>
 
-        <div class="pipeline-card tactile" id="stage-2">
-          <div class="stage-num">03 / STAGE</div>
+        <div class="pipeline-card tactile card-tint-pink" id="stage-2">
+          <div class="stage-badge">03</div>
+          <div class="stage-num">Stage / Explain</div>
           <h3 class="stage-title">Explain</h3>
-          <p class="stage-desc">In-context threat span highlighting with grounded plain-language risk explanations.</p>
+          <p class="stage-desc">In-context threat span highlighting with grounded, plain-language risk explanations.</p>
         </div>
 
-        <div class="pipeline-card tactile" id="stage-3">
-          <div class="stage-num">04 / STAGE</div>
+        <div class="pipeline-card tactile card-tint-green" id="stage-3">
+          <div class="stage-badge">04</div>
+          <div class="stage-num">Stage / Respond</div>
           <h3 class="stage-title">Respond</h3>
-          <p class="stage-desc">Tactile risk score reveal (0–100) & prioritized incident recovery action checklist.</p>
+          <p class="stage-desc">Tactile risk score reveal (0–100) & a prioritized incident recovery checklist.</p>
         </div>
       </div>
     </section>
 
     <!-- Control Console Grid -->
     <section id="console" class="console-grid">
-      
+
       <!-- Left Pane: Telemetry Input Terminal -->
       <div class="console-pane tactile">
-        <div class="pane-title">
-          <span>[ TELEMETRY INPUT ]</span>
-          <span class="mono-tag" style="background-color: var(--color-surface-muted); padding: 4px 8px; border: 1.5px solid var(--color-ink); border-radius: 4px;">PASTE ZONE</span>
+        <div class="pane-bar">
+          <div class="pane-dots" aria-hidden="true">
+            <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
+          </div>
+          <h2 class="pane-title">Telemetry input</h2>
+          <span class="sticker sticker-yellow">PASTE ZONE</span>
         </div>
 
-        <div class="preset-bar">
-          <span class="mono-tag" style="align-self: center; margin-right: 4px;">TEST PRESETS:</span>
-          <button class="btn-preset" id="preset-phishing">[ PHISHING EMAIL ]</button>
-          <button class="btn-preset" id="preset-sms">[ URGENT SMS ]</button>
-          <button class="btn-preset" id="preset-legit">[ SAFE NOTICE ]</button>
-        </div>
+        <div class="pane-body">
+          <div class="preset-bar">
+            <span class="preset-label">Try a sample:</span>
+            <button class="btn-preset" id="preset-phishing" type="button">Phishing email</button>
+            <button class="btn-preset" id="preset-sms" type="button">Urgent SMS</button>
+            <button class="btn-preset" id="preset-legit" type="button">Safe notice</button>
+          </div>
 
-        <div class="telemetry-input-group">
-          <textarea id="telemetry-input" class="telemetry-textarea" placeholder="Paste email header, subject line, and body text here..."></textarea>
-        </div>
+          <div class="telemetry-input-group">
+            <label for="telemetry-input" class="sr-only">Message to analyze</label>
+            <textarea id="telemetry-input" class="telemetry-textarea" placeholder="Paste email header, subject line, and body text here..."></textarea>
+            <span class="textarea-corner" aria-hidden="true">TXT</span>
+          </div>
 
-        <div class="privacy-toggle-row">
-          <span id="privacy-counts">✓ Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
-          <button class="btn-preset" id="btn-clear">[ CLEAR ]</button>
-        </div>
+          <div class="privacy-toggle-row">
+            <span id="privacy-counts" class="privacy-counts">[OK] Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
+            <button class="btn-preset btn-preset-ghost" id="btn-clear" type="button">Clear</button>
+          </div>
 
-        <button class="btn btn-primary tactile" id="btn-analyze" style="width: 100%; margin-top: 8px; font-size: 1rem;">
-          [ RUN RISK ANALYSIS PAYLOAD (CMD+ENTER) → ]
-        </button>
+          <button class="btn btn-primary btn-block btn-lg tactile" id="btn-analyze" type="button">
+            Run risk analysis
+            <span class="kbd-hint" aria-hidden="true">CTRL + ENTER</span>
+          </button>
 
-        <div class="privacy-card">
-          <div style="font-weight: 800; margin-bottom: 4px;">[ PRIVACY GUARANTEE ]</div>
-          Phone numbers, email addresses, and verification codes are redacted client-side before rule processing. No message content is ever written to logs or disk.
+          <div class="privacy-card">
+            <div class="privacy-card-title">
+              <span class="shield-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/></svg>
+              </span>
+              Privacy guarantee
+            </div>
+            Phone numbers, email addresses, and verification codes are redacted client-side before rule processing. No message content is ever written to logs or disk.
+          </div>
         </div>
       </div>
 
       <!-- Right Pane: Live Analysis Center -->
       <div class="console-pane tactile">
-        <div class="pane-title">
-          <span>[ LIVE ANALYSIS CENTER ]</span>
-          <span class="mono-tag" style="background-color: var(--color-surface-muted); padding: 4px 8px; border: 1.5px solid var(--color-ink); border-radius: 4px;">SECURITY OUTPUT</span>
+        <div class="pane-bar pane-bar-dark">
+          <div class="pane-dots" aria-hidden="true">
+            <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
+          </div>
+          <h2 class="pane-title">Live analysis center</h2>
+          <span class="sticker sticker-red">OUTPUT</span>
         </div>
 
-        <!-- Risk Verdict Display -->
-        <div class="verdict-box">
-          <div class="gauge-svg-container">
-            <svg width="90" height="90" viewBox="0 0 90 90">
-              <circle cx="45" cy="45" r="36" fill="none" stroke="#EFECE6" stroke-width="9" />
-              <circle id="gauge-arc" cx="45" cy="45" r="36" fill="none" stroke="#EA3E2B" stroke-width="9" 
-                      stroke-linecap="round" stroke-dasharray="226.19" stroke-dashoffset="226.19" 
-                      transform="rotate(-90 45 45)" />
-            </svg>
-          </div>
-
-          <div class="verdict-info">
-            <span class="verdict-badge verdict-safe" id="verdict-badge">[ VERDICT · READY ]</span>
-            <div class="verdict-score-num">
-              <span id="score-num">0</span><span style="font-size: 1.1rem; color: #666666;"> / 100</span>
+        <div class="pane-body">
+          <!-- Risk Verdict Display -->
+          <div class="verdict-box" aria-live="polite">
+            <div class="gauge-svg-container">
+              <svg width="120" height="120" viewBox="0 0 90 90" aria-hidden="true">
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#121212" stroke-width="13" />
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#FFFFFF" stroke-width="9" />
+                <circle id="gauge-arc" cx="45" cy="45" r="36" fill="none" stroke="#EA3E2B" stroke-width="9"
+                        stroke-linecap="butt" stroke-dasharray="226.19" stroke-dashoffset="226.19"
+                        transform="rotate(-90 45 45)" />
+              </svg>
+              <div class="gauge-label">RISK</div>
             </div>
-            <p id="verdict-explanation" style="font-size: 0.88rem; color: #333333; margin-top: 4px;">
-              Awaiting message payload analysis...
-            </p>
+
+            <div class="verdict-info">
+              <span class="verdict-badge verdict-safe" id="verdict-badge">[ VERDICT · READY ]</span>
+              <div class="verdict-score-num">
+                <span id="score-num">0</span><span class="score-denom">/100</span>
+              </div>
+              <p id="verdict-explanation" class="verdict-explanation">
+                Awaiting message payload analysis...
+              </p>
+            </div>
           </div>
-        </div>
 
-        <!-- Threat Inspector -->
-        <div style="margin-bottom: 8px;" class="mono-tag">[ ANNOTATED THREAT INSPECTOR ]</div>
-        <div class="threat-inspector-box" id="threat-inspector">
-          <span style="color: #888888;">Paste a message and click Analyze to view threat breakdown.</span>
-        </div>
+          <!-- Threat Inspector -->
+          <div class="labeled-box">
+            <span class="box-label">Annotated threat inspector</span>
+            <div class="threat-inspector-box" id="threat-inspector">
+              <span class="placeholder-text">Paste a message and click Analyze to view the threat breakdown.</span>
+            </div>
+          </div>
 
-        <!-- Remediation Action Checklist -->
-        <div class="checklist-box">
-          <div class="checklist-title">[ ACTIONABLE RECOVERY CHECKLIST ]</div>
-          <ul class="checklist-items" id="checklist-items">
-            <li><span class="check-bullet">•</span> Awaiting threat analysis report.</li>
-          </ul>
+          <!-- Remediation Action Checklist -->
+          <div class="labeled-box">
+            <span class="box-label box-label-yellow">Recovery checklist</span>
+            <div class="checklist-box">
+              <ul class="checklist-items" id="checklist-items">
+                <li><span class="check-bullet">•</span> Awaiting threat analysis report.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
     </section>
 
     <!-- Feature Grid -->
-    <section id="features" style="margin-bottom: 48px;">
-      <span class="section-header-tag">[ FEATURES ]</span>
-      <h2>System Capabilities</h2>
+    <section id="features" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Features</span>
+        <h2 class="section-title">Built <span class="marker marker-pink">chunky</span>, built careful</h2>
+        <p class="section-sub">Everything that touches your message happens where you can see it.</p>
+      </div>
 
       <div class="feature-grid">
-        <div class="feature-card tactile">
-          <div class="card-tag">*[ CLIENT-SIDE · STABLE ]*</div>
-          <h3>Local PII Redaction</h3>
-          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
-            Phone numbers, email addresses, and OTP sequences are stripped in browser memory before any telemetry processing. Zero storage.
-          </p>
-        </div>
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-yellow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.5"/></svg>
+          </div>
+          <div class="card-tag">Client-side · Stable</div>
+          <h3>Local PII redaction</h3>
+          <p>Phone numbers, email addresses, and OTP sequences are stripped in browser memory before any telemetry processing. Zero storage.</p>
+        </article>
 
-        <div class="feature-card tactile">
-          <div class="card-tag">*[ RULES + LAYA ]*</div>
-          <h3>Hybrid Threat Engine</h3>
-          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
-            Combines deterministic domain lookalike & urgency rules with local classifier scoring for high-precision fraud detection.
-          </p>
-        </div>
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-blue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
+          </div>
+          <div class="card-tag">Rules + Laya</div>
+          <h3>Hybrid threat engine</h3>
+          <p>Combines deterministic domain lookalike & urgency rules with local classifier scoring for high-precision fraud detection.</p>
+        </article>
 
-        <div class="feature-card tactile">
-          <div class="card-tag">*[ SMS · EMAIL ]*</div>
-          <h3>Multi-Channel Support</h3>
-          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
-            One unified backend API supporting both paste web console telemetry and real-time Gmail Chrome extension injection.
-          </p>
-        </div>
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-pink" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+          </div>
+          <div class="card-tag">SMS · Email</div>
+          <h3>Multi-channel support</h3>
+          <p>One unified backend API supporting both the paste console and real-time Gmail Chrome extension injection.</p>
+        </article>
       </div>
     </section>
 
     <!-- Deployment Tiers Section -->
-    <section id="tiers" style="margin-bottom: 48px;">
-      <span class="section-header-tag">[ DEPLOYMENT TIERS ]</span>
-      <h2>Release Roadmap & Architecture</h2>
+    <section id="tiers" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Roadmap</span>
+        <h2 class="section-title">Release <span class="marker marker-green">roadmap</span> & architecture</h2>
+      </div>
 
       <div class="tier-grid">
-        <div class="tier-card tactile">
-          <div class="card-tag">[ DEMO · CURRENT ]</div>
-          <h3>Hackathon Prototype</h3>
-          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
-            Client-side redaction, local Express rule server, GSAP pipeline, and Chrome Manifest V3 Gmail extension.
-          </p>
-        </div>
+        <article class="tier-card tactile tier-current">
+          <span class="sticker sticker-red sticker-corner">CURRENT</span>
+          <div class="tier-step">01</div>
+          <div class="card-tag">Demo</div>
+          <h3>Hackathon prototype</h3>
+          <p>Client-side redaction, local Express rule server, GSAP pipeline, and Chrome Manifest V3 Gmail extension.</p>
+        </article>
 
-        <div class="tier-card tactile">
-          <div class="card-tag">[ PILOT · UPCOMING ]</div>
-          <h3>Campus Pilot</h3>
-          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
-            Custom domain lookalike database, organizational phishing alerts, and standalone Laya container integration.
-          </p>
-        </div>
+        <article class="tier-card tactile">
+          <div class="tier-step">02</div>
+          <div class="card-tag">Pilot · Upcoming</div>
+          <h3>Campus pilot</h3>
+          <p>Custom domain lookalike database, organizational phishing alerts, and standalone Laya container integration.</p>
+        </article>
 
-        <div class="tier-card tactile">
-          <div class="card-tag">[ PRODUCTION · FUTURE ]</div>
-          <h3>Public Release</h3>
-          <p style="font-size: 0.9rem; color: #444444; margin-top: 6px;">
-            Zero-knowledge encrypted telemetry API, multi-browser extensions, and enterprise security dashboard.
-          </p>
-        </div>
+        <article class="tier-card tactile">
+          <div class="tier-step">03</div>
+          <div class="card-tag">Production · Future</div>
+          <h3>Public release</h3>
+          <p>Zero-knowledge encrypted telemetry API, multi-browser extensions, and enterprise security dashboard.</p>
+        </article>
       </div>
     </section>
 
   </main>
 
   <!-- Footer -->
-  <footer class="footer container">
-    <div>
-      <strong>Ratio'd</strong> // Scam Risk Analyzer · Team Skill Issue
-    </div>
-    <div style="color: #666666;">
-      Built with Playful Neo-Brutalist Utility Design System
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <div>
+          <strong>Ratio&rsquo;d</strong> <span class="footer-muted">// Scam Risk Analyzer · Team Skill Issue</span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="privacy.html" class="nav-link">Privacy</a>
+        <a href="#pipeline" class="nav-link">How it works</a>
+        <a href="#console" class="nav-link">Analyze</a>
+      </div>
+      <div class="footer-muted">Playful Neo-Brutalist Utility Design System</div>
     </div>
   </footer>
 

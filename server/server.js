@@ -17,19 +17,79 @@ function setCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
-function resolveFile(relativePath) {
-  const candidates = [
-    path.join(__dirname, relativePath),
-    path.join(__dirname, "..", relativePath),
-    path.join(__dirname, "web", relativePath),
-    path.join(__dirname, "../web", relativePath)
-  ];
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-      return candidate;
-    }
+// The repository ROOT is the single source of truth for all frontend assets.
+// Historically the frontend was duplicated across web/ and server/web/, which
+// caused localhost and the Vercel deployment to drift apart. There is now
+// exactly one copy, served from here and by Vercel from the same paths.
+const WEB_ROOT = path.join(__dirname, "..");
+
+const MIME_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".txt": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".zip": "application/zip"
+};
+
+// Only these top-level entries may ever be served. Anything else (server/,
+// api/, .git, dotfiles) stays private.
+const ALLOWED_ENTRIES = new Set([
+  "index.html",
+  "privacy.html",
+  "styles.css",
+  "robots.txt",
+  "ratiod-extension.zip",
+  "ratiod-full-project.zip",
+  "js",
+  "assets"
+]);
+
+/**
+ * Resolve a URL pathname to a file inside WEB_ROOT, or null if it is not
+ * publicly servable. Rejects traversal attempts and private directories.
+ */
+function resolveWebFile(pathname) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return null;
   }
-  return null;
+
+  const relative = decoded.replace(/^\/+/, "");
+  if (!relative) return null;
+
+  // Normalise and verify containment.
+  const resolved = path.resolve(WEB_ROOT, relative);
+  if (resolved !== WEB_ROOT && !resolved.startsWith(WEB_ROOT + path.sep)) {
+    return null;
+  }
+  if (relative.split("/").includes("..")) return null;
+
+  // Allowlist check on the first path segment.
+  const topLevel = relative.split("/")[0];
+  if (!ALLOWED_ENTRIES.has(topLevel)) return null;
+
+  if (!fs.existsSync(resolved)) return null;
+
+  const stat = fs.statSync(resolved);
+  if (stat.isDirectory()) {
+    const indexFile = path.join(resolved, "index.html");
+    return fs.existsSync(indexFile) ? indexFile : null;
+  }
+  return stat.isFile() ? resolved : null;
+}
+
+function contentTypeFor(filePath) {
+  return MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
 }
 
 const server = http.createServer((req, res) => {
@@ -42,15 +102,20 @@ const server = http.createServer((req, res) => {
   }
 
   const parsedUrl = url.parse(req.url, true);
-  const pathname = parsedUrl.pathname;
+  let pathname = parsedUrl.pathname;
 
   // 1. Health Endpoint
-  if (req.method === "GET" && pathname === "/health") {
+  if (req.method === "GET" && (pathname === "/health" || pathname === "/api/health")) {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({
       status: "online",
       system: "Ratio'd Scam Risk Analyzer Engine",
-      framework: "Node.js Express-compatible HTTP Server",
+      runtime: "node-http-server",
+      engine: {
+        rules: "deterministic-homoglyph-levenshtein",
+        model: "laya_stub_heuristic",
+        explain: "grounded-in-flags"
+      },
       timestamp: new Date().toISOString()
     }));
     return;
@@ -78,55 +143,29 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 3. Static File Routes
-  if (req.method === "GET") {
-    if (pathname === "/" || pathname === "/index.html") {
-      const file = resolveFile("index.html") || resolveFile("web/index.html");
-      if (file) {
-        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        res.end(fs.readFileSync(file));
-        return;
-      }
-    }
+  // 3. Static Assets — all served from the repository root (single source of truth)
+  if (req.method === "GET" || req.method === "HEAD") {
+    // Friendly extensionless routes
+    if (pathname === "/") pathname = "/index.html";
+    if (pathname === "/privacy") pathname = "/privacy.html";
+    if (pathname === "/analyze" || pathname === "/api/analyze") pathname = "/index.html";
 
-    if (pathname === "/privacy" || pathname === "/privacy.html") {
-      const file = resolveFile("privacy.html") || resolveFile("web/privacy.html");
-      if (file) {
-        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        res.end(fs.readFileSync(file));
-        return;
-      }
-    }
+    const file = resolveWebFile(pathname);
+    if (file) {
+      const ext = path.extname(file).toLowerCase();
+      const headers = { "Content-Type": contentTypeFor(file) };
 
-    if (pathname === "/styles.css" || pathname.endsWith(".css")) {
-      const file = resolveFile("styles.css") || resolveFile("web/styles.css");
-      if (file) {
-        res.writeHead(200, { "Content-Type": "text/css; charset=utf-8" });
-        res.end(fs.readFileSync(file));
-        return;
+      // Downloads should save rather than render
+      if (ext === ".zip") {
+        headers["Content-Disposition"] = `attachment; filename="${path.basename(file)}"`;
       }
-    }
+      if (/\.(png|jpe?g|svg|webp|ico)$/i.test(file)) {
+        headers["Cache-Control"] = "public, max-age=3600";
+      }
 
-    if (pathname.includes("ratiod-extension.zip")) {
-      const file = resolveFile("ratiod-extension.zip") || resolveFile("web/ratiod-extension.zip");
-      if (file) {
-        res.writeHead(200, {
-          "Content-Type": "application/zip",
-          "Content-Disposition": 'attachment; filename="ratiod-extension.zip"'
-        });
-        res.end(fs.readFileSync(file));
-        return;
-      }
-    }
-
-    if (pathname.startsWith("/js/")) {
-      const relPath = pathname.substring(1);
-      const file = resolveFile(relPath) || resolveFile(`web/${relPath}`);
-      if (file) {
-        res.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8" });
-        res.end(fs.readFileSync(file));
-        return;
-      }
+      res.writeHead(200, headers);
+      if (req.method === "HEAD") return res.end();
+      return res.end(fs.readFileSync(file));
     }
   }
 
@@ -136,5 +175,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[RATIO'D ENGINE] Express-compatible Security Service listening on http://localhost:${PORT}`);
+  console.log(`[RATIO'D ENGINE] Security Service listening on http://localhost:${PORT}`);
+  console.log(`[RATIO'D ENGINE] Serving web console from ${WEB_ROOT}`);
 });

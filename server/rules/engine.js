@@ -116,7 +116,13 @@ const PROMOTIONAL_CLUTTER_PATTERNS = [
 
 const SUSPICIOUS_DOMAINS = [
   { regex: /[a-z0-9-]+\.(xyz|top|tk|club|work|gq|cf|ml|monster|rest|hair|cfd)/i, reason: "High-risk top-level domain (TLD)" },
-  { regex: /http:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i, reason: "Raw IP address URL instead of domain" }
+  { regex: /http:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i, reason: "Raw IP address URL instead of domain" },
+  {
+    // URL shorteners hide the real destination, a staple of smishing /
+    // delivery-fraud lures. Detected generically so new services are covered too.
+    regex: /https?:\/\/(?:www\.)?(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|buff\.ly|rebrand\.ly|cutt\.ly|shorturl\.at|rb\.gy|tiny\.cc|t\.ly|lnkd\.in|db\.tt|qr\.ae|v\.gd|s\.id|lnk\.to)\b|\b(?:bit\.ly|tinyurl\.com|rebrand\.ly|cutt\.ly|shorturl\.at|tiny\.cc|lnk\.to)\//i,
+    reason: "URL shortener conceals the true destination domain"
+  }
 ];
 
 function extractDomains(text) {

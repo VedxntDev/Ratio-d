@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (privacyText) {
       if (stats.total_masked > 0) {
-        privacyText.innerHTML = `<strong>✓ REAL-TIME PII REDACTION:</strong> ${stats.phones_masked} phone(s), ${stats.emails_masked} email(s), ${stats.otp_masked} OTP code(s) masked.`;
+        privacyText.innerHTML = `<strong>&#10003; REAL-TIME PII REDACTION:</strong> ${stats.phones_masked} phone(s), ${stats.emails_masked} email(s), ${stats.otp_masked} OTP code(s) masked.`;
       } else {
         privacyText.textContent = "✓ Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.";
       }
@@ -59,10 +59,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // 3. Preset Loaders
-  document.getElementById("preset-phishing")?.addEventListener("click", () => {
+  function loadPhishingPreset() {
     setChannel(window.Presets.phishingEmail.channel);
     textarea.value = window.Presets.phishingEmail.text;
     textarea.dispatchEvent(new Event("input"));
+  }
+
+  document.getElementById("preset-phishing")?.addEventListener("click", loadPhishingPreset);
+  document.getElementById("hero-preset-phishing")?.addEventListener("click", () => {
+    loadPhishingPreset();
+    document.getElementById("console")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   document.getElementById("preset-sms")?.addEventListener("click", () => {
@@ -80,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
   clearBtn?.addEventListener("click", () => {
     textarea.value = "";
     textarea.dispatchEvent(new Event("input"));
-    inspectorBox.innerHTML = '<span style="color: #888888;">Paste a message and click Analyze to view threat breakdown.</span>';
+    inspectorBox.innerHTML = '<span class="placeholder-text">Paste a message and click Analyze to view the threat breakdown.</span>';
     explanationBox.textContent = "Awaiting message payload analysis...";
     verdictBadge.className = "verdict-badge verdict-safe";
     verdictBadge.textContent = "[ VERDICT · READY ]";
@@ -178,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Checklist
     if (checklistList) {
       checklistList.innerHTML = steps.map(step => `
-        <li><span class="check-bullet">✓</span> <span>${step}</span></li>
+        <li><span class="check-bullet">&#10003;</span> <span>${step}</span></li>
       `).join('');
     }
   }

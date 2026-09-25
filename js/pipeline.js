@@ -51,6 +51,14 @@ window.PipelineController = {
 
     gaugeArc.setAttribute("stroke", arcColor);
 
+    // Retrigger the cartoon "pop" on the verdict card each reveal
+    const verdictBox = document.querySelector(".verdict-box");
+    if (verdictBox && targetScore > 0) {
+      verdictBox.classList.remove("pop");
+      void verdictBox.offsetWidth;
+      verdictBox.classList.add("pop");
+    }
+
     if (prefersReducedMotion || typeof gsap === "undefined") {
       gaugeArc.style.strokeDashoffset = dashOffset;
       numDisplay.textContent = targetScore;

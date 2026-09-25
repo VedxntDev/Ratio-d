@@ -1,0 +1,9 @@
+{
+  "name": "ratio-d",
+  "version": "1.0.0",
+  "description": "Ratio'd Scam & Spam Risk Analyzer",
+  "private": true,
+  "scripts": {
+    "start": "node server/server.js"
+  }
+}

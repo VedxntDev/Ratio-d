@@ -1,5 +1,7 @@
 /**
- * Vercel Serverless Function Entry Point for Ratio'd Security Backend
+ * Vercel Serverless Function Entry Point for Ratio'd Security Backend.
+ * Shares the exact same analysis pipeline as the local Node server
+ * (server/routes/analyze.js) so production and localhost behave identically.
  */
 const { handleAnalyze } = require("../server/routes/analyze");
 
@@ -12,18 +14,28 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  if (req.method === "GET" && (req.url === "/api/health" || req.url === "/health")) {
+  // Path may arrive with or without the /api prefix depending on the rewrite.
+  const pathname = (req.url || "/").split("?")[0].replace(/\/+$/, "") || "/";
+
+  if (req.method === "GET" && (pathname === "/health" || pathname === "/api" || pathname === "/api/index")) {
     return res.status(200).json({
       status: "online",
       system: "Ratio'd Scam Risk Analyzer Engine",
-      framework: "Vercel Serverless Function Engine",
+      runtime: "vercel-serverless",
+      engine: {
+        rules: "deterministic-homoglyph-levenshtein",
+        model: "laya_stub_heuristic",
+        explain: "grounded-in-flags"
+      },
       timestamp: new Date().toISOString()
     });
   }
 
-  if (req.method === "POST") {
+  if (req.method === "POST" && (pathname === "/analyze" || pathname === "/api/analyze" || pathname === "/api")) {
     try {
-      const payload = typeof req.body === "object" ? req.body : JSON.parse(req.body || "{}");
+      const payload = typeof req.body === "object" && req.body !== null
+        ? req.body
+        : JSON.parse(req.body || "{}");
       const responseData = await handleAnalyze(payload);
       return res.status(200).json(responseData);
     } catch (err) {
