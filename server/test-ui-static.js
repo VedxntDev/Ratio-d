@@ -99,8 +99,14 @@ check("dismissible promo bar present", /id="promo-bar"/.test(html) && /id="promo
 check("promo bar starts hidden (shown by JS only)", /id="promo-bar"[^>]*hidden/.test(html));
 check("promo dismissal remembered", /ratiod\.promo\.dismissed/.test(installJs));
 check("floating download button present", /id="dl-fab"/.test(html));
-check("fab hides while install section is on screen", /installVisible/.test(installJs));
-check("fab only shows past the hero", /pastHero/.test(installJs));
+// The fab is now a permanent bottom-left control, so it must NOT be gated on
+// scroll position any more (that used to hide it past the hero / on #install).
+check("fab is always visible (no scroll gating)", !/pastHero|installVisible/.test(installJs));
+check("fab is pinned bottom-left in CSS",
+  /\.dl-fab \{[^}]*position: fixed;[^}]*left: 22px;[^}]*bottom: 22px/.test(css) &&
+  !/\.dl-fab \{[^}]*right: 22px/.test(css));
+check("fab visible state is the CSS default (works without JS)",
+  /\.dl-fab \{[^}]*opacity: 1;[^}]*visibility: visible/.test(css));
 check("promo bar has a download link", /id="promo-bar"[\s\S]{0,600}?ratiod-extension\.zip/.test(html));
 check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.dl-fab \{/.test(css));
 check("promo bar responsive", /@media \(max-width: 600px\)[\s\S]*?\.promo-inner/.test(css));
@@ -112,6 +118,34 @@ check("install appears before features in page order",
   order.join(" -> "));
 check("install section is inside <main>",
   html.indexOf('id="install"') < html.indexOf("</main>"));
+
+/* ---- primary navigation ---- */
+// Nav order is a product decision, so pin it: Analyze -> Get Extension ->
+// Architecture -> How it works -> Features -> Roadmap -> Privacy Policy.
+const navBlock = (html.match(/<nav aria-label="Primary">[\s\S]*?<\/nav>/) || [""])[0];
+const navOrder = [...navBlock.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)]
+  .map((m) => m[2].trim());
+check("primary nav has the expected links in order",
+  navOrder.join("|") ===
+    "Analyze|Get Extension|Architecture|How it works|Features|Roadmap|Privacy Policy",
+  navOrder.join(" -> "));
+check("privacy policy is linked from the nav", /href="privacy\.html"/.test(navBlock));
+check("privacy page exists and has real policy copy",
+  fs.existsSync(path.join(ROOT, "privacy.html")) &&
+  /Privacy Policy/.test(fs.readFileSync(path.join(ROOT, "privacy.html"), "utf8")));
+
+// Email/SMS must not be in the header any more, but the control itself must
+// survive inside the console - setChannel() in app.js drives it.
+const headerBlock = (html.match(/<header class="header">[\s\S]*?<\/header>/) || [""])[0];
+check("no email/SMS channel tabs in the header", !/id="tab-email"|id="tab-sms"/.test(headerBlock));
+check("channel selector survives in the telemetry pane",
+  /class="channel-row"[\s\S]{0,300}?id="tab-email"/.test(html) &&
+  /class="channel-row"[\s\S]{0,300}?id="tab-sms"/.test(html));
+// A missing selector must not throw: setChannel() runs on every preset load.
+check("setChannel tolerates absent channel buttons",
+  /channelSMSBtn\?\.classList\.toggle/.test(appJs) &&
+  /channelEmailBtn\?\.classList\.toggle/.test(appJs) &&
+  !/channel(SMS|Email)Btn\.classList/.test(appJs));
 
 /* ---- ShapeWaves hero background ---- */
 const wavesJs = fs.readFileSync(path.join(ROOT, "js", "shape-waves.js"), "utf8");

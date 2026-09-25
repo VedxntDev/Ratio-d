@@ -103,36 +103,16 @@
   }
 
   /* ---------- floating download button ----------
-     Only shows once the reader is past the hero AND the install section is
-     not already on screen, so it never covers the thing it links to. */
+     Pinned to the bottom-left corner and visible at all times, on every
+     breakpoint. It is the persistent entry point to the install section, so it
+     deliberately does NOT hide while #install is on screen - that section is
+     tall and the button would otherwise blink out and back on scroll. */
   (function () {
     var fab = document.getElementById("dl-fab");
-    var installSection = document.getElementById("install");
-    if (!fab || !installSection || !("IntersectionObserver" in window)) return;
-
-    var pastHero = false;
-    var installVisible = false;
-
-    function update() {
-      fab.classList.toggle("is-visible", pastHero && !installVisible);
-    }
-
-    var hero = document.querySelector(".hero-section");
-    if (hero && "IntersectionObserver" in window) {
-      new IntersectionObserver(function (entries) {
-        pastHero = !entries[0].isIntersecting && entries[0].boundingClientRect.top < 0;
-        update();
-      }, { threshold: 0 }).observe(hero);
-    } else {
-      // No observer support: keep it simple and just show it after scrolling.
-      pastHero = true;
-      update();
-    }
-
-    new IntersectionObserver(function (entries) {
-      installVisible = entries[0].isIntersecting;
-      update();
-    }, { threshold: 0.15 }).observe(installSection);
+    if (!fab) return;
+    // No observers, no thresholds: visible from first paint. The CSS default is
+    // the visible state, this class is belt-and-braces for older markup.
+    fab.classList.add("is-visible");
   })();
 
   /* ---------- copy to clipboard ---------- */

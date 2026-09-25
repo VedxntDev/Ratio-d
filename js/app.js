@@ -22,17 +22,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let activePrivacyStats = { phones_masked: 0, emails_masked: 0, otp_masked: 0, total_masked: 0 };
 
   // 1. Channel Switch Handler
+  // The channel selector now lives inside the telemetry pane rather than the
+  // site header, so both buttons can legitimately be absent (e.g. a build that
+  // drops the console). Every touch below is therefore optional-chained.
   function setChannel(channel) {
     currentChannel = channel;
-    if (channel === "sms") {
-      channelSMSBtn.classList.add("active");
-      channelEmailBtn.classList.remove("active");
-      textarea.placeholder = "Paste raw SMS message text here...";
-    } else {
-      channelEmailBtn.classList.add("active");
-      channelSMSBtn.classList.remove("active");
-      textarea.placeholder = "Paste email header, subject line, and body text here...";
-    }
+    const isSms = channel === "sms";
+    channelSMSBtn?.classList.toggle("active", isSms);
+    channelEmailBtn?.classList.toggle("active", !isSms);
+    if (!textarea) return;
+    textarea.placeholder = isSms
+      ? "Paste raw SMS message text here..."
+      : "Paste email header, subject line, and body text here...";
   }
 
   channelSMSBtn?.addEventListener("click", () => setChannel("sms"));
