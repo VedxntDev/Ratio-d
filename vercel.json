@@ -2,11 +2,14 @@
   "version": 2,
   "public": true,
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/analyze", "destination": "/api/index.js" },
-    { "source": "/api/analyze", "destination": "/api/index.js" },
-    { "source": "/health", "destination": "/api/index.js" },
-    { "source": "/api/health", "destination": "/api/index.js" },
-    { "source": "/privacy", "destination": "/privacy.html" }
+  "routes": [
+    { "src": "^/(server|docs|extension)([./].*)?$", "status": 404 },
+    { "src": "^/(package|vercel)\\.json$", "status": 404 },
+    { "src": "^/\\.[^/]+$", "status": 404 },
+    { "handle": "filesystem" },
+    { "src": "^/analyze$", "dest": "/api" },
+    { "src": "^/api/analyze$", "dest": "/api" },
+    { "src": "^/health$", "dest": "/api" },
+    { "src": "^/api/health$", "dest": "/api" }
   ]
 }

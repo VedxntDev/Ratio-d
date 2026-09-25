@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Ratio'd Scam & Spam Risk Analyzer",
   "private": true,
+  "main": "server.js",
   "scripts": {
-    "start": "node server/server.js"
+    "start": "node server.js",
+    "test": "node server/test-phishing.js"
   }
 }

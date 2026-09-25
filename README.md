@@ -38,29 +38,32 @@
 ├── styles.css                     # Playful Neo-Brutalist stylesheet
 ├── js/                            # Redactor, presets, API client, GSAP pipeline
 ├── assets/                        # Hero mascot artwork
+├── server.js                      # Universal entrypoint: HTTP server locally,
+│                                  # (req,res) handler on Vercel
 ├── extension/                     # Gmail Chrome extension (Manifest V3)
 │   ├── manifest.json
 │   ├── content-script.js          # Gmail DOM scanner & client-side redactor
 │   ├── banner.js                  # Isolated Shadow DOM banner injector
 │   ├── background.js              # Service worker proxy
 │   └── icons/                     # Modern 16px, 48px, 128px, 512px icons
-├── server/                        # Backend security API
-│   ├── server.js                  # HTTP service on port 3000 (also serves the console)
-│   ├── routes/analyze.js          # POST /analyze route handler
+├── server/                        # Analysis pipeline (shared by both runtimes)
+│   ├── routes/analyze.js          # POST /analyze handler
 │   ├── rules/engine.js            # Deterministic threat rules (homoglyph, Levenshtein, shorteners)
 │   ├── laya/client.js             # Model classifier fallback
 │   ├── llm/explain.js             # Grounded explanation generator
 │   ├── combine/score.js           # Score + verdict + next-steps builder
 │   ├── privacy/log.js             # Zero-persistence privacy telemetry
 │   └── test-phishing.js           # Regression suite (5 cases)
-├── api/index.js                   # Vercel serverless entry (shares the same pipeline)
-├── vercel.json                    # Routing: /analyze, /health -> api/index.js
+├── api/index.js                   # Vercel function -> re-exports the root handler
+├── vercel.json                    # Routing + blocks internal paths
 └── docs/                          # Project report & audit documentation
 ```
 
 > **Note:** The frontend is served from the repository root by both the local
 > server and Vercel. There is intentionally only **one** copy — earlier
-> duplicated copies under `web/` caused localhost and production to drift apart.
+> duplicated copies under `web/` and `server/web/` caused localhost and
+> production to drift apart. `server.js` is likewise the single HTTP entrypoint,
+> so the two environments cannot diverge in behaviour.
 
 ---
 
@@ -70,7 +73,7 @@
 ```bash
 npm start
 ```
-*or:* `node server/server.js`
+*or:* `node server.js`
 
 This single process serves **both** the API and the web console:
 - Console: **http://localhost:3000**
@@ -85,11 +88,28 @@ still reach the analysis API on port 3000.*
 
 ### 3. Run the Phishing Regression Suite
 ```bash
-node server/test-phishing.js
+npm test
 ```
 *Expected: `Summary: 5/5 Tests Passed`.*
 
-### 4. Load Chrome Extension in Gmail
+### 4. Deploy to Vercel
+The production site is **https://ratio-d.vercel.app**.
+
+The Vercel project must have **Root Directory = (empty / repo root)** and
+**Framework = Other**. If Root Directory is left as `server`, Vercel never
+sees `index.html` and every asset 404s.
+
+```bash
+npm i -g vercel
+vercel link --project ratio-d --yes
+vercel --prod
+```
+
+> `vercel.json` blocks `/server/*`, `/docs/*`, `/extension/*`, dotfiles and
+> `package.json` from being served, and routes `/analyze` + `/health` to the
+> serverless function in `api/index.js`.
+
+### 5. Load Chrome Extension in Gmail
 1. Open Chrome and go to `chrome://extensions/`.
 2. Enable **Developer mode** (top-right).
 3. Click **Load unpacked** and select the `extension/` folder.
