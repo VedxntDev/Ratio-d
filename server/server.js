@@ -87,6 +87,18 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  if (req.method === "GET" && (pathname === "/ratiod-extension.zip" || pathname === "/web/ratiod-extension.zip")) {
+    const zipPath = path.join(__dirname, "../web/ratiod-extension.zip");
+    if (fs.existsSync(zipPath)) {
+      res.writeHead(200, {
+        "Content-Type": "application/zip",
+        "Content-Disposition": 'attachment; filename="ratiod-extension.zip"'
+      });
+      res.end(fs.readFileSync(zipPath));
+      return;
+    }
+  }
+
   // Fallback 404
   res.writeHead(404, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ error: "Endpoint not found" }));
