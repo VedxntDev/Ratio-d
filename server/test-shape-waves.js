@@ -18,11 +18,18 @@ function check(label, ok, detail) {
 }
 
 function makeEnv({ webgpu }) {
-  const calls = { draws: 0, submits: 0, passes: [], textures: 0, destroyed: 0 };
+  const calls = { draws: 0, submits: 0, passes: [], textures: 0, destroyed: 0, params: null };
 
   const device = {
     queue: {
-      writeBuffer() {},
+      // Capture the scene params upload (9 x vec4f = 36 floats) so the tests can
+      // assert the legibility + palette contract against the bytes the GPU
+      // actually receives, not just against the source text.
+      writeBuffer(buf, offset, data) {
+        if (data instanceof Float32Array && data.length === 36) {
+          calls.params = Array.from(data);
+        }
+      },
       copyExternalImageToTexture() {},
       submit(list) {
         calls.submits += list.length;
@@ -93,13 +100,9 @@ function makeEnv({ webgpu }) {
     },
     document: {
       getElementById: (id) => (id === "shape-waves" ? canvas : null),
-      createElement: () => ({
-        width: 0, height: 0,
-        getContext: () => ({
-          fillRect() {}, fillText() {}, measureText: () => ({ width: 100 }),
-          set font(v) {}, set fillStyle(v) {}, set textAlign(v) {}, set textBaseline(v) {}
-        })
-      }),
+      // No 2d canvas is ever created any more: the text-cutout mask is gone, so
+      // the effect needs nothing from the 2d context.
+      createElement: () => { throw new Error("no 2d canvas should be created"); },
       addEventListener() {},
       removeEventListener() {},
       hidden: false
@@ -170,6 +173,32 @@ function run(env) {
     check("exactly one canvas pass per frame",
       seq.filter((p) => p === "canvas").length === 1,
       `${seq.filter((p) => p === "canvas").length} canvas pass(es)`);
+
+    // Uniform contents: verify the legibility + palette contract against the
+    // bytes actually uploaded to the GPU. Regressing `ink` upward or restoring
+    // the mask flag is what previously made the hero copy unreadable.
+    const p = env.calls.params;
+    check("scene params uploaded", p !== null && p.length === 36, p ? p.length + " floats" : "none");
+    if (p) {
+      const near = (a, b) => Math.abs(a - b) < 0.005;
+      const at = (o) => [p[o], p[o + 1], p[o + 2]];
+      const ink = p[24 + 3];  // hover.w, the global mark opacity
+      const yellow = at(28);  // accentA
+      const blue = at(32);    // accentB
+      const red = at(24);     // hover tint
+      const inkHex = at(20);  // color
+
+      // motion.z used to gate the text-cutout mask sample.
+      check("text-cutout mask flag is off", p[16 + 2] === 0, "motion.z = " + p[16 + 2]);
+      check("global ink opacity is set and stays low", ink > 0 && ink <= 0.95, "ink = " + ink);
+      check("ink colour is the site ink", near(inkHex[0], 0.07) && near(inkHex[2], 0.07), inkHex.join(", "));
+      check("accent A is sticker yellow", near(yellow[0], 1) && near(yellow[1], 0.82) && near(yellow[2], 0.25), yellow.join(", "));
+      check("accent B is sticker blue", near(blue[0], 0.36) && near(blue[1], 0.73) && near(blue[2], 1), blue.join(", "));
+      check("ripple tint is the primary red", near(red[0], 0.92) && near(red[1], 0.24) && near(red[2], 0.17), red.join(", "));
+      // grid dotSize must leave gaps between marks, otherwise the field reads
+      // as a solid block behind the copy again.
+      check("marks are small enough to leave gaps", p[8 + 1] > 0 && p[8 + 1] <= 0.65, "dotSize = " + p[8 + 1]);
+    }
   }
 
   // 3. Canvas element absent - must bail without touching anything

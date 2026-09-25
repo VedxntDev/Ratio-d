@@ -9,8 +9,12 @@
  *   - This project is deliberately zero-dependency with no build, served as
  *     static files. Adding React + a 10-package dep tree to animate one
  *     background is not a trade worth making.
- *   - The visual is identical: same WGSL scene/blur/composite shaders, same
- *     ripple simulation, same text cutout, same glow pass.
+ *   - The visual is the same: same WGSL scene/blur/composite shaders, same
+ *     ripple simulation, same glow pass. The library's text-cutout mask is
+ *     deliberately NOT ported - a lettered hole in the hero background read as
+ *     an artefact and competed with the real copy sitting on top of it. The
+ *     marks are drawn in the site's own ink + sticker accents instead, with a
+ *     transparent void so the page's real paper and halftone show through.
  *
  * Degrades to nothing at all when WebGPU is unavailable (notably Firefox),
  * leaving the hero's flat paper canvas exactly as it is today.
@@ -26,7 +30,6 @@
   const INTRO_JITTER = 0.16;
   const INTRO_END = 1 + INTRO_WARP + INTRO_JITTER + INTRO_BAND;
   const MAX_DPR = 2;
-  const MAX_MASK_SIZE = 1024;
   const NOISE_CELLS = 32;
   const TIME_RATE = 0.1;
   const SIM_STEP = 1 / 60;
@@ -148,15 +151,13 @@ struct Params {
   motion: vec4f,
   color: vec4f,
   hover: vec4f,
-  background: vec4f,
+  accentA: vec4f,
+  accentB: vec4f,
 }
 @group(0) @binding(0) var<uniform> params: Params;
-@group(0) @binding(1) var maskTexture: texture_2d<f32>;
-@group(0) @binding(2) var maskSampler: sampler;
-@group(0) @binding(3) var<storage, read> charges: array<f32>;
+@group(0) @binding(1) var<storage, read> charges: array<f32>;
 
 const SEED = vec2f(12.9898, 78.233);
-const GLOW_THRESHOLD = 0.6;
 
 fn sdIsoscelesTriangle(point: vec2f, q: vec2f) -> f32 {
   let p = vec2f(abs(point.x), point.y);
@@ -183,23 +184,21 @@ fn hash21(p: vec2f) -> f32 {
   let dotSize = params.grid.y;
   let mode = i32(params.grid.z + 0.5);
   let cols = i32(params.grid.w + 0.5);
-  let background = params.background.rgb;
-  let toSurface = params.hover.w < 0.5;
-
-  let pixel = uv * resolution;
   let origin = params.placement.xy;
   let rows = i32(params.placement.z + 0.5);
+
+  // The void is fully transparent and nothing is drawn outside the grid, so
+  // the page's own paper + dot-grid shows through. The canvas deliberately
+  // does NOT paint an opaque backdrop: stacking a second grid on top of this
+  // one is what produced the moire interference over the hero copy.
+  let pixel = uv * resolution;
   let cell = floor((pixel - origin) / cellPx);
   if (cell.y < 0.0 || i32(cell.y) >= rows || cell.x < 0.0 || i32(cell.x) >= cols) {
-    return vec4f(background, select(0.0, 1.0, toSurface));
+    return vec4f(0.0);
   }
   let center = origin + (cell + 0.5) * cellPx;
   let local = (pixel - center) / (cellPx * 0.5);
   let cellUv = center / resolution;
-
-  if (params.motion.z > 0.5 && textureSampleLevel(maskTexture, maskSampler, cellUv, 0.0).r > 0.5) {
-    return vec4f(background, select(0.0, 1.0, toSurface));
-  }
 
   var level = 1.0;
   let fade = params.motion.w;
@@ -233,7 +232,7 @@ fn hash21(p: vec2f) -> f32 {
     let bandW = ` + INTRO_BAND.toFixed(2) + ` * (0.6 + 0.8 * hash21(cell + vec2f(17.0, 9.0)));
     let t = clamp((introProgress - spread) / bandW, 0.0, 1.0);
     if (t <= 0.0) {
-      return vec4f(background, select(0.0, 1.0, toSurface));
+      return vec4f(0.0);
     }
     let back = t - 1.0;
     size = max(size * (1.0 + 2.70158 * back * back * back + 1.70158 * back * back), 0.02);
@@ -242,13 +241,19 @@ fn hash21(p: vec2f) -> f32 {
   let aa = 2.0 / cellPx;
   let coverage = smoothstep(aa, -aa, shapeDistance(local, shape, size));
 
-  let tint = mix(params.color.rgb, params.hover.rgb, max(smoothstep(0.15, 0.85, charge), front * 0.35));
+  // Ink plus the site's two sticker accents, one per noise band, so the field
+  // reads as a halftone print in the brand palette instead of a grey smear.
+  // band 0 -> ink triangles, 1 -> yellow circles, 2 -> blue squares.
+  var base = params.color.rgb;
+  if (band == 1) { base = params.accentA.rgb; }
+  if (band == 2) { base = params.accentB.rgb; }
+  let tint = mix(base, params.hover.rgb, max(smoothstep(0.15, 0.85, charge), front * 0.35));
 
-  let rgb = mix(background, tint, coverage * level);
-  if (toSurface) { return vec4f(rgb, 1.0); }
-  let luminance = dot(tint * level, vec3f(0.2126, 0.7152, 0.0722));
-  let glow = max(0.0, (luminance - GLOW_THRESHOLD) / (1.0 - GLOW_THRESHOLD)) * coverage;
-  return vec4f(rgb, glow);
+  // Premultiplied output so the layer composites transparently over the page.
+  // params.hover.w is the global ink opacity: this is the main lever that keeps
+  // the hero copy readable, since the marks sit directly behind the text.
+  let alpha = clamp(coverage * level * params.hover.w, 0.0, 1.0);
+  return vec4f(tint * alpha, alpha);
 }
 `;
 
@@ -261,16 +266,19 @@ struct Blur { direction: vec4f }
 @fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let sigma = blur.direction.z;
   let radius = i32(ceil(3.0 * sigma));
-  var sum = vec3f(0.0);
+  var sum = vec4f(0.0);
   var weight = 0.0;
   for (var i = -radius; i <= radius; i++) {
     let offset = f32(i);
     let w = exp(-(offset * offset) / (2.0 * sigma * sigma));
-    let s = textureSampleLevel(sourceTexture, sourceSampler, uv + offset * blur.direction.xy, 0.0);
-    sum += select(s.rgb, s.rgb * s.a, blur.direction.w > 0.5) * w;
+    // The source is premultiplied, so blurring all four channels together is
+    // correct and keeps the halo's alpha in step with its colour. The previous
+    // version returned a hard a = 1 here, which made the glow layer opaque
+    // across the whole hero regardless of how faint the marks were.
+    sum += textureSampleLevel(sourceTexture, sourceSampler, uv + offset * blur.direction.xy, 0.0) * w;
     weight += w;
   }
-  return vec4f(sum / weight, 1.0);
+  return sum / weight;
 }
 `;
 
@@ -282,36 +290,46 @@ struct Composite { strength: vec4f }
 @group(0) @binding(3) var linearSampler: sampler;
 
 @fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
-  let scene = textureSampleLevel(sceneTexture, linearSampler, uv, 0.0).rgb;
-  let glow = textureSampleLevel(glowTexture, linearSampler, uv, 0.0).rgb;
-  return vec4f(scene + glow * composite.strength.x, 1.0);
+  let scene = textureSampleLevel(sceneTexture, linearSampler, uv, 0.0);
+  let halo = textureSampleLevel(glowTexture, linearSampler, uv, 0.0);
+  let s = composite.strength.x;
+  // scene is the crisp mark, halo is that same mark blurred wide. Adding the
+  // two gives a soft bloom while leaving the page fully visible in the gaps.
+  return vec4f(scene.rgb + halo.rgb * s, clamp(scene.a + halo.a * s * 0.6, 0.0, 1.0));
 }
 `;
 
   // ── Brand-matched configuration ────────────────────────────────────────────
-  // The site's own palette rather than the library defaults (black/white),
-  // and calmer + more faded so the hero copy stays readable on top.
+  // Tuned for legibility first: the marks sit directly behind the hero copy,
+  // so the field is deliberately airy, faint and colourful rather than a dense
+  // monochrome wall. `ink` (global opacity) is the main contrast lever, and the
+  // CSS `opacity` on the ready state trims the whole layer again.
   const CFG = {
-    text: "Ratio\u2019d",
-    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
-    fontWeight: 800,
-    textSize: 0.5,
+    // There is intentionally no text cutout: a lettered hole in the background
+    // reads as an artefact and competes with the real hero copy. The mask
+    // texture, its bindings and the fillText path are all gone - see SCENE_FS.
     shapes: "mixed",
-    cellSize: 12,
-    dotSize: 0.7,
+    cellSize: 20,
+    dotSize: 0.5,
+    // Ink + the site's two sticker accents. The noise band picks between them:
+    // ink triangles, yellow circles, blue squares.
     color: "#121212",
+    accentA: "#FFD23F",
+    accentB: "#5DBBFF",
     hoverColor: "#EA3E2B",
-    backgroundColor: "#F6F1E7",
-    speed: 0.7,
+    // Global mark opacity (uniform: hover.w). Kept low so the muted subtitle
+    // stays readable on top of the field.
+    ink: 0.85,
+    speed: 0.55,
     scale: 1,
-    contrast: 1,
-    brightness: 0.42,
+    contrast: 1.05,
+    brightness: 0.36,
     flow: 0,
-    fade: 0.45,
+    fade: 0.5,
     splashRadius: 46,
-    splashStrength: 0.35,
-    glow: 0.2,
-    introDuration: 1.6
+    splashStrength: 0.3,
+    glow: 0.18,
+    introDuration: 1.8
   };
   const SHAPE_MODES = { mixed: 0, squares: 1, circles: 2, triangles: 3 };
 
@@ -357,8 +375,8 @@ struct Composite { strength: vec4f }
   let visible = true;
   let bounds = null;
 
-  // 8 x vec4f
-  const paramsData = new Float32Array(32);
+  // 9 x vec4f
+  const paramsData = new Float32Array(36);
 
   function fail(err) {
     // Leave the hero exactly as it is today: flat paper canvas, no effect.
@@ -400,7 +418,6 @@ struct Composite { strength: vec4f }
       format: "rgba8unorm",
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
     });
-    let maskTex = mkTex(1, 1);
     let sceneTex, glowA, glowB;
 
     const mkPipe = (fs, fmt) => device.createRenderPipeline({
@@ -413,13 +430,11 @@ struct Composite { strength: vec4f }
     const blurPipe = mkPipe(BLUR_FS, "rgba8unorm");
     const compPipe = mkPipe(COMPOSITE_FS, format);
 
-    const sceneBG = (mt) => device.createBindGroup({
+    const sceneBG = () => device.createBindGroup({
       layout: scenePipe.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: paramsBuf } },
-        { binding: 1, resource: mt.createView() },
-        { binding: 2, resource: sampler },
-        { binding: 3, resource: { buffer: chargeBuf } }
+        { binding: 1, resource: { buffer: chargeBuf } }
       ]
     });
     const blurBG = (buf, tex) => device.createBindGroup({
@@ -443,7 +458,7 @@ struct Composite { strength: vec4f }
       const hh = Math.max(1, Math.ceil(H / 2));
       glowA = mkTex(hw, hh);
       glowB = mkTex(hw, hh);
-      device.queue.writeBuffer(blurXBuf, 0, new Float32Array([1 / hw, 0, 4, 1]));
+      device.queue.writeBuffer(blurXBuf, 0, new Float32Array([1 / hw, 0, 4, 0]));
       device.queue.writeBuffer(blurYBuf, 0, new Float32Array([0, 1 / hh, 4, 0]));
       bg.blurX = blurBG(blurXBuf, sceneTex);
       bg.blurY = blurBG(blurYBuf, glowA);
@@ -456,39 +471,6 @@ struct Composite { strength: vec4f }
           { binding: 3, resource: sampler }
         ]
       });
-    }
-
-    function drawMask() {
-      const hasText = !!CFG.text.trim();
-      const scale = hasText ? Math.min(1, MAX_MASK_SIZE / Math.max(W, H)) : 0;
-      const mw = hasText ? Math.max(1, Math.round(W * scale)) : 1;
-      const mh = hasText ? Math.max(1, Math.round(H * scale)) : 1;
-      const mc = document.createElement("canvas");
-      mc.width = mw;
-      mc.height = mh;
-      const m2 = mc.getContext("2d");
-      m2.fillStyle = "#000";
-      m2.fillRect(0, 0, mw, mh);
-      if (hasText) {
-        let px = Math.max(1, CFG.textSize * mh);
-        m2.font = CFG.fontWeight + " " + px + "px " + CFG.fontFamily;
-        const w = m2.measureText(CFG.text).width;
-        const max = mw * 0.9;
-        if (w > max) {
-          px = Math.max(1, (px * max) / w);
-          m2.font = CFG.fontWeight + " " + px + "px " + CFG.fontFamily;
-        }
-        m2.textAlign = "center";
-        m2.textBaseline = "middle";
-        m2.fillStyle = "#fff";
-        m2.fillText(CFG.text, mw / 2, mh / 2);
-      }
-      const next = mkTex(mw, mh);
-      device.queue.copyExternalImageToTexture({ source: mc }, { texture: next }, [mw, mh]);
-      const old = maskTex;
-      maskTex = next;
-      old.destroy();
-      bg.scene = sceneBG(maskTex);
     }
 
     function configureGrid() {
@@ -510,7 +492,7 @@ struct Composite { strength: vec4f }
       device.queue.writeBuffer(nb, 0, charges);
       chargeBuf.destroy();
       chargeBuf = nb;
-      bg.scene = sceneBG(maskTex);
+      bg.scene = sceneBG();
     }
 
     function stepRipples() {
@@ -618,7 +600,6 @@ struct Composite { strength: vec4f }
       paramsData[2] = 1 / W;
       paramsData[3] = 1 / H;
       configureGrid();
-      drawMask();
     }
 
     const ro = new ResizeObserver(resize);
@@ -645,7 +626,9 @@ struct Composite { strength: vec4f }
 
     resize();
     configureGrid();
-    drawMask();
+    // configureGrid() only rebuilds the scene bind group when the grid size
+    // changes, so bind it explicitly for the first frame.
+    bg.scene = sceneBG();
     introStart = performance.now();
     introProgress = 0;
     loop(performance.now());
@@ -663,14 +646,16 @@ struct Composite { strength: vec4f }
         introProgress = Math.min(INTRO_END, ((now - introStart) / 1000 / CFG.introDuration) * INTRO_END);
       }
 
-      // placement / grid / field / motion / color / hover / background
+      // placement / grid / field / motion / color / hover / accentA / accentB
       paramsData.set([0, originY, rows, introProgress], 4);
       paramsData.set([cellPx, CFG.dotSize, SHAPE_MODES[CFG.shapes], cols], 8);
       paramsData.set([NOISE_CELLS * cellPx, 0.5 - (CFG.brightness - 0.5) * 0.4, 2.8 * CFG.contrast, time], 12);
-      paramsData.set([0, 0, CFG.text.trim() ? 1 : 0, CFG.fade], 16);
+      paramsData.set([0, 0, 0, CFG.fade], 16);
       paramsData.set([...parseColor(CFG.color, "#121212"), 1], 20);
-      paramsData.set([...parseColor(CFG.hoverColor, "#EA3E2B"), 1], 24);
-      paramsData.set([...parseColor(CFG.backgroundColor, "#F6F1E7"), 1], 28);
+      // hover.w carries the global ink opacity consumed by the scene shader.
+      paramsData.set([...parseColor(CFG.hoverColor, "#EA3E2B"), CFG.ink], 24);
+      paramsData.set([...parseColor(CFG.accentA, "#FFD23F"), 1], 28);
+      paramsData.set([...parseColor(CFG.accentB, "#5DBBFF"), 1], 32);
       device.queue.writeBuffer(paramsBuf, 0, paramsData);
 
       const glowOn = CFG.glow > 0;

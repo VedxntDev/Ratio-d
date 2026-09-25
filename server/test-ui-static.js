@@ -115,6 +115,13 @@ check("install section is inside <main>",
 
 /* ---- ShapeWaves hero background ---- */
 const wavesJs = fs.readFileSync(path.join(ROOT, "js", "shape-waves.js"), "utf8");
+// Prose-only copy of the module: the assertions below are about code, and the
+// file's comments legitimately name the things that were removed (e.g.
+// "the fillText path are all gone"). Strip them so a comment cannot satisfy or
+// break a structural check.
+const wavesCode = wavesJs
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/^\s*\/\/.*$/gm, "");
 
 check("hero canvas present", /<canvas id="shape-waves"/.test(html));
 check("shape-waves.js loaded", /js\/shape-waves\.js/.test(html));
@@ -139,14 +146,55 @@ check("honours reduced motion", /prefers-reduced-motion/.test(wavesJs));
 
 // Shader + pipeline integrity.
 check("WGSL scene shader present", /fn fs_main/.test(wavesJs) && /shapeDistance/.test(wavesJs));
-check("text cutout mask rendered", /fillText/.test(wavesJs));
 check("glow blur passes present", /blurPipe/.test(wavesJs) && /compPipe/.test(wavesJs));
 check("css layers the canvas behind content",
   /\.shape-waves \{[\s\S]*?z-index: 0/.test(css) && /\.hero-section > \.hero-copy[\s\S]*?z-index: 2/.test(css));
 check("canvas hidden until first frame", /\.shape-waves \{[\s\S]*?opacity: 0/.test(css));
 check("canvas never blocks clicks", /\.shape-waves \{[\s\S]*?pointer-events: none/.test(css));
+
+// The effect must stay out of the way of the hero copy. Two independent
+// guards: a global ink opacity in the shader and a faint layer opacity in CSS.
+// If either is loosened, the muted subtitle becomes unreadable over the marks.
+const readyOpacity = (css.match(/\.shape-waves\[data-ready='true'\]\s*\{\s*opacity:\s*([\d.]+)/) || [])[1];
+check("ready layer opacity is faint enough to read text over",
+  readyOpacity !== undefined && parseFloat(readyOpacity) <= 0.45,
+  "opacity " + readyOpacity);
+check("shader applies a global ink opacity",
+  /ink:\s*[\d.]+/.test(wavesJs) && /params\.hover\.w/.test(wavesJs));
+check("readability scrim sits between the canvas and the copy",
+  /\.hero-section::before\s*\{[\s\S]*?z-index: 1/.test(css) &&
+  /\.hero-section::before\s*\{[\s\S]*?linear-gradient/.test(css));
+
+// The canvas must be transparent so the page's real paper + halftone shows
+// through. An opaque backdrop forces a second grid to be stacked on top, which
+// moires against the shape grid and is what made the copy unreadable.
+const wavesRule = (css.match(/\.shape-waves \{[\s\S]*?\}/) || [""])[0];
+check("canvas paints no opaque backdrop", !/background\s*:/.test(wavesRule), wavesRule);
+check("no duplicate dot-grid overlay on the hero", !/\.hero-section::after/.test(css));
+
+// No lettering is baked into the background: a text cutout reads as an
+// artefact and fights the real hero copy. The feature is removed outright, so
+// assert the machinery is gone rather than merely switched off in config.
+check("no text cutout in the effect",
+  !/fillText/.test(wavesCode) &&
+  !/drawMask/.test(wavesCode) &&
+  !/maskTexture/.test(wavesCode) &&
+  !/\btext:\s*"/.test(wavesCode) &&
+  !/measureText/.test(wavesCode));
+
+// Palette must match the site's own tokens: ink, the two sticker accents and
+// the primary red used for pointer ripples. Paper now lives only in CSS.
 check("uses the brand palette",
-  wavesJs.includes("#F6F1E7") && wavesJs.includes("#EA3E2B") && wavesJs.includes("#121212"));
+  wavesJs.includes("#121212") && wavesJs.includes("#FFD23F") &&
+  wavesJs.includes("#5DBBFF") && wavesJs.includes("#EA3E2B"));
+check("brand accents are wired to the shader",
+  /params\.accentA/.test(wavesJs) && /params\.accentB/.test(wavesJs) &&
+  /parseColor\(CFG\.accentA/.test(wavesJs) && /parseColor\(CFG\.accentB/.test(wavesJs));
+
+// Premultiplied alpha throughout, or the transparent void composites wrong.
+check("scene shader emits premultiplied alpha",
+  /return vec4f\(tint \* alpha, alpha\)/.test(wavesJs));
+check("blur pass carries alpha", /sum \/ weight/.test(wavesJs) && !/vec4f\(sum \/ weight, 1\.0\)/.test(wavesJs));
 
 console.log(failures === 0 ? "\nALL STATIC CHECKS PASSED" : `\n${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

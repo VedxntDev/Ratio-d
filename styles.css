@@ -440,21 +440,34 @@ h1, h2, h3, h4 {
 .hero-copy { min-width: 0; }
 
 /* ── ShapeWaves hero background (vanilla WebGPU) ──────────────────────────
-   The canvas renders the site's paper colour opaquely, so the dot-grid
-   texture is re-applied above it as an overlay. Without WebGPU the canvas
-   is removed by JS and the hero falls back to exactly this appearance. */
+   The canvas draws only its marks over a transparent void, so the page's own
+   paper + halftone dot-grid shows through and the hero keeps the same texture
+   as the rest of the site. (It deliberately has no `background` of its own -
+   an opaque backdrop here is what previously forced a second, mismatched grid
+   to be stacked on top and moire'd against the shapes.)
+
+   Two things keep the hero copy readable on top of the effect:
+     1. the layer is faint - `opacity: 0.34` here on top of CFG.ink in the JS;
+     2. a soft paper scrim sits under the copy and fades out towards the
+        mascot card, which is a solid surface anyway.
+   Without WebGPU the canvas is removed by JS and the hero falls back to
+   exactly the flat paper + dot-grid look. */
 .hero-section { position: relative; isolation: isolate; }
 .shape-waves {
   position: absolute; inset: 0; width: 100%; height: 100%;
   z-index: 0; pointer-events: none;
-  background: var(--color-bg);
-  opacity: 0; transition: opacity 800ms ease;
+  opacity: 0; transition: opacity 900ms ease;
 }
-.shape-waves[data-ready='true'] { opacity: 1; }
-.hero-section::after {
+.shape-waves[data-ready='true'] { opacity: 0.34; }
+/* Readability scrim: a gradient veil, not a hard panel, so the shapes are
+   still felt on the left but never fight the subtitle. */
+.hero-section::before {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background-image: radial-gradient(rgba(18, 18, 18, 0.16) 1.4px, transparent 1.4px);
-  background-size: 22px 22px;
+  background: linear-gradient(100deg,
+    var(--color-bg) 0%,
+    rgba(246, 241, 231, 0.82) 26%,
+    rgba(246, 241, 231, 0.48) 44%,
+    rgba(246, 241, 231, 0) 66%);
 }
 .hero-section > .hero-copy,
 .hero-section > .hero-visual { position: relative; z-index: 2; }
@@ -1162,6 +1175,14 @@ h1, h2, h3, h4 {
 /* Responsive */
 @media (max-width: 992px) {
   .hero-section { grid-template-columns: 1fr; gap: 56px; }
+  /* Single column puts the copy *below* the mascot card, so the readability
+     scrim has to run vertically instead of across a left-hand copy column. */
+  .hero-section::before {
+    background: linear-gradient(to bottom,
+      rgba(246, 241, 231, 0) 0%,
+      rgba(246, 241, 231, 0.5) 32%,
+      var(--color-bg) 60%);
+  }
   .hero-visual { order: -1; padding: 30px 30px 0; }
   .mascot-card { width: min(100%, 320px); }
   .console-grid { grid-template-columns: 1fr; }
