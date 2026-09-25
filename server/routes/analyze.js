@@ -21,6 +21,7 @@ function computePrivacyStatsFromText(text) {
 }
 
 async function handleAnalyze(reqBody) {
+  const startedAt = Date.now();
   const { text, channel = "email" } = reqBody;
 
   if (!text || typeof text !== "string") {
@@ -47,14 +48,26 @@ async function handleAnalyze(reqBody) {
   // 6. Log Privacy Telemetry (Zero raw text persistence)
   logPrivacyTelemetry(validChannel, privacyStats);
 
-  // 7. Return Exact Contract (Part A.5)
+  // 7. Return Exact Contract (Part A.5) + transparent engine metadata.
+  // The engine block reports what ACTUALLY ran — including the explicit
+  // `laya_stub_heuristic` label, so no model score is ever implied to be real.
   return {
     score,
     verdict,
     flags,
     explanation,
     next_steps,
-    privacy: privacyStats
+    privacy: privacyStats,
+    engine: {
+      rules: "deterministic-homoglyph-levenshtein",
+      rule_flags: flags.length,
+      model_source: layaResult.source,
+      model_label: layaResult.label,
+      model_probability: layaResult.probability,
+      model_note: layaResult.note,
+      explain: "grounded-in-flags",
+      latency_ms: Date.now() - startedAt
+    }
   };
 }
 

@@ -13,6 +13,7 @@
  */
 
 const LOCAL_API = "http://127.0.0.1:3000/analyze";
+const LOCAL_HEALTH = "http://127.0.0.1:3000/health";
 const LOCAL_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]"];
 
 window.ApiClient = {
@@ -25,6 +26,11 @@ window.ApiClient = {
     return this.isLocalEnvironment()
       ? [LOCAL_API, sameOrigin]
       : [sameOrigin, LOCAL_API];
+  },
+
+  /** Endpoint used by the header connectivity probe. */
+  healthEndpoint() {
+    return this.isLocalEnvironment() ? LOCAL_HEALTH : "/health";
   },
 
   /**

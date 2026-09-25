@@ -6,6 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node server/test-phishing.js"
+    "test": "node server/test-phishing.js",
+    "test:ui": "node server/test-ui-static.js && node test-ui-contract.js"
   }
 }
