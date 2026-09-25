@@ -1,14 +1,17 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/analyze", "destination": "/api/index.js" },
-    { "source": "/api/analyze", "destination": "/api/index.js" },
-    { "source": "/health", "destination": "/api/index.js" },
-    { "source": "/api/health", "destination": "/api/index.js" },
-    { "source": "/privacy.html", "destination": "/web/privacy.html" },
-    { "source": "/privacy", "destination": "/web/privacy.html" },
-    { "source": "/ratiod-extension.zip", "destination": "/web/ratiod-extension.zip" },
-    { "source": "/(.*)", "destination": "/web/$1" }
+  "routes": [
+    { "src": "/analyze", "dest": "/api/index.js" },
+    { "src": "/api/analyze", "dest": "/api/index.js" },
+    { "src": "/health", "dest": "/api/index.js" },
+    { "src": "/api/health", "dest": "/api/index.js" },
+    { "src": "/privacy.html", "dest": "/web/privacy.html" },
+    { "src": "/privacy", "dest": "/web/privacy.html" },
+    { "src": "/ratiod-extension.zip", "dest": "/web/ratiod-extension.zip" },
+    { "src": "/js/(.*)", "dest": "/web/js/$1" },
+    { "src": "/styles.css", "dest": "/web/styles.css" },
+    { "src": "/index.html", "dest": "/web/index.html" },
+    { "src": "/", "dest": "/web/index.html" }
   ]
 }
