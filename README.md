@@ -1,5 +1,5 @@
 # Ratio'd — Scam Risk Analyzer & Defense System
-**Cybersecurity & Defense Track · Team Skill Issue**
+**Cybersecurity & Defense Track · Developed by [Vedant](https://github.com/VedxntDev)**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Manifest V3](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-brightgreen)](https://developer.chrome.com/docs/extensions/mv3/intro/)
@@ -119,4 +119,4 @@ vercel --prod
 
 ## 📜 License & Acknowledgments
 
-Built for Cybersecurity & Defense Track by Team Skill Issue. MIT License.
+Built for Cybersecurity & Defense Track by [Vedant](https://github.com/VedxntDev). MIT License.

@@ -116,6 +116,30 @@ check("promo bar has a download link", /id="promo-bar"[\s\S]{0,600}?ratiod-exten
 check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.dl-fab \{/.test(css));
 check("promo bar responsive", /@media \(max-width: 600px\)[\s\S]*?\.promo-inner/.test(css));
 
+/* ---- author credit ---- */
+// The hero sticker and the footer must credit Vedant and link to the GitHub
+// profile, replacing the old "Team Skill Issue" / design-system bylines.
+const CREDIT = "https://github.com/VedxntDev";
+const esc = CREDIT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+check("hero sticker credits Vedant and links out",
+  new RegExp(`<a class="sticker[^"]*" href="${esc}"[^>]*>DEVELOPED BY VEDANT</a>`).test(html));
+check("footer credits Vedant with a GitHub link",
+  new RegExp(`footer-credit" href="${esc}"`).test(html));
+check("old team / design-system bylines are gone from the page",
+  !/Team Skill Issue|TEAM SKILL ISSUE|Playful Neo-Brutalist Utility Design System/.test(html));
+// "Scam Risk Analyzer" survives only in <title> (SEO); it must be gone from
+// the visible hero kicker and the footer byline. Strip the head first so the
+// <title> itself can't satisfy (or trip) the check.
+const bodyMarkup = html.replace(/<head[\s\S]*?<\/head>/i, "");
+check("scam-risk byline removed from hero kicker and footer",
+  !/SCAM RISK ANALYZER/i.test(bodyMarkup) && !/Scam Risk Analyzer/.test(bodyMarkup));
+check("credit links open safely in a new tab",
+  (html.match(new RegExp(`href="${esc}[^"]*"[^>]*>`, "g")) || [])
+    .every((tag) => /rel="noopener noreferrer"/.test(tag) && /target="_blank"/.test(tag)));
+// A sticker used as an <a> inherits the UA underline, which breaks the pill.
+check("stickers used as links drop the underline",
+  /a\.sticker \{[^}]*text-decoration: none/.test(css));
+
 // The install flow must sit above the roadmap, not after it.
 const order = [...html.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1]);
 check("install appears before features in page order",

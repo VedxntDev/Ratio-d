@@ -122,6 +122,11 @@ h1, h2, h3, h4 {
 .sticker-white { background: var(--color-surface); }
 .sticker-tilt-left { transform: rotate(-4deg); }
 .sticker-tilt-right { transform: rotate(3deg); }
+/* Stickers double as links (the author credit), so the browser's default
+   underline would break the pill shape. */
+a.sticker { text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+a.sticker:hover { transform: rotate(0deg) translate(-1px, -1px); box-shadow: var(--shadow-hard); }
+a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
 
 /* Tactile physical interaction */
 .tactile {
@@ -1003,6 +1008,15 @@ h1, h2, h3, h4 {
 .footer-brand .logo-mark { width: 38px; height: 38px; font-size: 1.15rem; }
 .footer-links { display: flex; gap: 4px; flex-wrap: wrap; }
 .footer-muted { color: var(--color-text-muted); }
+/* Author credit inside muted footer text: needs a visible affordance without
+   fighting the muted colour it sits in. */
+.footer-credit {
+  color: var(--color-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.footer-credit:hover { color: var(--color-primary); }
 
 /* ============================================================
    Extension install flow
