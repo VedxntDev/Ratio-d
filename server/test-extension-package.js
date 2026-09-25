@@ -51,7 +51,10 @@ check(`all ${referenced.length} manifest-referenced files packaged`, missing.len
   missing.length ? "MISSING: " + missing.join(", ") : "none missing");
 
 // Required scripts must not be minified away or empty.
-["background.js", "content-script.js", "banner.js", "banner.css"].forEach((f) => {
+// Required scripts must not be minified away or empty. banner.css is
+// deliberately NOT here: the banner injects its styles inline from banner.js,
+// so the file was dead weight in a published archive.
+["background.js", "content-script.js", "banner.js"].forEach((f) => {
   check(`${f} packaged and non-empty`,
     listing.includes(f) &&
       fs.statSync(path.join(ROOT, "extension", f)).size > 100);
@@ -110,10 +113,49 @@ check("banner keeps the honest privacy wording",
 // ---------------------------------------------------------------------------
 // Icons: they must be real PNGs at the exact sizes Chrome requires.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// The published archives must match source. A stale zip is invisible in review
+// but is what a judge actually downloads, so staleness is treated as a failure.
+// ratiod-full-project.zip previously drifted and shipped a pre-fix banner.js.
+// ---------------------------------------------------------------------------
+const FULL_ZIP = path.join(ROOT, "ratiod-full-project.zip");
+
+const fullListing = execFileSync("unzip", ["-Z1", FULL_ZIP], { encoding: "utf8" })
+  .split("\n").map((s) => s.trim()).filter(Boolean);
+check("full-project zip exists", fullListing.length > 0, `${fullListing.length} entries`);
+check("full-project zip has no OS junk",
+  !fullListing.some((f) => /(^|\/)(\.DS_Store|__MACOSOSX)/.test(f)));
+check("full-project zip excludes .git and .vercel",
+  !fullListing.some((f) => f.startsWith(".git/") || f.startsWith(".vercel/")));
+check("full-project zip does not nest the archives",
+  !fullListing.includes("ratiod-extension.zip") && !fullListing.includes("ratiod-full-project.zip"));
+
+// The security fix must be present in BOTH published copies. This is the exact
+// check that would have caught the stale archive.
+[ZIP, FULL_ZIP].forEach((z, i) => {
+  const entry = i === 0 ? "banner.js" : "extension/banner.js";
+  const src = execFileSync("unzip", ["-p", z, entry], { encoding: "utf8" });
+  check(`${path.basename(z)} banner.js carries the XSS escaping fix`,
+    src.includes("function escapeHtml"));
+});
+// ...and must be byte-identical to the working tree, so neither can lag behind.
+check("full-project zip banner.js matches source",
+  execFileSync("unzip", ["-p", FULL_ZIP, "extension/banner.js"], { encoding: "utf8" }) ===
+  fs.readFileSync(path.join(ROOT, "extension", "banner.js"), "utf8"));
+check("extension zip banner.js matches source",
+  execFileSync("unzip", ["-p", ZIP, "banner.js"], { encoding: "utf8" }) ===
+  fs.readFileSync(path.join(ROOT, "extension", "banner.js"), "utf8"));
+
+// Every icon the manifest declares must be present AND a real PNG.
 [16, 48, 128, 512].forEach((size) => {
-  const f = path.join(ROOT, "extension", "icons", `icon${size}.png`);
-  const ok = fs.existsSync(f) && fs.readFileSync(f).subarray(1, 4).toString() === "PNG";
-  check(`icon${size}.png is a real PNG`, ok);
+  const f = `icons/icon${size}.png`;
+  const ok = listing.includes(f);
+  let real = false;
+  if (ok) {
+    const buf = execFileSync("unzip", ["-p", ZIP, f]);
+    real = buf.subarray(1, 4).toString() === "PNG" && buf.length > 200;
+  }
+  check(`icon${size}.png packaged and is a real PNG`, ok && real);
 });
 
 console.log(failures === 0

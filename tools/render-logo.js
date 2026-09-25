@@ -17,9 +17,12 @@ const get = (p) => new Promise((res, rej) => {
 });
 
 // size -> destination path. 16/48/128/512 are Chrome's required manifest sizes.
+// Every extension icon must be listed here: a size that is not regenerated
+// silently keeps the previous brand and ships an inconsistent toolbar icon.
 const TARGETS = [
   [16, "assets/favicon-16x16.png"],
   [32, "assets/favicon-32x32.png"],
+  [16, "extension/icons/icon16.png"],
   [48, "extension/icons/icon48.png"],
   [128, "extension/icons/icon128.png"],
   [512, "extension/icons/icon512.png"],

@@ -67,6 +67,24 @@ Verify the real banner in a browser (not just by regex):
 node tools/verify-banner.js
 ```
 
+### Building the downloadable archives
+
+```bash
+node tools/build-zips.js
+```
+
+Both published archives are generated, never hand-edited:
+
+| Archive | Contents | Rule |
+| --- | --- | --- |
+| `ratiod-extension.zip` | Only what `manifest.json` references, with the manifest at the **archive root** (Chrome refuses an archive with a wrapper folder) | derived from the manifest, so it cannot drift |
+| `ratiod-full-project.zip` | Every git-tracked file, minus `.git`, `.vercel` and the archives themselves | derived from `git ls-files` |
+
+`server/test-extension-package.js` fails if either archive drifts from source, so
+a stale download is a test failure rather than a silent defect. This matters:
+the full-project archive previously went stale and would have shipped a
+`banner.js` without the HTML-escaping fix.
+
 ---
 
 ## 🧠 Detection Model
