@@ -48,8 +48,24 @@ async function connect() {
   ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && p.has(m.id)) { p.get(m.id)(m); p.delete(m.id); } };
   const send = (method, params) => new Promise((res) => { const i = ++id; p.set(i, res); ws.send(JSON.stringify({ id: i, method, params: params || {} })); });
   const ev = async (x) => (await send("Runtime.evaluate", { expression: x, returnByValue: true, awaitPromise: true })).result.result.value;
-  await send("Page.enable"); await send("Runtime.enable");
-  return { chrome, ws, send, ev };
+  await send("Page.enable"); await send("Runtime.enable"); await send("Log.enable");
+  await send("Network.enable");
+  const errs = [];
+  ws.addEventListener("message", (e) => {
+    const m = JSON.parse(e.data);
+    if (m.method === "Log.entryAdded" && m.params.entry.level === "error") {
+      const e = m.params.entry;
+      errs.push(`${e.text} ${e.url ? "[" + e.url + "]" : ""}`);
+    }
+    if (m.method === "Runtime.exceptionThrown") {
+      errs.push(m.params.exceptionDetails.text + " " +
+        (m.params.exceptionDetails.exception?.description || ""));
+    }
+    if (m.method === "Network.loadingFailed") {
+      errs.push("loadingFailed: " + (m.params.errorText || ""));
+    }
+  });
+  return { chrome, ws, send, ev, errs };
 }
 
 const HOST_SEL = "document.getElementById('ratiod-banner-host')";
@@ -90,7 +106,7 @@ const INTERACT = `(() => {
 })()`;
 
 (async () => {
-  const { chrome, ws, send, ev } = await connect();
+  const { chrome, ws, send, ev, errs } = await connect();
   const bannerJs = fs.readFileSync(`${ROOT}/extension/banner.js`, "utf8");
   const html = `<!doctype html><meta charset="utf-8">
     <body style="margin:0;padding:24px;background:#F6F1E7">
@@ -131,6 +147,22 @@ const INTERACT = `(() => {
   check("drawer toggle syncs aria-expanded", i.open.open === true && i.open.aria === "true", JSON.stringify(i.open));
   check("collapse hides the body and re-expands", i.collapsed === true && i.reExpanded === true);
   check("dismiss removes the banner from the DOM", i.gone === true);
+
+  // Clear anything collected from the harness page above, so the counts below
+  // describe the real site only.
+  errs.length = 0;
+  await send("Page.navigate", { url: "http://127.0.0.1:3000/" });
+  await sleep(4000);
+  const local = await ev(`(() => ({
+    title: document.title,
+    h1: (document.querySelector('h1')||{}).innerText,
+    bg: getComputedStyle(document.body).backgroundColor,
+    logoMark: !!document.querySelector('.logo-mark'),
+    credit: !!Array.from(document.querySelectorAll('a')).find(a => a.href === 'https://github.com/VedxntDev' && a.textContent.trim() === 'Developed by Vedant'),
+    tabs: document.querySelectorAll('[id^=tab-]').length
+  }))()`);
+  console.log("LOCAL:", JSON.stringify(local, null, 1));
+  console.log("CONSOLE ERRORS:", JSON.stringify(errs, null, 1));
 
   await send("Page.navigate", { url: "https://ratio-d.vercel.app/" });
   await sleep(4500);
