@@ -5,7 +5,11 @@
 window.ApiClient = {
   async analyze(text, channel = "email") {
     try {
-      const response = await fetch("http://127.0.0.1:3000/analyze", {
+      const endpoint = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "http://127.0.0.1:3000/analyze"
+        : "/analyze";
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
