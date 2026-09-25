@@ -36,6 +36,11 @@
 
 html { scroll-behavior: smooth; }
 
+/* The header is sticky, so any #anchor jump would otherwise park the section
+   heading underneath it. Applied to every section rather than per-section so a
+   newly added section inherits the offset for free. */
+section[id] { scroll-margin-top: 110px; }
+
 body {
   background-color: var(--color-bg);
   background-image: radial-gradient(rgba(18, 18, 18, 0.16) 1.4px, transparent 1.4px);
@@ -611,7 +616,6 @@ h1, h2, h3, h4 {
   grid-template-columns: 1fr 1fr;
   gap: 32px;
   margin-bottom: 96px;
-  scroll-margin-top: 110px;
 }
 .console-pane {
   background-color: var(--color-surface);

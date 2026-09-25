@@ -115,75 +115,6 @@
       </div>
     </section>
 
-    <!-- Pipeline Section -->
-    <section id="pipeline" class="section">
-      <div class="section-head">
-        <span class="section-header-tag">Pipeline</span>
-        <h2 class="section-title">Live <span class="marker marker-blue">4-stage</span> verification</h2>
-        <p class="section-sub">A deterministic client-side inspection pipeline that runs before any external model is ever invoked.</p>
-      </div>
-
-      <div class="pipeline-grid">
-        <div class="pipeline-card tactile card-tint-yellow" id="stage-0">
-          <div class="stage-badge">01</div>
-          <div class="stage-num">Stage / Observe</div>
-          <h3 class="stage-title">Observe</h3>
-          <p class="stage-desc">Raw message capture & immediate client-side PII masking (phones, emails, OTPs).</p>
-        </div>
-
-        <div class="pipeline-card tactile card-tint-blue" id="stage-1">
-          <div class="stage-badge">02</div>
-          <div class="stage-num">Stage / Detect</div>
-          <h3 class="stage-title">Detect</h3>
-          <p class="stage-desc">Deterministic rule checks for lookalike domains, link mismatches & urgency triggers.</p>
-        </div>
-
-        <div class="pipeline-card tactile card-tint-pink" id="stage-2">
-          <div class="stage-badge">03</div>
-          <div class="stage-num">Stage / Explain</div>
-          <h3 class="stage-title">Explain</h3>
-          <p class="stage-desc">In-context threat span highlighting with grounded, plain-language risk explanations.</p>
-        </div>
-
-        <div class="pipeline-card tactile card-tint-green" id="stage-3">
-          <div class="stage-badge">04</div>
-          <div class="stage-num">Stage / Respond</div>
-          <h3 class="stage-title">Respond</h3>
-          <p class="stage-desc">Tactile risk score reveal (0–100) & a prioritized incident recovery checklist.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Architecture Flowchart Section -->
-    <section id="architecture" class="section">
-      <div class="section-head">
-        <span class="section-header-tag">Architecture</span>
-        <h2 class="section-title">Every stage of the <span class="marker marker-blue">pipeline</span></h2>
-        <p class="section-sub">Ten stages from the Gmail tab to the verdict banner. Stages 1&ndash;3 and 10 run in your browser &mdash; your phone numbers, email addresses and OTP codes are masked <em>before</em> anything crosses the network boundary.</p>
-      </div>
-
-      <div class="arch-controls">
-        <div class="arch-lens" role="group" aria-label="View lens">
-          <button class="channel-tab active" id="arch-lens-components" type="button" aria-pressed="true">Components</button>
-          <button class="channel-tab" id="arch-lens-data" type="button" aria-pressed="false">Data</button>
-        </div>
-        <div class="arch-transport">
-          <button class="btn btn-secondary btn-sm tactile" id="arch-prev" type="button" aria-label="Previous stage">&#8592; Prev</button>
-          <button class="btn btn-primary btn-sm tactile" id="arch-play" type="button" aria-pressed="false" aria-label="Play through the pipeline">&#9654; Play</button>
-          <button class="btn btn-secondary btn-sm tactile" id="arch-next" type="button" aria-label="Next stage">Next &#8594;</button>
-        </div>
-        <p class="arch-status" id="arch-status" role="status" aria-live="polite">Stage 01 / 10</p>
-      </div>
-
-      <div class="arch-board" id="arch-board">
-        <noscript>
-          <p class="section-sub">The interactive chart needs JavaScript. The ten stages are: 1) the user opens the email, 2) the content script activates, 3) client-side PII redaction, 4) redacted text is sent to the backend, 5) the rule engine and 6) the Laya local model run in parallel, 7) the score combiner merges them, 8) the LLM writes the explanation, 9) the response is returned, and 10) the Shadow DOM banner is rendered in Gmail.</p>
-        </noscript>
-      </div>
-
-      <div class="arch-detail tactile" id="arch-detail" aria-live="polite"></div>
-    </section>
-
     <!-- Control Console Grid -->
     <section id="console" class="console-grid">
 
@@ -298,163 +229,232 @@
 
     </section>
 
-  <!-- Extension Install -->
-  <section id="install" class="section install-section">
-    <div class="container">
-      <div class="section-head">
-        <span class="section-header-tag">Get the extension</span>
-        <h2 class="section-title">Read every email <span class="marker marker-blue">before</span> you trust it</h2>
-        <p class="section-sub">One download and four clicks puts a live risk verdict inside Gmail. The banner renders inside its own Shadow DOM, so Gmail styling can never break it.</p>
-      </div>
+    <!-- Extension Install -->
+    <section id="install" class="section install-section">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-header-tag">Get the extension</span>
+          <h2 class="section-title">Read every email <span class="marker marker-blue">before</span> you trust it</h2>
+          <p class="section-sub">One download and four clicks puts a live risk verdict inside Gmail. The banner renders inside its own Shadow DOM, so Gmail styling can never break it.</p>
+        </div>
 
-      <div class="install-grid">
+        <div class="install-grid">
 
-        <aside class="install-aside">
-          <div class="install-card tactile">
-            <span class="sticker sticker-red sticker-float-1">FREE</span>
-            <div class="install-icon" aria-hidden="true">🧩</div>
-            <h3 class="install-title">Ratio&rsquo;d for Gmail</h3>
-            <p class="install-sub">Manifest V3 &middot; v1.0.0 &middot; 33 KB</p>
+          <aside class="install-aside">
+            <div class="install-card tactile">
+              <span class="sticker sticker-red sticker-float-1">FREE</span>
+              <div class="install-icon" aria-hidden="true">🧩</div>
+              <h3 class="install-title">Ratio&rsquo;d for Gmail</h3>
+              <p class="install-sub">Manifest V3 &middot; v1.0.0 &middot; 33 KB</p>
 
-            <a href="ratiod-extension.zip" download="ratiod-extension.zip"
-               class="btn btn-primary btn-block" id="dl-btn">
-              <span aria-hidden="true">⬇</span> Download the ZIP
-            </a>
+              <a href="ratiod-extension.zip" download="ratiod-extension.zip"
+                 class="btn btn-primary btn-block" id="dl-btn">
+                <span aria-hidden="true">⬇</span> Download the ZIP
+              </a>
 
-            <ul class="install-meta">
-              <li><span class="bullet" aria-hidden="true">✓</span> Works with the live API, no local server needed</li>
-              <li><span class="bullet" aria-hidden="true">✓</span> No account, no sign-in, nothing stored</li>
-              <li><span class="bullet" aria-hidden="true">✓</span> Uninstall with one click</li>
-            </ul>
-          </div>
-
-          <a class="alt-link" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">
-            View source on GitHub <span aria-hidden="true">↗</span>
-          </a>
-        </aside>
-
-        <div class="install-main">
-          <div class="steps-head">
-            <div class="steps-progress">
-              <div class="progress-track"><span class="progress-fill" id="progress-fill"></span></div>
-              <span class="progress-text" id="progress-text">0 of 5 done</span>
+              <ul class="install-meta">
+                <li><span class="bullet" aria-hidden="true">✓</span> Works with the live API, no local server needed</li>
+                <li><span class="bullet" aria-hidden="true">✓</span> No account, no sign-in, nothing stored</li>
+                <li><span class="bullet" aria-hidden="true">✓</span> Uninstall with one click</li>
+              </ul>
             </div>
-            <button class="btn-link" id="reset-steps" type="button">Reset</button>
-          </div>
 
-          <ol class="isteps" id="isteps">
-            <li class="istep">
-              <label class="istep-check">
-                <input type="checkbox" data-step="1">
-                <span class="istep-box" aria-hidden="true"></span>
-                <span class="sr-only">Mark step 1 complete</span>
-              </label>
-              <div class="istep-body">
-                <h3>Download the ZIP</h3>
-                <p>Use the button on the left. It saves to your normal Downloads folder.</p>
-                <div class="istep-actions">
-                  <a href="ratiod-extension.zip" download class="btn btn-secondary btn-sm">⬇ Download again</a>
+            <a class="alt-link" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">
+              View source on GitHub <span aria-hidden="true">↗</span>
+            </a>
+          </aside>
+
+          <div class="install-main">
+            <div class="steps-head">
+              <div class="steps-progress">
+                <div class="progress-track"><span class="progress-fill" id="progress-fill"></span></div>
+                <span class="progress-text" id="progress-text">0 of 5 done</span>
+              </div>
+              <button class="btn-link" id="reset-steps" type="button">Reset</button>
+            </div>
+
+            <ol class="isteps" id="isteps">
+              <li class="istep">
+                <label class="istep-check">
+                  <input type="checkbox" data-step="1">
+                  <span class="istep-box" aria-hidden="true"></span>
+                  <span class="sr-only">Mark step 1 complete</span>
+                </label>
+                <div class="istep-body">
+                  <h3>Download the ZIP</h3>
+                  <p>Use the button on the left. It saves to your normal Downloads folder.</p>
+                  <div class="istep-actions">
+                    <a href="ratiod-extension.zip" download class="btn btn-secondary btn-sm">⬇ Download again</a>
+                  </div>
                 </div>
-              </div>
-            </li>
+              </li>
 
-            <li class="istep">
-              <label class="istep-check">
-                <input type="checkbox" data-step="2">
-                <span class="istep-box" aria-hidden="true"></span>
-                <span class="sr-only">Mark step 2 complete</span>
-              </label>
-              <div class="istep-body">
-                <h3>Unzip it</h3>
-                <p>Double-click <code>ratiod-extension.zip</code>. You should end up with a folder that contains <code>manifest.json</code>.</p>
-                <p class="istep-note">Safari on macOS unzips automatically — skip to step 3. On Windows: right-click the ZIP → <em>Extract All</em>.</p>
-              </div>
-            </li>
-
-            <li class="istep">
-              <label class="istep-check">
-                <input type="checkbox" data-step="3">
-                <span class="istep-box" aria-hidden="true"></span>
-                <span class="sr-only">Mark step 3 complete</span>
-              </label>
-              <div class="istep-body">
-                <h3>Open the extensions page</h3>
-                <p>Copy the address below and paste it into your Chrome address bar.</p>
-                <div class="copy-row">
-                  <code class="copy-code">chrome://extensions</code>
-                  <button class="btn btn-secondary btn-sm" data-copy="chrome://extensions" type="button">Copy</button>
+              <li class="istep">
+                <label class="istep-check">
+                  <input type="checkbox" data-step="2">
+                  <span class="istep-box" aria-hidden="true"></span>
+                  <span class="sr-only">Mark step 2 complete</span>
+                </label>
+                <div class="istep-body">
+                  <h3>Unzip it</h3>
+                  <p>Double-click <code>ratiod-extension.zip</code>. You should end up with a folder that contains <code>manifest.json</code>.</p>
+                  <p class="istep-note">Safari on macOS unzips automatically — skip to step 3. On Windows: right-click the ZIP → <em>Extract All</em>.</p>
                 </div>
-                <p class="istep-note">Chrome blocks links to <code>chrome://</code> pages from any website, which is why this one needs a copy-paste.</p>
-              </div>
-            </li>
+              </li>
 
-            <li class="istep">
-              <label class="istep-check">
-                <input type="checkbox" data-step="4">
-                <span class="istep-box" aria-hidden="true"></span>
-                <span class="sr-only">Mark step 4 complete</span>
-              </label>
-              <div class="istep-body">
-                <h3>Load it</h3>
-                <ol class="mini-steps">
-                  <li>Turn on <strong>Developer mode</strong> with the toggle in the top-right corner.</li>
-                  <li>Click <strong>Load unpacked</strong> in the toolbar that appears.</li>
-                  <li>Pick the unzipped folder — the one containing <code>manifest.json</code>, not the ZIP file.</li>
-                </ol>
-              </div>
-            </li>
-
-            <li class="istep">
-              <label class="istep-check">
-                <input type="checkbox" data-step="5">
-                <span class="istep-box" aria-hidden="true"></span>
-                <span class="sr-only">Mark step 5 complete</span>
-              </label>
-              <div class="istep-body">
-                <h3>Open Gmail and try it</h3>
-                <p>Click any email in your inbox and the verdict banner appears at the top of the message.</p>
-                <div class="istep-actions">
-                  <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
-                    Open Gmail <span aria-hidden="true">↗</span>
-                  </a>
-                  <a href="#console" class="btn btn-secondary btn-sm">Test in the console</a>
+              <li class="istep">
+                <label class="istep-check">
+                  <input type="checkbox" data-step="3">
+                  <span class="istep-box" aria-hidden="true"></span>
+                  <span class="sr-only">Mark step 3 complete</span>
+                </label>
+                <div class="istep-body">
+                  <h3>Open the extensions page</h3>
+                  <p>Copy the address below and paste it into your Chrome address bar.</p>
+                  <div class="copy-row">
+                    <code class="copy-code">chrome://extensions</code>
+                    <button class="btn btn-secondary btn-sm" data-copy="chrome://extensions" type="button">Copy</button>
+                  </div>
+                  <p class="istep-note">Chrome blocks links to <code>chrome://</code> pages from any website, which is why this one needs a copy-paste.</p>
                 </div>
-              </div>
-            </li>
-          </ol>
+              </li>
 
-          <div class="faq">
-            <h3 class="faq-title">If something goes wrong</h3>
+              <li class="istep">
+                <label class="istep-check">
+                  <input type="checkbox" data-step="4">
+                  <span class="istep-box" aria-hidden="true"></span>
+                  <span class="sr-only">Mark step 4 complete</span>
+                </label>
+                <div class="istep-body">
+                  <h3>Load it</h3>
+                  <ol class="mini-steps">
+                    <li>Turn on <strong>Developer mode</strong> with the toggle in the top-right corner.</li>
+                    <li>Click <strong>Load unpacked</strong> in the toolbar that appears.</li>
+                    <li>Pick the unzipped folder — the one containing <code>manifest.json</code>, not the ZIP file.</li>
+                  </ol>
+                </div>
+              </li>
 
-            <details class="faq-item">
-              <summary>"Load unpacked" is missing</summary>
-              <p>Developer mode is not on yet. Toggle it in the top-right of the extensions page and the toolbar with <strong>Load unpacked</strong> appears.</p>
-            </details>
+              <li class="istep">
+                <label class="istep-check">
+                  <input type="checkbox" data-step="5">
+                  <span class="istep-box" aria-hidden="true"></span>
+                  <span class="sr-only">Mark step 5 complete</span>
+                </label>
+                <div class="istep-body">
+                  <h3>Open Gmail and try it</h3>
+                  <p>Click any email in your inbox and the verdict banner appears at the top of the message.</p>
+                  <div class="istep-actions">
+                    <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                      Open Gmail <span aria-hidden="true">↗</span>
+                    </a>
+                    <a href="#console" class="btn btn-secondary btn-sm">Test in the console</a>
+                  </div>
+                </div>
+              </li>
+            </ol>
 
-            <details class="faq-item">
-              <summary>Chrome says "Manifest file is missing or unreadable"</summary>
-              <p>You picked the ZIP instead of the extracted folder. Go back, extract the archive, and choose the folder containing <code>manifest.json</code>.</p>
-            </details>
+            <div class="faq">
+              <h3 class="faq-title">If something goes wrong</h3>
 
-            <details class="faq-item">
-              <summary>The banner never appears in Gmail</summary>
-              <p>Refresh Gmail once with <kbd>Cmd</kbd>+<kbd>R</kbd> (Windows: <kbd>Ctrl</kbd>+<kbd>R</kbd>) after loading, then open an email you have not already got open. The extension only runs on <code>mail.google.com</code>.</p>
-            </details>
+              <details class="faq-item">
+                <summary>"Load unpacked" is missing</summary>
+                <p>Developer mode is not on yet. Toggle it in the top-right of the extensions page and the toolbar with <strong>Load unpacked</strong> appears.</p>
+              </details>
 
-            <details class="faq-item">
-              <summary>The banner shows "engine unreachable"</summary>
-              <p>Rare — the extension talks to the live API automatically. Check your connection and reload the email. If you run the project locally, <code>npm start</code> and the banner will prefer that.</p>
-            </details>
+              <details class="faq-item">
+                <summary>Chrome says "Manifest file is missing or unreadable"</summary>
+                <p>You picked the ZIP instead of the extracted folder. Go back, extract the archive, and choose the folder containing <code>manifest.json</code>.</p>
+              </details>
 
-            <details class="faq-item">
-              <summary>How do I remove it?</summary>
-              <p>Open the extensions page, find <strong>Ratio&rsquo;d</strong>, click <strong>Remove</strong>. Nothing was stored locally, so there is nothing to clean up.</p>
-            </details>
+              <details class="faq-item">
+                <summary>The banner never appears in Gmail</summary>
+                <p>Refresh Gmail once with <kbd>Cmd</kbd>+<kbd>R</kbd> (Windows: <kbd>Ctrl</kbd>+<kbd>R</kbd>) after loading, then open an email you have not already got open. The extension only runs on <code>mail.google.com</code>.</p>
+              </details>
+
+              <details class="faq-item">
+                <summary>The banner shows "engine unreachable"</summary>
+                <p>Rare — the extension talks to the live API automatically. Check your connection and reload the email. If you run the project locally, <code>npm start</code> and the banner will prefer that.</p>
+              </details>
+
+              <details class="faq-item">
+                <summary>How do I remove it?</summary>
+                <p>Open the extensions page, find <strong>Ratio&rsquo;d</strong>, click <strong>Remove</strong>. Nothing was stored locally, so there is nothing to clean up.</p>
+              </details>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <!-- Architecture Flowchart Section -->
+    <section id="architecture" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Architecture</span>
+        <h2 class="section-title">Every stage of the <span class="marker marker-blue">pipeline</span></h2>
+        <p class="section-sub">Ten stages from the Gmail tab to the verdict banner. Stages 1&ndash;3 and 10 run in your browser &mdash; your phone numbers, email addresses and OTP codes are masked <em>before</em> anything crosses the network boundary.</p>
+      </div>
+
+      <div class="arch-controls">
+        <div class="arch-lens" role="group" aria-label="View lens">
+          <button class="channel-tab active" id="arch-lens-components" type="button" aria-pressed="true">Components</button>
+          <button class="channel-tab" id="arch-lens-data" type="button" aria-pressed="false">Data</button>
+        </div>
+        <div class="arch-transport">
+          <button class="btn btn-secondary btn-sm tactile" id="arch-prev" type="button" aria-label="Previous stage">&#8592; Prev</button>
+          <button class="btn btn-primary btn-sm tactile" id="arch-play" type="button" aria-pressed="false" aria-label="Play through the pipeline">&#9654; Play</button>
+          <button class="btn btn-secondary btn-sm tactile" id="arch-next" type="button" aria-label="Next stage">Next &#8594;</button>
+        </div>
+        <p class="arch-status" id="arch-status" role="status" aria-live="polite">Stage 01 / 10</p>
+      </div>
+
+      <div class="arch-board" id="arch-board">
+        <noscript>
+          <p class="section-sub">The interactive chart needs JavaScript. The ten stages are: 1) the user opens the email, 2) the content script activates, 3) client-side PII redaction, 4) redacted text is sent to the backend, 5) the rule engine and 6) the Laya local model run in parallel, 7) the score combiner merges them, 8) the LLM writes the explanation, 9) the response is returned, and 10) the Shadow DOM banner is rendered in Gmail.</p>
+        </noscript>
+      </div>
+
+      <div class="arch-detail tactile" id="arch-detail" aria-live="polite"></div>
+    </section>
+
+    <!-- Pipeline Section -->
+    <section id="pipeline" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Pipeline</span>
+        <h2 class="section-title">Live <span class="marker marker-blue">4-stage</span> verification</h2>
+        <p class="section-sub">A deterministic client-side inspection pipeline that runs before any external model is ever invoked.</p>
+      </div>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-card tactile card-tint-yellow" id="stage-0">
+          <div class="stage-badge">01</div>
+          <div class="stage-num">Stage / Observe</div>
+          <h3 class="stage-title">Observe</h3>
+          <p class="stage-desc">Raw message capture & immediate client-side PII masking (phones, emails, OTPs).</p>
+        </div>
+
+        <div class="pipeline-card tactile card-tint-blue" id="stage-1">
+          <div class="stage-badge">02</div>
+          <div class="stage-num">Stage / Detect</div>
+          <h3 class="stage-title">Detect</h3>
+          <p class="stage-desc">Deterministic rule checks for lookalike domains, link mismatches & urgency triggers.</p>
+        </div>
+
+        <div class="pipeline-card tactile card-tint-pink" id="stage-2">
+          <div class="stage-badge">03</div>
+          <div class="stage-num">Stage / Explain</div>
+          <h3 class="stage-title">Explain</h3>
+          <p class="stage-desc">In-context threat span highlighting with grounded, plain-language risk explanations.</p>
+        </div>
+
+        <div class="pipeline-card tactile card-tint-green" id="stage-3">
+          <div class="stage-badge">04</div>
+          <div class="stage-num">Stage / Respond</div>
+          <h3 class="stage-title">Respond</h3>
+          <p class="stage-desc">Tactile risk score reveal (0–100) & a prioritized incident recovery checklist.</p>
+        </div>
+      </div>
+    </section>
 
     <!-- Feature Grid -->
     <section id="features" class="section">

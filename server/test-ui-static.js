@@ -129,6 +129,28 @@ check("primary nav has the expected links in order",
   navOrder.join("|") ===
     "Analyze|Get Extension|Architecture|How it works|Features|Roadmap|Privacy Policy",
   navOrder.join(" -> "));
+
+// Scrolling down must reveal the sections in the same order the nav lists
+// them, so the first thing below the hero is the analyzer and the second is
+// the extension pitch. Derive the expectation from the nav rather than
+// hard-coding it twice, so the two can never drift apart silently.
+const NAV_TO_SECTION = {
+  Analyze: "console",
+  "Get Extension": "install",
+  Architecture: "architecture",
+  "How it works": "pipeline",
+  Features: "features",
+  Roadmap: "tiers",
+};
+const derivedOrder = navOrder.filter((l) => NAV_TO_SECTION[l]).map((l) => NAV_TO_SECTION[l]);
+check("scroll order matches nav order",
+  derivedOrder.join(",") === order.join(","),
+  `page: ${order.join(" -> ")} | from nav: ${derivedOrder.join(" -> ")}`);
+check("analyzer is the first section after the hero",
+  order[0] === "console" && html.indexOf('class="hero-section"') < html.indexOf('id="console"'),
+  order.join(" -> "));
+check("extension install directly follows the analyzer",
+  order[1] === "install", order.join(" -> "));
 check("privacy policy is linked from the nav", /href="privacy\.html"/.test(navBlock));
 check("privacy page exists and has real policy copy",
   fs.existsSync(path.join(ROOT, "privacy.html")) &&
