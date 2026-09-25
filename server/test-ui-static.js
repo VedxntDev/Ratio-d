@@ -99,12 +99,17 @@ check("dismissible promo bar present", /id="promo-bar"/.test(html) && /id="promo
 check("promo bar starts hidden (shown by JS only)", /id="promo-bar"[^>]*hidden/.test(html));
 check("promo dismissal remembered", /ratiod\.promo\.dismissed/.test(installJs));
 check("floating download button present", /id="dl-fab"/.test(html));
-// The fab is now a permanent bottom-left control, so it must NOT be gated on
+// The fab is now a permanent bottom-right control, so it must NOT be gated on
 // scroll position any more (that used to hide it past the hero / on #install).
 check("fab is always visible (no scroll gating)", !/pastHero|installVisible/.test(installJs));
-check("fab is pinned bottom-left in CSS",
-  /\.dl-fab \{[^}]*position: fixed;[^}]*left: 22px;[^}]*bottom: 22px/.test(css) &&
-  !/\.dl-fab \{[^}]*right: 22px/.test(css));
+check("fab is pinned bottom-right in CSS",
+  /\.dl-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
+  !/\.dl-fab \{[^}]*left: 22px/.test(css));
+// The narrow-screen override must move to `right` too, or the base `right`
+// plus a mobile `left` would stretch the button across the viewport.
+check("mobile fab override also uses right",
+  /@media \(max-width: 600px\)[\s\S]*?\.dl-fab \{[^}]*right: 16px/.test(css) &&
+  !/@media \(max-width: 600px\)[\s\S]*?\.dl-fab \{[^}]*left: 16px/.test(css));
 check("fab visible state is the CSS default (works without JS)",
   /\.dl-fab \{[^}]*opacity: 1;[^}]*visibility: visible/.test(css));
 check("promo bar has a download link", /id="promo-bar"[\s\S]{0,600}?ratiod-extension\.zip/.test(html));

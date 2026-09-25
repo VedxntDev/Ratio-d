@@ -1156,13 +1156,11 @@ h1, h2, h3, h4 {
 .promo-close:hover { background: var(--color-primary); color: #fff; transform: rotate(90deg); }
 
 /* ---- floating download button ----
-   Pinned bottom-LEFT (not right) and visible from first paint at every
-   breakpoint. The visible state is the DEFAULT so the button can never be
-   missing if JS is blocked or slow; .is-visible is kept as a no-op-compatible
-   hook. Bottom-left avoids the browser's right-edge controls and the corner
-   where the mobile promo-bar actions stack up. */
+   Pinned bottom-RIGHT and visible from first paint at every breakpoint. The
+   visible state is the DEFAULT so the button can never be missing if JS is
+   blocked or slow; .is-visible is kept as a no-op-compatible hook. */
 .dl-fab {
-  position: fixed; left: 22px; bottom: 22px; z-index: 80;
+  position: fixed; right: 22px; bottom: 22px; z-index: 80;
   display: inline-flex; align-items: center; gap: 9px;
   background: var(--color-primary); color: #fff;
   font-family: var(--font-display); font-size: 0.92rem; font-weight: 800;
@@ -1173,7 +1171,7 @@ h1, h2, h3, h4 {
   transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.25s;
 }
 .dl-fab.is-visible { opacity: 1; visibility: visible; transform: none; }
-.dl-fab:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--color-ink); }
+.dl-fab:hover { transform: translate(2px, -2px); box-shadow: 7px 7px 0 var(--color-ink); }
 .dl-fab-icon { font-size: 1.05rem; }
 @media (max-width: 600px) {
   .promo-inner { flex-wrap: wrap; gap: 10px; }
@@ -1183,7 +1181,7 @@ h1, h2, h3, h4 {
   .promo-text { order: 3; flex: 1 0 100%; width: 100%; }
   .promo-actions { margin-left: auto; }
   .dl-fab-text { display: none; }
-  .dl-fab { padding: 14px; left: 16px; bottom: 16px; }
+  .dl-fab { padding: 14px; right: 16px; bottom: 16px; }
 }
 
 .faq-item kbd {
