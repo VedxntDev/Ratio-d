@@ -4,6 +4,7 @@
   "rewrites": [
     { "source": "/privacy.html", "destination": "/web/privacy.html" },
     { "source": "/privacy", "destination": "/web/privacy.html" },
+    { "source": "/ratiod-extension.zip", "destination": "/web/ratiod-extension.zip" },
     { "source": "/(.*)", "destination": "/web/$1" }
   ]
 }
