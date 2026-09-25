@@ -42,8 +42,11 @@ async function handleAnalyze(reqBody) {
   // 4. Combine Scores & Build Next Steps
   const { score, verdict, next_steps } = combineScore(ruleScore, layaResult, validChannel, flags);
 
-  // 5. Generate Grounded Explanation (Grounded ONLY in flags)
-  const explanation = generateExplanation(verdict, flags, validChannel);
+  // 5. Generate Grounded Explanation.
+  // Deterministic by default; uses the LLM prompt only when a key is configured,
+  // and the returned source is reported verbatim so nothing is ever implied.
+  const { explanation, source: explainSource, model: explainModel } =
+    await generateExplanation(verdict, flags, validChannel, text);
 
   // 6. Log Privacy Telemetry (Zero raw text persistence)
   logPrivacyTelemetry(validChannel, privacyStats);
@@ -66,6 +69,8 @@ async function handleAnalyze(reqBody) {
       model_probability: layaResult.probability,
       model_note: layaResult.note,
       explain: "grounded-in-flags",
+      explain_source: explainSource,
+      explain_model: explainModel,
       latency_ms: Date.now() - startedAt
     }
   };

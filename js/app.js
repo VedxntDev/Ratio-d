@@ -200,7 +200,10 @@ document.addEventListener("DOMContentLoaded", () => {
         isFallback ? "is-warn" : "is-good"],
       ["PII masked (server)", (privacy.phones_masked || 0) + " phone / " +
         (privacy.emails_masked || 0) + " email / " + (privacy.otp_masked || 0) + " OTP", ""],
-      ["Explanation mode", engine.explain || "grounded-in-flags", "is-good"]
+      ["Explanation mode", engine.explain || "grounded-in-flags", "is-good"],
+      ["Explanation by", engine.explain_source === "llm"
+        ? "LLM (" + (engine.explain_model || "unknown") + ")"
+        : "deterministic engine", engine.explain_source === "llm" ? "is-warn" : "is-good"]
     ];
     engineGrid.innerHTML = rows.map(function (r) {
       return '<div><dt>' + r[0] + '</dt><dd class="' + r[2] + '">' + escapeHtml(r[1]) + "</dd></div>";

@@ -7,6 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "test": "node server/test-phishing.js",
-    "test:ui": "node server/test-ui-static.js && node test-ui-contract.js"
+    "test:ui": "node server/test-ui-static.js && node test-ui-contract.js",
+    "test:spec": "node server/test-spec-rules.js && node server/test-spec-sanity.js",
+    "test:fp": "node server/test-false-positives.js",
+    "test:all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-ui-static.js && node test-ui-contract.js"
   }
 }
