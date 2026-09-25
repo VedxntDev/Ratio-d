@@ -3,289 +3,353 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0F172A">
-  <meta name="description" content="Ratio'd is a privacy-first scam risk analyzer. PII is redacted in your browser, then a deterministic engine returns a 0-100 risk score with recovery steps.">
-  <title>Ratio'd — Scam Risk Analyzer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#FFD23F">
+  <meta name="description" content="Ratio'd is a privacy-first scam risk analyzer for emails and SMS. Client-side PII redaction, a deterministic threat engine, and a 0–100 risk score with recovery steps.">
+  <title>Ratio'd — Scam Risk Analyzer (Cybersecurity & Defense)</title>
+
+  <!-- GSAP Library for Live Pipeline Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<a class="skip-link" href="#console">Skip to analyzer</a>
+  <a class="skip-link" href="#console">Skip to the analyzer</a>
 
-<!-- ============ HEADER ============ -->
-<header class="site-header">
-  <div class="shell header-inner">
-    <a href="#top" class="brand" aria-label="Ratio'd home">
-      <span class="brand-mark" aria-hidden="true">R</span>
-      <span class="brand-name">Ratio&rsquo;d</span>
-    </a>
-
-    <nav class="site-nav" aria-label="Primary">
-      <a href="#console">Analyzer</a>
-      <a href="#pipeline">Pipeline</a>
-      <a href="#features">Capabilities</a>
-      <a href="#install">Get the extension</a>
-    </nav>
-
-    <div class="header-right">
-      <a href="#install" class="btn btn-install btn-sm">
-        <span aria-hidden="true">⬇</span> Get extension
+  <!-- Header Navigation -->
+  <header class="header">
+    <div class="container nav-wrapper">
+      <a href="#top" class="logo-group" aria-label="Ratio'd home">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <span class="brand-title">Ratio&rsquo;d</span>
+        <span class="sticker sticker-yellow sticker-tilt-left">DEFENSE · V1.0</span>
       </a>
-      <div class="chan-switch" role="group" aria-label="Message channel">
-        <button class="chan-btn is-active" id="tab-email" type="button" aria-pressed="true">Email</button>
-        <button class="chan-btn" id="tab-sms" type="button" aria-pressed="false">SMS</button>
+
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="#console" class="nav-link">Analyze</a></li>
+          <li><a href="#pipeline" class="nav-link">How it works</a></li>
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#install" class="nav-link">Get Extension</a></li>
+          <li><a href="#tiers" class="nav-link">Roadmap</a></li>
+        </ul>
+      </nav>
+
+      <div class="channel-selector" role="group" aria-label="Message channel">
+        <button class="channel-tab active" id="tab-email" type="button">Email</button>
+        <button class="channel-tab" id="tab-sms" type="button">SMS</button>
       </div>
-      <div class="conn-pill" id="conn-pill" data-state="checking" title="Backend connectivity">
-        <span class="conn-dot" aria-hidden="true"></span>
-        <span id="conn-text">Connecting</span>
-      </div>
+    </div>
+  </header>
+
+  <!-- Marquee Ticker -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>// ZERO DATA STORED</span><span>// CLIENT-SIDE PII REDACTION</span><span>// 4-STAGE PIPELINE</span><span>// 0–100 RISK SCORE</span><span>// GMAIL EXTENSION</span><span>// RULES + LAYA ENGINE</span>
+      <span>// ZERO DATA STORED</span><span>// CLIENT-SIDE PII REDACTION</span><span>// 4-STAGE PIPELINE</span><span>// 0–100 RISK SCORE</span><span>// GMAIL EXTENSION</span><span>// RULES + LAYA ENGINE</span>
     </div>
   </div>
-</header>
 
-<main id="top">
+  <main class="container" id="top">
 
-  <!-- ============ HERO ============ -->
-  <section class="hero">
-    <div class="shell hero-inner">
+    <!-- Hero Section -->
+    <section class="hero-section">
       <div class="hero-copy">
-        <span class="eyebrow">Privacy-first threat analysis</span>
-        <h1 class="hero-title">Read the message.<br><span class="grad">Not your instincts.</span></h1>
-        <p class="hero-lede">
-          Paste any email or SMS. Ratio&rsquo;d strips your phone numbers, emails and OTPs
-          <em>in your browser</em>, then runs a deterministic rule engine that explains every
-          flag it fires &mdash; no black box, nothing stored.
+        <div class="hero-kicker">
+          <span class="sticker sticker-blue">SCAM RISK ANALYZER</span>
+          <span class="sticker sticker-white sticker-tilt-right">TEAM SKILL ISSUE</span>
+        </div>
+
+        <h1 class="hero-headline">
+          Check the <span class="marker">message,</span><br>
+          <span class="italic-accent">not your luck.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Paste a sketchy email or text. Ratio&rsquo;d scrubs your personal info in the browser, runs it through a deterministic threat engine, and hands you a plain-language verdict with a recovery checklist.
         </p>
-        <div class="hero-actions">
-          <a href="#console" class="btn btn-primary">Open the analyzer</a>
-          <a href="#install" class="btn btn-ghost">⬇ Get the Chrome extension</a>
-          <button class="btn btn-ghost" id="hero-sample" type="button">Try a sample phish</button>
-        </div>
-        <ul class="hero-trust">
-          <li><strong>0</strong> messages stored</li>
-          <li><strong>100%</strong> PII masked client-side</li>
-          <li><strong>&lt;15ms</strong> verdict latency</li>
-        </ul>
-      </div>
 
-      <div class="hero-art">
-        <div class="art-card">
-          <div class="art-bar">
-            <span class="art-dot" style="background:#FF5F57"></span>
-            <span class="art-dot" style="background:#FEBC2E"></span>
-            <span class="art-dot" style="background:#28C840"></span>
-            <span class="art-bar-label">ratiod &middot; live verdict</span>
-          </div>
-          <img src="assets/mascot.jpg" alt="Ratio'd mascot illustration" class="art-img" width="360" height="360">
-          <div class="art-verdict">
-            <span class="art-score">100</span>
-            <span class="art-label">HIGH RISK</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ CONSOLE ============ -->
-  <section id="console" class="console-section">
-    <div class="shell">
-      <div class="section-intro">
-        <h2 class="section-title">The analyzer</h2>
-        <p class="section-lede">Everything runs against the live engine. Nothing you paste is written to disk.</p>
-      </div>
-
-      <div class="console-grid">
-
-        <!-- INPUT PANE -->
-        <div class="pane pane-input">
-          <div class="pane-head">
-            <h3 class="pane-title">Message input</h3>
-            <span class="pane-hint"><kbd>Cmd</kbd>+<kbd>Enter</kbd> to run</span>
-          </div>
-
-          <textarea id="telemetry-input" class="msg-input" spellcheck="false"
-            placeholder="Paste the full email or SMS here - headers, subject and body all help.&#10;&#10;From: security-alert@paypa1-security.com&#10;Subject: URGENT: account suspended&#10;https://paypa1-security.com/restore-login"></textarea>
-
-          <div class="preset-row">
-            <span class="preset-label">Samples</span>
-            <button class="chip chip-danger" id="preset-phishing" type="button">Phishing email</button>
-            <button class="chip chip-warn" id="preset-sms" type="button">Smishing SMS</button>
-            <button class="chip chip-safe" id="preset-legit" type="button">Legitimate mail</button>
-          </div>
-
-          <div class="redaction-readout" id="redaction-readout">
-            <span class="ro-icon" aria-hidden="true">&#128274;</span>
-            <span id="privacy-counts">Client-side redaction armed &mdash; no PII leaves your browser unmasked.</span>
-          </div>
-
-          <div class="pane-actions">
-            <button class="btn btn-primary btn-block" id="btn-analyze" type="button">Analyze message</button>
-            <button class="btn btn-quiet" id="btn-clear" type="button">Clear</button>
-          </div>
+        <div class="hero-cta-group">
+          <a href="#console" class="btn btn-primary btn-lg tactile">Analyze a message
+            <span class="btn-arrow" aria-hidden="true">→</span>
+          </a>
+          <button class="btn btn-secondary btn-lg tactile" id="hero-preset-phishing" type="button">Load sample phish</button>
         </div>
 
-        <!-- OUTPUT PANE -->
-        <div class="pane pane-output">
-          <div class="pane-head">
-            <h3 class="pane-title">Verdict</h3>
-            <span class="verdict-badge verdict-idle" id="verdict-badge">Awaiting input</span>
+        <div class="system-status-banner tactile">
+          <div class="status-left">
+            <span class="status-pulse" aria-hidden="true"></span>
+            <span id="status-banner-text">[ SYSTEM ALERT: AIR-GAPPED CLIENT REDACTION ACTIVE ]</span>
           </div>
-
-          <div class="result-empty" id="result-empty">
-            <div class="empty-ring" aria-hidden="true"></div>
-            <p>Paste a message and run the analyzer to see the risk score, every rule that fired, and what to do next.</p>
-          </div>
-
-          <div class="result-view" id="result-view" hidden>
-            <div class="score-row">
-              <div class="score-ring">
-                <svg viewBox="0 0 120 120" class="ring-svg" aria-hidden="true">
-                  <circle class="ring-track" cx="60" cy="60" r="52"></circle>
-                  <circle class="ring-fill" id="gauge-arc" cx="60" cy="60" r="52"></circle>
-                </svg>
-                <div class="score-center">
-                  <span class="score-num" id="score-num">0</span>
-                  <span class="score-of">/ 100</span>
-                </div>
-              </div>
-              <div class="score-meta">
-                <p class="explanation" id="verdict-explanation"></p>
-                <div class="flag-chips" id="flag-chips"></div>
-              </div>
-            </div>
-
-            <div class="block">
-              <h4 class="block-title">What the engine caught</h4>
-              <ul class="flag-list" id="flags-list"></ul>
-            </div>
-
-            <div class="block">
-              <h4 class="block-title">What to do next</h4>
-              <ol class="step-list" id="steps-list"></ol>
-            </div>
-
-            <div class="block engine-block">
-              <h4 class="block-title">Engine trace <span class="block-sub">live response from the analysis backend</span></h4>
-              <dl class="engine-grid" id="engine-grid"></dl>
-            </div>
-          </div>
+          <span class="sticker sticker-yellow">ZERO DATA STORED</span>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- ============ PIPELINE ============ -->
-  <section id="pipeline" class="band-section">
-    <div class="shell">
-      <div class="section-intro">
-        <h2 class="section-title">Four deterministic stages</h2>
-        <p class="section-lede">No stage can be skipped, and every verdict traces back to a specific rule.</p>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="mascot-card tactile">
+          <div class="mascot-card-bar">
+            <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
+            <span class="mascot-card-title">agent_ratiod.png</span>
+          </div>
+          <img src="assets/mascot.jpg" alt="" class="mascot-img" width="360" height="360">
+          <span class="starburst starburst-yellow">100%<br>LOCAL</span>
+          <span class="sticker sticker-red sticker-float-1">PHISH SPOTTED</span>
+          <span class="sticker sticker-blue sticker-float-2">OTP · MASKED</span>
+        </div>
+        <div class="hero-blob hero-blob-yellow"></div>
+        <div class="hero-blob hero-blob-blue"></div>
       </div>
+    </section>
+
+    <!-- Pipeline Section -->
+    <section id="pipeline" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Pipeline</span>
+        <h2 class="section-title">Live <span class="marker marker-blue">4-stage</span> verification</h2>
+        <p class="section-sub">A deterministic client-side inspection pipeline that runs before any external model is ever invoked.</p>
+      </div>
+
       <div class="pipeline-grid">
-        <article class="stage" id="stage-0">
-          <span class="stage-num">01</span>
+        <div class="pipeline-card tactile card-tint-yellow" id="stage-0">
+          <div class="stage-badge">01</div>
+          <div class="stage-num">Stage / Observe</div>
           <h3 class="stage-title">Observe</h3>
-          <p>Message is captured and PII is masked locally &mdash; phones, emails and OTP codes never leave the browser in the clear.</p>
-        </article>
-        <article class="stage" id="stage-1">
-          <span class="stage-num">02</span>
+          <p class="stage-desc">Raw message capture & immediate client-side PII masking (phones, emails, OTPs).</p>
+        </div>
+
+        <div class="pipeline-card tactile card-tint-blue" id="stage-1">
+          <div class="stage-badge">02</div>
+          <div class="stage-num">Stage / Detect</div>
           <h3 class="stage-title">Detect</h3>
-          <p>Homoglyph normalization, Levenshtein brand distance, brand stuffing, risky TLDs, shorteners, urgency and credential harvesting.</p>
-        </article>
-        <article class="stage" id="stage-2">
-          <span class="stage-num">03</span>
+          <p class="stage-desc">Deterministic rule checks for lookalike domains, link mismatches & urgency triggers.</p>
+        </div>
+
+        <div class="pipeline-card tactile card-tint-pink" id="stage-2">
+          <div class="stage-badge">03</div>
+          <div class="stage-num">Stage / Explain</div>
           <h3 class="stage-title">Explain</h3>
-          <p>An explanation is generated strictly from the flags that actually fired. It cannot invent a reason.</p>
-        </article>
-        <article class="stage" id="stage-3">
-          <span class="stage-num">04</span>
+          <p class="stage-desc">In-context threat span highlighting with grounded, plain-language risk explanations.</p>
+        </div>
+
+        <div class="pipeline-card tactile card-tint-green" id="stage-3">
+          <div class="stage-badge">04</div>
+          <div class="stage-num">Stage / Respond</div>
           <h3 class="stage-title">Respond</h3>
-          <p>A 0&ndash;100 score, a plain-language verdict and a recovery checklist tuned to what was detected.</p>
+          <p class="stage-desc">Tactile risk score reveal (0–100) & a prioritized incident recovery checklist.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Control Console Grid -->
+    <section id="console" class="console-grid">
+
+      <!-- Left Pane: Telemetry Input Terminal -->
+      <div class="console-pane tactile">
+        <div class="pane-bar">
+          <div class="pane-dots" aria-hidden="true">
+            <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
+          </div>
+          <h2 class="pane-title">Telemetry input</h2>
+          <span class="sticker sticker-yellow">PASTE ZONE</span>
+        </div>
+
+        <div class="pane-body">
+          <div class="preset-bar">
+            <span class="preset-label">Try a sample:</span>
+            <button class="btn-preset" id="preset-phishing" type="button">Phishing email</button>
+            <button class="btn-preset" id="preset-sms" type="button">Urgent SMS</button>
+            <button class="btn-preset" id="preset-legit" type="button">Safe notice</button>
+          </div>
+
+          <div class="telemetry-input-group">
+            <label for="telemetry-input" class="sr-only">Message to analyze</label>
+            <textarea id="telemetry-input" class="telemetry-textarea" placeholder="Paste email header, subject line, and body text here..."></textarea>
+            <span class="textarea-corner" aria-hidden="true">TXT</span>
+          </div>
+
+          <div class="privacy-toggle-row">
+            <span id="privacy-counts" class="privacy-counts">[OK] Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
+            <button class="btn-preset btn-preset-ghost" id="btn-clear" type="button">Clear</button>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-lg tactile" id="btn-analyze" type="button">
+            Run risk analysis
+            <span class="kbd-hint" aria-hidden="true">CTRL + ENTER</span>
+          </button>
+
+          <div class="privacy-card">
+            <div class="privacy-card-title">
+              <span class="shield-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/></svg>
+              </span>
+              Privacy guarantee
+            </div>
+            Phone numbers, email addresses, and verification codes are redacted client-side before rule processing. No message content is ever written to logs or disk.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Pane: Live Analysis Center -->
+      <div class="console-pane tactile">
+        <div class="pane-bar pane-bar-dark">
+          <div class="pane-dots" aria-hidden="true">
+            <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
+          </div>
+          <h2 class="pane-title">Live analysis center</h2>
+          <span class="sticker sticker-red">OUTPUT</span>
+        </div>
+
+        <div class="pane-body">
+          <!-- Risk Verdict Display -->
+          <div class="verdict-box" aria-live="polite">
+            <div class="gauge-svg-container">
+              <svg width="120" height="120" viewBox="0 0 90 90" aria-hidden="true">
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#121212" stroke-width="13" />
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#FFFFFF" stroke-width="9" />
+                <circle id="gauge-arc" cx="45" cy="45" r="36" fill="none" stroke="#EA3E2B" stroke-width="9"
+                        stroke-linecap="butt" stroke-dasharray="226.19" stroke-dashoffset="226.19"
+                        transform="rotate(-90 45 45)" />
+              </svg>
+              <div class="gauge-label">RISK</div>
+            </div>
+
+            <div class="verdict-info">
+              <span class="verdict-badge verdict-safe" id="verdict-badge">[ VERDICT · READY ]</span>
+              <div class="verdict-score-num">
+                <span id="score-num">0</span><span class="score-denom">/100</span>
+              </div>
+              <p id="verdict-explanation" class="verdict-explanation">
+                Awaiting message payload analysis...
+              </p>
+            </div>
+          </div>
+
+          <!-- Threat Inspector -->
+          <div class="labeled-box">
+            <span class="box-label">Annotated threat inspector</span>
+            <div class="threat-inspector-box" id="threat-inspector">
+              <span class="placeholder-text">Paste a message and click Analyze to view the threat breakdown.</span>
+            </div>
+          </div>
+
+          <!-- Remediation Action Checklist -->
+          <div class="labeled-box">
+            <span class="box-label box-label-yellow">Recovery checklist</span>
+            <div class="checklist-box">
+              <ul class="checklist-items" id="checklist-items">
+                <li><span class="check-bullet">•</span> Awaiting threat analysis report.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Feature Grid -->
+    <section id="features" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Features</span>
+        <h2 class="section-title">Built <span class="marker marker-pink">chunky</span>, built careful</h2>
+        <p class="section-sub">Everything that touches your message happens where you can see it.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-yellow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.5"/></svg>
+          </div>
+          <div class="card-tag">Client-side · Stable</div>
+          <h3>Local PII redaction</h3>
+          <p>Phone numbers, email addresses, and OTP sequences are stripped in browser memory before any telemetry processing. Zero storage.</p>
+        </article>
+
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-blue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
+          </div>
+          <div class="card-tag">Rules + Laya</div>
+          <h3>Hybrid threat engine</h3>
+          <p>Combines deterministic domain lookalike & urgency rules with local classifier scoring for high-precision fraud detection.</p>
+        </article>
+
+        <article class="feature-card tactile">
+          <div class="feature-icon feature-icon-pink" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+          </div>
+          <div class="card-tag">SMS · Email</div>
+          <h3>Multi-channel support</h3>
+          <p>One unified backend API supporting both the paste console and real-time Gmail Chrome extension injection.</p>
         </article>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ============ FEATURES ============ -->
-  <section id="features" class="console-section">
-    <div class="shell">
-      <div class="section-intro">
-        <h2 class="section-title">Built to be checked</h2>
-        <p class="section-lede">Every claim here is verifiable from the engine trace in the analyzer.</p>
+    <!-- Deployment Tiers Section -->
+    <section id="tiers" class="section">
+      <div class="section-head">
+        <span class="section-header-tag">Roadmap</span>
+        <h2 class="section-title">Release <span class="marker marker-green">roadmap</span> & architecture</h2>
       </div>
-      <div class="feature-grid">
-        <div class="feature">
-          <span class="feature-icon" aria-hidden="true">&#128274;</span>
-          <h3>Air-gapped redaction</h3>
-          <p>Regex masking runs in the page before any network call. The server only ever receives the already-redacted string.</p>
-        </div>
-        <div class="feature">
-          <span class="feature-icon" aria-hidden="true">&#128269;</span>
-          <h3>Homoglyph detection</h3>
-          <p><code>m1crosoft</code>, <code>paypa1</code> and <code>rnicrosoft</code> are normalized and matched against a brand list, with a Levenshtein fallback for everything else.</p>
-        </div>
-        <div class="feature">
-          <span class="feature-icon" aria-hidden="true">&#9889;</span>
-          <h3>Urgency + credential combos</h3>
-          <p>Pressure language and password demands score far higher together than either signal alone &mdash; which is exactly how real lures are built.</p>
-        </div>
-        <div class="feature">
-          <span class="feature-icon" aria-hidden="true">&#128203;</span>
-          <h3>No false-positive theatre</h3>
-          <p>Official sender domains are exempt by default, so a genuine password reset from an account you own stays <strong>safe</strong>.</p>
-        </div>
-        <div class="feature">
-          <span class="feature-icon" aria-hidden="true">&#9878;</span>
-          <h3>Honest model reporting</h3>
-          <p>The classifier reports <code>laya_stub_heuristic</code> in every response. A stub is never dressed up as a real model score.</p>
-        </div>
-        <div class="feature">
-          <span class="feature-icon" aria-hidden="true">&#9881;</span>
-          <h3>Gmail extension</h3>
-          <p>A Manifest V3 extension injects the same verdict into Gmail inside an isolated Shadow DOM, immune to page CSS.</p>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ============ INSTALL ============ -->
-  <section id="install" class="install-section">
-    <div class="shell">
-      <div class="section-intro">
-        <span class="eyebrow">Chrome extension</span>
-        <h2 class="section-title">Read every email before you trust it</h2>
-        <p class="section-lede">
-          One download and four clicks puts a live risk verdict inside Gmail. The banner
-          renders in its own Shadow DOM, so Gmail's styling can never break it &mdash;
-          and it keeps working with the analysis API even if your local server is off.
-        </p>
+      <div class="tier-grid">
+        <article class="tier-card tactile tier-current">
+          <span class="sticker sticker-red sticker-corner">CURRENT</span>
+          <div class="tier-step">01</div>
+          <div class="card-tag">Demo</div>
+          <h3>Hackathon prototype</h3>
+          <p>Client-side redaction, local Express rule server, GSAP pipeline, and Chrome Manifest V3 Gmail extension.</p>
+        </article>
+
+        <article class="tier-card tactile">
+          <div class="tier-step">02</div>
+          <div class="card-tag">Pilot · Upcoming</div>
+          <h3>Campus pilot</h3>
+          <p>Custom domain lookalike database, organizational phishing alerts, and standalone Laya container integration.</p>
+        </article>
+
+        <article class="tier-card tactile">
+          <div class="tier-step">03</div>
+          <div class="card-tag">Production · Future</div>
+          <h3>Public release</h3>
+          <p>Zero-knowledge encrypted telemetry API, multi-browser extensions, and enterprise security dashboard.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Extension Install -->
+  <section id="install" class="section install-section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-header-tag">Get the extension</span>
+        <h2 class="section-title">Read every email <span class="marker marker-blue">before</span> you trust it</h2>
+        <p class="section-sub">One download and four clicks puts a live risk verdict inside Gmail. The banner renders inside its own Shadow DOM, so Gmail styling can never break it.</p>
       </div>
 
       <div class="install-grid">
 
         <aside class="install-aside">
-          <div class="dl-card">
-            <div class="dl-icon" aria-hidden="true">🧩</div>
-            <h3 class="dl-title">Ratio&rsquo;d for Gmail</h3>
-            <p class="dl-sub">Manifest V3 &middot; v1.0.0 &middot; 33 KB</p>
+          <div class="install-card tactile">
+            <span class="sticker sticker-red sticker-float-1">FREE</span>
+            <div class="install-icon" aria-hidden="true">🧩</div>
+            <h3 class="install-title">Ratio&rsquo;d for Gmail</h3>
+            <p class="install-sub">Manifest V3 &middot; v1.0.0 &middot; 33 KB</p>
 
             <a href="ratiod-extension.zip" download="ratiod-extension.zip"
                class="btn btn-primary btn-block" id="dl-btn">
               <span aria-hidden="true">⬇</span> Download the ZIP
             </a>
 
-            <ul class="dl-meta">
-              <li><span class="tick" aria-hidden="true">✓</span> Works with the live API, no local server needed</li>
-              <li><span class="tick" aria-hidden="true">✓</span> No account, no sign-in, nothing stored</li>
-              <li><span class="tick" aria-hidden="true">✓</span> Uninstall with one click</li>
+            <ul class="install-meta">
+              <li><span class="bullet" aria-hidden="true">✓</span> Works with the live API, no local server needed</li>
+              <li><span class="bullet" aria-hidden="true">✓</span> No account, no sign-in, nothing stored</li>
+              <li><span class="bullet" aria-hidden="true">✓</span> Uninstall with one click</li>
             </ul>
           </div>
 
           <a class="alt-link" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">
-            View the source on GitHub <span aria-hidden="true">↗</span>
+            View source on GitHub <span aria-hidden="true">↗</span>
           </a>
         </aside>
 
@@ -309,7 +373,7 @@
                 <h3>Download the ZIP</h3>
                 <p>Use the button on the left. It saves to your normal Downloads folder.</p>
                 <div class="istep-actions">
-                  <a href="ratiod-extension.zip" download class="btn btn-quiet btn-sm">⬇ Download again</a>
+                  <a href="ratiod-extension.zip" download class="btn btn-secondary btn-sm">⬇ Download again</a>
                 </div>
               </div>
             </li>
@@ -322,14 +386,8 @@
               </label>
               <div class="istep-body">
                 <h3>Unzip it</h3>
-                <p>
-                  Double-click <code>ratiod-extension.zip</code>. You should end up with a
-                  folder that contains <code>manifest.json</code>.
-                </p>
-                <p class="istep-note">
-                  Safari on macOS unzips automatically &mdash; skip to step 3.
-                  On Windows: right-click the ZIP &rarr; <em>Extract All</em>.
-                </p>
+                <p>Double-click <code>ratiod-extension.zip</code>. You should end up with a folder that contains <code>manifest.json</code>.</p>
+                <p class="istep-note">Safari on macOS unzips automatically — skip to step 3. On Windows: right-click the ZIP → <em>Extract All</em>.</p>
               </div>
             </li>
 
@@ -344,12 +402,9 @@
                 <p>Copy the address below and paste it into your Chrome address bar.</p>
                 <div class="copy-row">
                   <code class="copy-code">chrome://extensions</code>
-                  <button class="btn btn-quiet btn-sm" data-copy="chrome://extensions" type="button">Copy</button>
+                  <button class="btn btn-secondary btn-sm" data-copy="chrome://extensions" type="button">Copy</button>
                 </div>
-                <p class="istep-note">
-                  Chrome blocks links to <code>chrome://</code> pages from any website,
-                  which is why this one needs a copy-paste.
-                </p>
+                <p class="istep-note">Chrome blocks links to <code>chrome://</code> pages from any website, which is why this one needs a copy-paste.</p>
               </div>
             </li>
 
@@ -364,7 +419,7 @@
                 <ol class="mini-steps">
                   <li>Turn on <strong>Developer mode</strong> with the toggle in the top-right corner.</li>
                   <li>Click <strong>Load unpacked</strong> in the toolbar that appears.</li>
-                  <li>Pick the unzipped folder &mdash; the one containing <code>manifest.json</code>, not the ZIP file.</li>
+                  <li>Pick the unzipped folder — the one containing <code>manifest.json</code>, not the ZIP file.</li>
                 </ol>
               </div>
             </li>
@@ -382,7 +437,7 @@
                   <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
                     Open Gmail <span aria-hidden="true">↗</span>
                   </a>
-                  <a href="#console" class="btn btn-quiet btn-sm">Test in the web console</a>
+                  <a href="#console" class="btn btn-secondary btn-sm">Test in the console</a>
                 </div>
               </div>
             </li>
@@ -393,27 +448,27 @@
 
             <details class="faq-item">
               <summary>"Load unpacked" is missing</summary>
-              <p>You have not enabled Developer mode yet. Toggle it on in the top-right of the extensions page, then the toolbar with <strong>Load unpacked</strong> appears.</p>
+              <p>Developer mode is not on yet. Toggle it in the top-right of the extensions page and the toolbar with <strong>Load unpacked</strong> appears.</p>
             </details>
 
             <details class="faq-item">
               <summary>Chrome says "Manifest file is missing or unreadable"</summary>
-              <p>You selected the ZIP file instead of the extracted folder. Go back, extract the archive, and choose the folder that contains <code>manifest.json</code>.</p>
+              <p>You picked the ZIP instead of the extracted folder. Go back, extract the archive, and choose the folder containing <code>manifest.json</code>.</p>
             </details>
 
             <details class="faq-item">
               <summary>The banner never appears in Gmail</summary>
-              <p>Refresh Gmail once with <kbd>Cmd</kbd>+<kbd>R</kbd> (Windows: <kbd>Ctrl</kbd>+<kbd>R</kbd>) after loading the extension, then open an email you have not already got open. The extension only runs on <code>mail.google.com</code>.</p>
+              <p>Refresh Gmail once with <kbd>Cmd</kbd>+<kbd>R</kbd> (Windows: <kbd>Ctrl</kbd>+<kbd>R</kbd>) after loading, then open an email you have not already got open. The extension only runs on <code>mail.google.com</code>.</p>
             </details>
 
             <details class="faq-item">
               <summary>The banner shows "engine unreachable"</summary>
-              <p>The extension talks to the live API automatically, so this is rare. Check your connection and reload the email. If you run the project locally, start it with <code>npm start</code> and the banner will prefer that instead.</p>
+              <p>Rare — the extension talks to the live API automatically. Check your connection and reload the email. If you run the project locally, <code>npm start</code> and the banner will prefer that.</p>
             </details>
 
             <details class="faq-item">
               <summary>How do I remove it?</summary>
-              <p>Open the extensions page, find <strong>Ratio&rsquo;d</strong>, and click <strong>Remove</strong>. Nothing was stored locally, so there is nothing to clean up.</p>
+              <p>Open the extensions page, find <strong>Ratio&rsquo;d</strong>, click <strong>Remove</strong>. Nothing was stored locally, so there is nothing to clean up.</p>
             </details>
           </div>
         </div>
@@ -421,27 +476,31 @@
     </div>
   </section>
 
-  <!-- ============ FOOTER ============ -->
-  <footer class="site-footer">
-    <div class="shell footer-inner">
-      <div>
-        <span class="brand-name">Ratio&rsquo;d</span>
-        <p class="footer-note">Privacy-first scam risk analyzer. No message content is ever stored.</p>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <div>
+          <strong>Ratio&rsquo;d</strong> <span class="footer-muted">// Scam Risk Analyzer · Team Skill Issue</span>
+        </div>
       </div>
-      <nav class="footer-links" aria-label="Footer">
-        <a href="privacy.html">Privacy policy</a>
-        <a href="ratiod-extension.zip" download>Download extension</a>
-      </nav>
+      <div class="footer-links">
+        <a href="privacy.html" class="nav-link">Privacy</a>
+        <a href="#install" class="nav-link">Get Extension</a>
+        <a href="#pipeline" class="nav-link">How it works</a>
+        <a href="#console" class="nav-link">Analyze</a>
+      </div>
+      <div class="footer-muted">Playful Neo-Brutalist Utility Design System</div>
     </div>
   </footer>
 
-</main>
-
-<script src="js/redactor.js"></script>
-<script src="js/presets.js"></script>
-<script src="js/api.js"></script>
-<script src="js/pipeline.js"></script>
-<script src="js/install.js"></script>
-<script src="js/app.js"></script>
+  <!-- App Scripts -->
+  <script src="js/redactor.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/pipeline.js"></script>
+  <script src="js/install.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

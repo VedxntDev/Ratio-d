@@ -1,265 +1,191 @@
 /**
- * Ratio'd — Console Application
- *
- * Wires the UI to the live analysis backend and surfaces exactly what the
- * engine returned (rules fired, model source, latency, privacy counts) so
- * the connection is visible rather than assumed.
+ * Ratio'd Core Web Application Orchestrator
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-  const $ = (id) => document.getElementById(id);
+  const textarea = document.getElementById("telemetry-input");
+  const analyzeBtn = document.getElementById("btn-analyze");
+  const clearBtn = document.getElementById("btn-clear");
+  const channelSMSBtn = document.getElementById("tab-sms");
+  const channelEmailBtn = document.getElementById("tab-email");
 
-  const input        = $("telemetry-input");
-  const analyzeBtn   = $("btn-analyze");
-  const clearBtn     = $("btn-clear");
-  const emailTab     = $("tab-email");
-  const smsTab       = $("tab-sms");
-  const privacyText  = $("privacy-counts");
-  const redactionBox = $("redaction-readout");
-  const connPill     = $("conn-pill");
-  const connText     = $("conn-text");
+  const privacyText = document.getElementById("privacy-counts");
+  const systemStatusBanner = document.getElementById("status-banner-text");
 
-  const emptyState   = $("result-empty");
-  const resultView   = $("result-view");
-  const badge        = $("verdict-badge");
-  const explanation  = $("verdict-explanation");
-  const flagChips    = $("flag-chips");
-  const flagList     = $("flags-list");
-  const stepList     = $("steps-list");
-  const engineGrid   = $("engine-grid");
-  const scoreNum     = $("score-num");
-  const gaugeArc     = $("gauge-arc");
+  const inspectorBox = document.getElementById("threat-inspector");
+  const explanationBox = document.getElementById("verdict-explanation");
+  const verdictBadge = document.getElementById("verdict-badge");
+  const checklistList = document.getElementById("checklist-items");
 
-  let channel = "email";
+  let currentChannel = "email";
+  let activeRedactedText = "";
+  let activePrivacyStats = { phones_masked: 0, emails_masked: 0, otp_masked: 0, total_masked: 0 };
 
-  // Circumference of the r=52 circle: 2 * PI * 52
-  const CIRC = 2 * Math.PI * 52;
-
-  function escapeHtml(str) {
-    return String(str == null ? "" : str)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-
-  function wait(ms) {
-    return new Promise(function (r) { setTimeout(r, ms); });
-  }
-
-  /* ---------------- channel ---------------- */
-  function setChannel(next) {
-    channel = next;
-    const isSms = next === "sms";
-    emailTab.classList.toggle("is-active", !isSms);
-    smsTab.classList.toggle("is-active", isSms);
-    emailTab.setAttribute("aria-pressed", String(!isSms));
-    smsTab.setAttribute("aria-pressed", String(isSms));
-    input.placeholder = isSms
-      ? "Paste the SMS body here..."
-      : "Paste the full email here - headers, subject and body all help.";
-  }
-  emailTab.addEventListener("click", () => setChannel("email"));
-  smsTab.addEventListener("click", () => setChannel("sms"));
-
-  /* ---------------- live redaction readout ---------------- */
-  function updateRedaction(raw) {
-    const { stats } = window.Redactor.redact(raw);
-    const total = stats.total_masked;
-
-    if (total > 0) {
-      redactionBox.classList.add("is-hot");
-      privacyText.innerHTML =
-        "<strong>" + total + " item(s) masked in your browser:</strong> " +
-        stats.phones_masked + " phone &middot; " +
-        stats.emails_masked + " email &middot; " +
-        stats.otp_masked + " OTP &mdash; only the redacted text is sent.";
+  // 1. Channel Switch Handler
+  function setChannel(channel) {
+    currentChannel = channel;
+    if (channel === "sms") {
+      channelSMSBtn.classList.add("active");
+      channelEmailBtn.classList.remove("active");
+      textarea.placeholder = "Paste raw SMS message text here...";
     } else {
-      redactionBox.classList.remove("is-hot");
-      privacyText.textContent =
-        "Client-side redaction armed \u2014 no PII leaves your browser unmasked.";
-    }
-    return stats;
-  }
-  input.addEventListener("input", () => updateRedaction(input.value));
-
-  /* ---------------- connectivity probe ---------------- */
-  async function probeBackend() {
-    try {
-      const res = await fetch(window.ApiClient.healthEndpoint(), { method: "GET" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      connPill.dataset.state = "online";
-      connText.textContent = "Engine online";
-      connPill.title = "Backend: " + (data.runtime || "unknown") + " \u00b7 rules: " +
-        ((data.engine && data.engine.rules) || "n/a");
-    } catch {
-      connPill.dataset.state = "offline";
-      connText.textContent = "Engine offline";
+      channelEmailBtn.classList.add("active");
+      channelSMSBtn.classList.remove("active");
+      textarea.placeholder = "Paste email header, subject line, and body text here...";
     }
   }
-  probeBackend();
 
-  /* ---------------- presets ---------------- */
-  function loadPreset(preset) {
-    setChannel(preset.channel);
-    input.value = preset.text;
-    updateRedaction(input.value);
-  }
-  $("preset-phishing").addEventListener("click", () => loadPreset(window.Presets.phishingEmail));
-  $("preset-sms").addEventListener("click", () => loadPreset(window.Presets.urgentSms));
-  $("preset-legit").addEventListener("click", () => loadPreset(window.Presets.legitimateNotice));
-  $("hero-sample").addEventListener("click", () => {
-    loadPreset(window.Presets.phishingEmail);
-    $("console").scrollIntoView({ behavior: "smooth", block: "start" });
+  channelSMSBtn?.addEventListener("click", () => setChannel("sms"));
+  channelEmailBtn?.addEventListener("click", () => setChannel("email"));
+
+  // 2. Real-time PII Redaction Input Listener
+  textarea?.addEventListener("input", () => {
+    const rawText = textarea.value;
+    const { redactedText, stats } = window.Redactor.redact(rawText);
+    activeRedactedText = redactedText;
+    activePrivacyStats = stats;
+
+    if (privacyText) {
+      if (stats.total_masked > 0) {
+        privacyText.innerHTML = `<strong>&#10003; REAL-TIME PII REDACTION:</strong> ${stats.phones_masked} phone(s), ${stats.emails_masked} email(s), ${stats.otp_masked} OTP code(s) masked.`;
+      } else {
+        privacyText.textContent = "✓ Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.";
+      }
+    }
+
+    if (systemStatusBanner && stats.total_masked > 0) {
+      systemStatusBanner.textContent = `[ SYSTEM ALERT: ${stats.total_masked} PII ITEM(S) REDACTED IN BROWSER MEMORY ]`;
+    }
   });
 
-  /* ---------------- reset ---------------- */
-  function reset() {
-    input.value = "";
-    updateRedaction("");
-    emptyState.hidden = false;
-    resultView.hidden = true;
-    badge.className = "verdict-badge verdict-idle";
-    badge.textContent = "Awaiting input";
-    explanation.textContent = "";
-    flagChips.innerHTML = "";
-    flagList.innerHTML = "";
-    stepList.innerHTML = "";
-    engineGrid.innerHTML = "";
-    scoreNum.textContent = "0";
-    gaugeArc.style.strokeDashoffset = CIRC;
-    gaugeArc.style.stroke = "var(--muted-2)";
-    window.PipelineController.reset();
-  }
-  clearBtn.addEventListener("click", reset);
-
-  /* ---------------- render ---------------- */
-  function scoreColor(verdict) {
-    if (verdict === "high_risk") return "#DC2626";
-    if (verdict === "suspicious") return "#B45309";
-    if (verdict === "promo_clutter") return "#4F46E5";
-    return "#059669";
+  // 3. Preset Loaders
+  function loadPhishingPreset() {
+    setChannel(window.Presets.phishingEmail.channel);
+    textarea.value = window.Presets.phishingEmail.text;
+    textarea.dispatchEvent(new Event("input"));
   }
 
-  function render(result) {
-    const score = result.score || 0;
-    const verdict = result.verdict || "safe";
-    const flags = result.flags || [];
-    const steps = result.next_steps || [];
-    const engine = result.engine || {};
-    const privacy = result.privacy || {};
+  document.getElementById("preset-phishing")?.addEventListener("click", loadPhishingPreset);
+  document.getElementById("hero-preset-phishing")?.addEventListener("click", () => {
+    loadPhishingPreset();
+    document.getElementById("console")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
-    emptyState.hidden = true;
-    resultView.hidden = false;
+  document.getElementById("preset-sms")?.addEventListener("click", () => {
+    setChannel(window.Presets.urgentSms.channel);
+    textarea.value = window.Presets.urgentSms.text;
+    textarea.dispatchEvent(new Event("input"));
+  });
 
-    badge.className = "verdict-badge verdict-" + verdict;
-    badge.textContent = verdict.replace(/_/g, " ");
+  document.getElementById("preset-legit")?.addEventListener("click", () => {
+    setChannel(window.Presets.legitimateNotice.channel);
+    textarea.value = window.Presets.legitimateNotice.text;
+    textarea.dispatchEvent(new Event("input"));
+  });
 
-    explanation.textContent = result.explanation || "";
+  clearBtn?.addEventListener("click", () => {
+    textarea.value = "";
+    textarea.dispatchEvent(new Event("input"));
+    inspectorBox.innerHTML = '<span class="placeholder-text">Paste a message and click Analyze to view the threat breakdown.</span>';
+    explanationBox.textContent = "Awaiting message payload analysis...";
+    verdictBadge.className = "verdict-badge verdict-safe";
+    verdictBadge.textContent = "[ VERDICT · READY ]";
+    checklistList.innerHTML = '<li><span class="check-bullet">•</span> Awaiting threat analysis report.</li>';
+    window.PipelineController.animateGaugeArc(0, "safe");
+  });
 
-    // score ring
-    gaugeArc.style.stroke = scoreColor(verdict);
-    requestAnimationFrame(function () {
-      gaugeArc.style.strokeDashoffset = CIRC * (1 - score / 100);
-    });
-    scoreNum.textContent = score;
+  // 4. Keyboard Hotkey (Cmd/Ctrl + Enter)
+  textarea?.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      runAnalysisPipeline();
+    }
+  });
 
-    // quick chips
-    flagChips.innerHTML = flags.slice(0, 6).map(function (f) {
-      const cls = f.type === "promo" ? "is-warn" : (verdict === "high_risk" ? "is-danger" : "");
-      return '<span class="flag-chip ' + cls + '">' + escapeHtml(f.span) + "</span>";
-    }).join("");
+  analyzeBtn?.addEventListener("click", runAnalysisPipeline);
 
-    // full flag detail
-    flagList.innerHTML = flags.length
-      ? flags.map(function (f) {
-          const cls = f.type === "promo" ? "is-promo" : "is-danger";
-          return '<li class="' + cls + '"><span class="flag-dot"></span>' +
-            '<span class="flag-body"><span class="flag-span">' + escapeHtml(f.span) + "</span>" +
-            '<span class="flag-reason">' + escapeHtml(f.reason) + "</span></span></li>";
-        }).join("")
-      : '<li><span class="flag-dot"></span><span class="flag-body">' +
-        '<span class="flag-reason">No rules fired. Nothing matched a known threat pattern.</span>' +
-        "</span></li>";
-
-    // next steps
-    stepList.innerHTML = steps.map(function (s) {
-      return "<li><span>" + escapeHtml(s) + "</span></li>";
-    }).join("");
-
-    // engine trace — proof of what actually answered
-    const isFallback = result.source === "browser_fallback";
-    const rows = [
-      ["Rule engine", engine.rules || "n/a", "is-good"],
-      ["Rules fired", String(engine.rule_flags != null ? engine.rule_flags : flags.length), ""],
-      ["Model source", engine.model_source || result.source || "n/a",
-        engine.model_source === "laya_stub_heuristic" ? "is-warn" : ""],
-      ["Model probability", engine.model_probability != null
-        ? Number(engine.model_probability).toFixed(2) : "n/a", ""],
-      ["Backend latency", engine.latency_ms != null ? engine.latency_ms + " ms" : "n/a", ""],
-      ["Answered by", isFallback ? "browser fallback" : "analysis backend",
-        isFallback ? "is-warn" : "is-good"],
-      ["PII masked (server)", (privacy.phones_masked || 0) + " phone / " +
-        (privacy.emails_masked || 0) + " email / " + (privacy.otp_masked || 0) + " OTP", ""],
-      ["Explanation mode", engine.explain || "grounded-in-flags", "is-good"],
-      ["Explanation by", engine.explain_source === "llm"
-        ? "LLM (" + (engine.explain_model || "unknown") + ")"
-        : "deterministic engine", engine.explain_source === "llm" ? "is-warn" : "is-good"]
-    ];
-    engineGrid.innerHTML = rows.map(function (r) {
-      return '<div><dt>' + r[0] + '</dt><dd class="' + r[2] + '">' + escapeHtml(r[1]) + "</dd></div>";
-    }).join("");
-  }
-
-  /* ---------------- run ---------------- */
-  let running = false;
-  async function run() {
-    if (running) return;
-    const raw = input.value.trim();
-    if (!raw) {
-      input.focus();
-      input.placeholder = "Paste a message first \u2014 or try a sample above.";
+  // 5. Main Analysis Pipeline Execution
+  async function runAnalysisPipeline() {
+    const rawText = textarea.value.trim();
+    if (!rawText) {
+      alert("Please paste a message or select a sample preset first.");
       return;
     }
 
-    running = true;
-    analyzeBtn.disabled = true;
-    analyzeBtn.textContent = "Analyzing\u2026";
+    // Ensure latest redaction pass
+    const { redactedText, stats } = window.Redactor.redact(rawText);
 
-    const { redactedText } = window.Redactor.redact(raw);
-    const started = performance.now();
+    // Stage 1: Observe (0.2s)
+    window.PipelineController.animatePipeline(0);
 
-    window.PipelineController.setStage(0);
-    await wait(180);
-    window.PipelineController.setStage(1);
+    setTimeout(async () => {
+      // Stage 2: Detect (0.4s)
+      window.PipelineController.animatePipeline(1);
 
-    try {
-      const result = await window.ApiClient.analyze(redactedText, channel);
-      window.PipelineController.setStage(2);
-      await wait(160);
-      window.PipelineController.setStage(3);
-      await wait(180);
-      render(result);
-      probeBackend();
-    } catch (err) {
-      explanation.textContent = "Analysis failed: " + err.message;
-    } finally {
-      analyzeBtn.disabled = false;
-      analyzeBtn.textContent = "Analyze message";
-      running = false;
-      connPill.title = "Last analysis round trip: " +
-        Math.round(performance.now() - started) + " ms";
-    }
+      // Call API
+      const result = await window.ApiClient.analyze(redactedText, currentChannel, stats);
+
+      // Stage 3: Explain (0.6s)
+      window.PipelineController.animatePipeline(2);
+      renderThreatInspector(rawText, result.flags);
+
+      // Stage 4: Respond (0.8s)
+      window.PipelineController.animatePipeline(3, () => {
+        renderVerdictAndChecklist(result);
+      });
+    }, 400);
   }
 
-  analyzeBtn.addEventListener("click", run);
-  input.addEventListener("keydown", function (e) {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-      e.preventDefault();
-      run();
+  // 6. Highlighted Threat Inspector Renderer
+  function renderThreatInspector(originalText, flags) {
+    if (!flags || flags.length === 0) {
+      inspectorBox.textContent = originalText;
+      return;
     }
-  });
 
-  setChannel("email");
-  updateRedaction("");
-  window.PipelineController.reset();
+    let htmlText = originalText;
+    // Highlight matched spans in order of length descending to avoid partial tag replace issues
+    const sortedFlags = [...flags].sort((a, b) => b.span.length - a.span.length);
+
+    sortedFlags.forEach((flag) => {
+      if (flag.span && flag.span.length > 2) {
+        const regex = new RegExp(escapeRegExp(flag.span), "gi");
+        htmlText = htmlText.replace(regex, (match) => {
+          return `<span class="highlighted-flag" title="${flag.reason}">${match}</span>`;
+        });
+      }
+    });
+
+    inspectorBox.innerHTML = htmlText;
+  }
+
+  // Helper escape regex
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // 7. Render Verdict, Score Gauge & Checklist
+  function renderVerdictAndChecklist(result) {
+    const score = result.score || 0;
+    const verdict = result.verdict || "safe";
+    const explanation = result.explanation || "Analysis complete.";
+    const steps = result.next_steps || [];
+
+    // Verdict Badge
+    verdictBadge.className = `verdict-badge verdict-${verdict}`;
+    verdictBadge.textContent = `[ VERDICT · ${verdict.toUpperCase()} ]`;
+
+    // Explanation Box
+    explanationBox.textContent = explanation;
+
+    // Animate Gauge Arc
+    window.PipelineController.animateGaugeArc(score, verdict);
+
+    // Checklist
+    if (checklistList) {
+      checklistList.innerHTML = steps.map(step => `
+        <li><span class="check-bullet">&#10003;</span> <span>${step}</span></li>
+      `).join('');
+    }
+  }
 });

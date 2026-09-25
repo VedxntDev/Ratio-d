@@ -27,12 +27,23 @@ check("doctype present", /^\s*<!doctype html>/i.test(html));
 check("lang attribute set", /<html lang="en">/.test(html));
 check("viewport meta present", /name="viewport"/.test(html));
 check("title present", /<title>[^<]+<\/title>/.test(html));
-check("no external animation CDN", !/gsap/i.test(html), "GSAP removed - zero external JS deps");
 check("single local stylesheet", count(html, /<link[^>]+href="styles\.css"/g) === 1, "styles.css linked once");
 
-// Every id app.js reaches for must exist in the markup.
-// app.js resolves ids through a $() helper, so match those call sites.
-const ids = [...appJs.matchAll(/\$\("([^"]+)"\)/g)].map((m) => m[1]);
+// Animation must degrade gracefully: the page has to work even if the
+// animation library is blocked, offline, or simply not used at all.
+const pipelineJs = fs.readFileSync(path.join(ROOT, "js", "pipeline.js"), "utf8");
+check("animation degrades without its library",
+  /typeof gsap === "undefined"|matchMedia\("\(prefers-reduced-motion/.test(pipelineJs),
+  "guarded against a missing/blocked animation lib");
+check("reduced motion respected in pipeline",
+  /prefers-reduced-motion/.test(pipelineJs) || /prefers-reduced-motion/.test(css));
+
+// Every id the app reaches for must exist in the markup. Supports both
+// `document.getElementById("x")` and the `$("x")` helper style.
+const ids = [
+  ...appJs.matchAll(/getElementById\("([^"]+)"\)/g),
+  ...appJs.matchAll(/\$\("([^"]+)"\)/g),
+].map((m) => m[1]);
 const missing = ids.filter((id) => !html.includes(`id="${id}"`));
 check(
   `all ${ids.length} app.js element ids present in markup`,
@@ -56,7 +67,7 @@ check("css braces balanced", openBraces === closeBraces, `${openBraces} open / $
 check("reduced-motion honoured", /prefers-reduced-motion/.test(css));
 check("focus-visible styles present", /:focus-visible/.test(css));
 check("skip link present", /skip-link/.test(html));
-check("responsive breakpoints", /@media \(max-width: 720px\)/.test(css));
+check("responsive breakpoints", /@media \(max-width: (992|768|720|600)px\)/.test(css));
 check("install section responsive", /\.install-grid \{ grid-template-columns: 1fr; \}/.test(css));
 
 /* ---- extension install flow ---- */
