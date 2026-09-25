@@ -27,9 +27,13 @@
       <a href="#console">Analyzer</a>
       <a href="#pipeline">Pipeline</a>
       <a href="#features">Capabilities</a>
+      <a href="#install">Get the extension</a>
     </nav>
 
     <div class="header-right">
+      <a href="#install" class="btn btn-install btn-sm">
+        <span aria-hidden="true">⬇</span> Get extension
+      </a>
       <div class="chan-switch" role="group" aria-label="Message channel">
         <button class="chan-btn is-active" id="tab-email" type="button" aria-pressed="true">Email</button>
         <button class="chan-btn" id="tab-sms" type="button" aria-pressed="false">SMS</button>
@@ -57,6 +61,7 @@
         </p>
         <div class="hero-actions">
           <a href="#console" class="btn btn-primary">Open the analyzer</a>
+          <a href="#install" class="btn btn-ghost">⬇ Get the Chrome extension</a>
           <button class="btn btn-ghost" id="hero-sample" type="button">Try a sample phish</button>
         </div>
         <ul class="hero-trust">
@@ -246,6 +251,176 @@
     </div>
   </section>
 
+  <!-- ============ INSTALL ============ -->
+  <section id="install" class="install-section">
+    <div class="shell">
+      <div class="section-intro">
+        <span class="eyebrow">Chrome extension</span>
+        <h2 class="section-title">Read every email before you trust it</h2>
+        <p class="section-lede">
+          One download and four clicks puts a live risk verdict inside Gmail. The banner
+          renders in its own Shadow DOM, so Gmail's styling can never break it &mdash;
+          and it keeps working with the analysis API even if your local server is off.
+        </p>
+      </div>
+
+      <div class="install-grid">
+
+        <aside class="install-aside">
+          <div class="dl-card">
+            <div class="dl-icon" aria-hidden="true">🧩</div>
+            <h3 class="dl-title">Ratio&rsquo;d for Gmail</h3>
+            <p class="dl-sub">Manifest V3 &middot; v1.0.0 &middot; 33 KB</p>
+
+            <a href="ratiod-extension.zip" download="ratiod-extension.zip"
+               class="btn btn-primary btn-block" id="dl-btn">
+              <span aria-hidden="true">⬇</span> Download the ZIP
+            </a>
+
+            <ul class="dl-meta">
+              <li><span class="tick" aria-hidden="true">✓</span> Works with the live API, no local server needed</li>
+              <li><span class="tick" aria-hidden="true">✓</span> No account, no sign-in, nothing stored</li>
+              <li><span class="tick" aria-hidden="true">✓</span> Uninstall with one click</li>
+            </ul>
+          </div>
+
+          <a class="alt-link" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">
+            View the source on GitHub <span aria-hidden="true">↗</span>
+          </a>
+        </aside>
+
+        <div class="install-main">
+          <div class="steps-head">
+            <div class="steps-progress">
+              <div class="progress-track"><span class="progress-fill" id="progress-fill"></span></div>
+              <span class="progress-text" id="progress-text">0 of 5 done</span>
+            </div>
+            <button class="btn-link" id="reset-steps" type="button">Reset</button>
+          </div>
+
+          <ol class="isteps" id="isteps">
+            <li class="istep">
+              <label class="istep-check">
+                <input type="checkbox" data-step="1">
+                <span class="istep-box" aria-hidden="true"></span>
+                <span class="sr-only">Mark step 1 complete</span>
+              </label>
+              <div class="istep-body">
+                <h3>Download the ZIP</h3>
+                <p>Use the button on the left. It saves to your normal Downloads folder.</p>
+                <div class="istep-actions">
+                  <a href="ratiod-extension.zip" download class="btn btn-quiet btn-sm">⬇ Download again</a>
+                </div>
+              </div>
+            </li>
+
+            <li class="istep">
+              <label class="istep-check">
+                <input type="checkbox" data-step="2">
+                <span class="istep-box" aria-hidden="true"></span>
+                <span class="sr-only">Mark step 2 complete</span>
+              </label>
+              <div class="istep-body">
+                <h3>Unzip it</h3>
+                <p>
+                  Double-click <code>ratiod-extension.zip</code>. You should end up with a
+                  folder that contains <code>manifest.json</code>.
+                </p>
+                <p class="istep-note">
+                  Safari on macOS unzips automatically &mdash; skip to step 3.
+                  On Windows: right-click the ZIP &rarr; <em>Extract All</em>.
+                </p>
+              </div>
+            </li>
+
+            <li class="istep">
+              <label class="istep-check">
+                <input type="checkbox" data-step="3">
+                <span class="istep-box" aria-hidden="true"></span>
+                <span class="sr-only">Mark step 3 complete</span>
+              </label>
+              <div class="istep-body">
+                <h3>Open the extensions page</h3>
+                <p>Copy the address below and paste it into your Chrome address bar.</p>
+                <div class="copy-row">
+                  <code class="copy-code">chrome://extensions</code>
+                  <button class="btn btn-quiet btn-sm" data-copy="chrome://extensions" type="button">Copy</button>
+                </div>
+                <p class="istep-note">
+                  Chrome blocks links to <code>chrome://</code> pages from any website,
+                  which is why this one needs a copy-paste.
+                </p>
+              </div>
+            </li>
+
+            <li class="istep">
+              <label class="istep-check">
+                <input type="checkbox" data-step="4">
+                <span class="istep-box" aria-hidden="true"></span>
+                <span class="sr-only">Mark step 4 complete</span>
+              </label>
+              <div class="istep-body">
+                <h3>Load it</h3>
+                <ol class="mini-steps">
+                  <li>Turn on <strong>Developer mode</strong> with the toggle in the top-right corner.</li>
+                  <li>Click <strong>Load unpacked</strong> in the toolbar that appears.</li>
+                  <li>Pick the unzipped folder &mdash; the one containing <code>manifest.json</code>, not the ZIP file.</li>
+                </ol>
+              </div>
+            </li>
+
+            <li class="istep">
+              <label class="istep-check">
+                <input type="checkbox" data-step="5">
+                <span class="istep-box" aria-hidden="true"></span>
+                <span class="sr-only">Mark step 5 complete</span>
+              </label>
+              <div class="istep-body">
+                <h3>Open Gmail and try it</h3>
+                <p>Click any email in your inbox and the verdict banner appears at the top of the message.</p>
+                <div class="istep-actions">
+                  <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                    Open Gmail <span aria-hidden="true">↗</span>
+                  </a>
+                  <a href="#console" class="btn btn-quiet btn-sm">Test in the web console</a>
+                </div>
+              </div>
+            </li>
+          </ol>
+
+          <div class="faq">
+            <h3 class="faq-title">If something goes wrong</h3>
+
+            <details class="faq-item">
+              <summary>"Load unpacked" is missing</summary>
+              <p>You have not enabled Developer mode yet. Toggle it on in the top-right of the extensions page, then the toolbar with <strong>Load unpacked</strong> appears.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>Chrome says "Manifest file is missing or unreadable"</summary>
+              <p>You selected the ZIP file instead of the extracted folder. Go back, extract the archive, and choose the folder that contains <code>manifest.json</code>.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>The banner never appears in Gmail</summary>
+              <p>Refresh Gmail once with <kbd>Cmd</kbd>+<kbd>R</kbd> (Windows: <kbd>Ctrl</kbd>+<kbd>R</kbd>) after loading the extension, then open an email you have not already got open. The extension only runs on <code>mail.google.com</code>.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>The banner shows "engine unreachable"</summary>
+              <p>The extension talks to the live API automatically, so this is rare. Check your connection and reload the email. If you run the project locally, start it with <code>npm start</code> and the banner will prefer that instead.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>How do I remove it?</summary>
+              <p>Open the extensions page, find <strong>Ratio&rsquo;d</strong>, and click <strong>Remove</strong>. Nothing was stored locally, so there is nothing to clean up.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ FOOTER ============ -->
   <footer class="site-footer">
     <div class="shell footer-inner">
@@ -266,6 +441,7 @@
 <script src="js/presets.js"></script>
 <script src="js/api.js"></script>
 <script src="js/pipeline.js"></script>
+<script src="js/install.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
