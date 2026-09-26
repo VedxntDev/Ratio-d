@@ -51,6 +51,41 @@ banner (exposed via `web_accessible_resources`).
 
 ---
 
+## 👁️ Mascot Eye-Follow Button
+
+The floating mascot in the bottom-left corner is a dependency-free port of
+Framer's [`<Eye Follow Button />`](https://framer.com/m/Eye-Follow-Button-yMBK.js@UiZdcXLPs68fBczUfQ27),
+restyled as the Ratio'd shield. Its pupils track the cursor with a spring and
+blink on a timer.
+
+**Why a port, not the component.** The original ships as a compiled Framer
+module that imports `framer`, `framer-motion` and `react/jsx-runtime` from
+`framerusercontent.com`. This site is static files with no build step and no
+`node_modules`, so none of those imports can resolve — and loading it would put
+a third-party script on a page whose entire pitch is *"zero data stored,
+everything local"*. `js/shape-waves.js` is a port for exactly the same reason.
+
+**What was kept,** because it is the actual feel of the component:
+
+- Per-eye tracking from each eye's **own** origin, not a shared centre — this
+  is what gives the pair its slight parallax.
+- The clamp `maxDistance = (eyeSize - pupilSize) / 2 * (range / 100)`. The pupil
+  can never slide out of the sclera, however far away the cursor goes.
+- The spring at `stiffness = speed, damping = 20`, integrated by hand rather
+  than faked with a CSS transition, so the slight overshoot on a fast flick
+  matches framer-motion.
+- The blink: `scaleY` on the eyeball down to `0.3` for 200 ms on a timer.
+
+**Degradation.** With JS off the button is still a working, labelled link. With
+`prefers-reduced-motion: reduce`, or on a touch device with no cursor to follow,
+the mascot is still drawn but marked `data-mascot-state="static"` and no
+animation loop is ever started. The `requestAnimationFrame` loop also parks
+itself once the springs settle rather than spinning on a static page.
+
+Run its suite on its own with `npm run test:mascot`.
+
+---
+
 ## 🧩 Chrome Extension
 
 | Area | Detail |
@@ -117,6 +152,7 @@ and the benign traffic it must never touch.
 ├── index.html                     # Web console (single source of truth)
 ├── styles.css                     # Playful Neo-Brutalist stylesheet
 ├── js/                            # Redactor, presets, API client, GSAP pipeline
+│   └── mascot-eyes.js             # Mascot eye-follow button (see below)
 ├── assets/                        # Brand logo + favicons + hero mascot artwork
 ├── favicon.ico                    # Root copy: browsers probe /favicon.ico by default
 ├── tools/                         # Build-time asset/verification scripts
