@@ -20,7 +20,7 @@
     },
     "commands": {
       "start": "node server.js",
-      "test_all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-model-signals.js && node server/test-scam-corpus.js && node server/test-context-manifest.js && node server/test-promo-verdict.js && node server/test-ui-static.js && node server/test-mascot-eyes.js && node server/test-extension-package.js && node server/test-shape-waves.js && node server/test-architecture.js && node test-ui-contract.js",
+      "test_all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-model-signals.js && node server/test-scam-corpus.js && node server/test-context-manifest.js && node server/test-fallback-parity.js && node server/test-promo-verdict.js && node server/test-ui-static.js && node server/test-mascot-eyes.js && node server/test-extension-package.js && node server/test-shape-waves.js && node server/test-architecture.js && node test-ui-contract.js",
       "test_corpus": "node server/test-scam-corpus.js"
     },
     "test_prerequisite": "test:all REQUIRES a running server (node server.js) because test-ui-contract.js makes real HTTP calls to http://127.0.0.1:3000. Without it that final suite fails with 'CONTRACT TEST FAILED: fetch failed' and the run exits 1."

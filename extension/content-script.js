@@ -29,6 +29,17 @@ let lastAnalyzedHash = null;
 function renderFallbackAnalysis(emailBodyElem, redactedText) {
   if (!emailBodyElem) return;
 
+  // The offline engine (fallback-engine.js) implements the same signal
+  // families as the server, so a degraded connection still surfaces
+  // inheritance lures, hosted lookalikes, Reply-To redirects and
+  // mixed-script homoglyphs rather than reading everything as safe.
+  if (window.RatiodFallback) {
+    const result = window.RatiodFallback.analyze(redactedText);
+    if (window.injectRatiodBanner) window.injectRatiodBanner(emailBodyElem, result);
+    return;
+  }
+
+  // Last-ditch path if even the fallback engine failed to load.
   const phonesMatch = redactedText.match(/\[PHONE_REDACTED\]/g);
   const emailsMatch = redactedText.match(/\[EMAIL_REDACTED\]/g);
 

@@ -70,66 +70,34 @@ window.ApiClient = {
   },
 
   /**
-   * Deterministic last-resort engine. Mirrors the backend verdict vocabulary
-   * (safe / suspicious / high_risk / promo_clutter) so the UI renders normally
-   * with no network. Deliberately conservative and clearly labelled.
+   * Deterministic last-resort engine.
+   *
+   * Delegates to the shared offline engine in js/fallback-engine.js, which
+   * implements the same signal families as the server. It is a genuine copy of
+   * extension/fallback-engine.js rather than a re-implementation, because a
+   * Chrome extension can only ship files inside extension/ while the deployed
+   * site cannot serve /extension/* (vercel.json 404s it).
+   * server/test-fallback-parity.js keeps the two behaviourally identical.
    */
   clientSideFallback(text, channel = "email") {
-    const flags = [];
-    let score = 15;
+    if (window.RatiodFallback) {
+      return window.RatiodFallback.analyze(text);
+    }
+
+    // If the shared engine failed to load, fall back to a single combined
+    // check so the console still renders something rather than throwing.
     const lower = (text || "").toLowerCase();
-
-    if (/urgent|within \d+ hours|immediately|expires today|action required/.test(lower)) {
-      flags.push({ span: "urgent / time-limit", reason: "Time pressure indicator", type: "rule" });
-      score += 35;
-    }
-
-    if (/paypa1|secur1ty|m1crosoft|bit\.ly|bitly|\.top\b|\.xyz\b/.test(lower)) {
-      flags.push({ span: "spoofed link/domain", reason: "Lookalike or obfuscated link", type: "rule" });
-      score += 40;
-    }
-
-    if (/password|\botp\b|suspended|verify your credentials/.test(lower)) {
-      flags.push({ span: "credential request", reason: "Harvesting attempt signal", type: "rule" });
-      score += 25;
-    }
-
-    let promoCount = 0;
-    if (/unsubscribe|% off|sale|deal of the day/.test(lower)) {
-      promoCount++;
-      flags.push({ span: "promotional language", reason: "Marketing email signal", type: "promo" });
-    }
-
-    const hasSevere = flags.some(f => f.type === "rule" && f.reason.indexOf("spoofed") !== -1);
-    if (hasSevere) score = Math.max(score, 82);
-
-    const finalScore = Math.min(100, score);
-    let verdict = "safe";
-    if (hasSevere || finalScore >= 66) verdict = "high_risk";
-    else if (promoCount >= 2 && finalScore < 40) verdict = "promo_clutter";
-    else if (finalScore >= 35) verdict = "suspicious";
-
-    const count = (re) => {
-      const m = (text || "").match(re);
-      return m ? m.length : 0;
-    };
-
+    const bad = /urgent|paypa1|secur1ty|m1crosoft|bit\.ly|verify your (password|credentials)|suspended/.test(lower);
     return {
-      score: finalScore,
-      verdict,
-      flags,
-      explanation: "Offline browser analysis of this " + String(channel).toUpperCase() +
-        " message surfaced " + flags.length + " indicator(s). Treat with caution and verify independently.",
-      next_steps: [
-        "Do not click links or provide credentials.",
-        "Verify sender details through an official channel."
-      ],
-      privacy: {
-        phones_masked: count(/\[PHONE_REDACTED\]/g),
-        emails_masked: count(/\[EMAIL_REDACTED\]/g),
-        otp_masked: count(/\[OTP_REDACTED\]/g)
-      },
-      source: "browser_fallback"
+      score: bad ? 82 : 8,
+      verdict: bad ? "high_risk" : "safe",
+      flags: bad ? [{ span: "combined offline indicator", reason: "Several scam indicators matched at once", type: "rule" }] : [],
+      explanation: bad
+        ? "Offline analysis flagged several scam indicators while the engine was unreachable."
+        : "Offline analysis found no strong scam indicators. This is a reduced check, not a full analysis.",
+      next_steps: ["Do not click links or provide credentials.", "Verify sender details through an official channel."],
+      privacy: { phones_masked: 0, emails_masked: 0, otp_masked: 0 },
+      engine: { rules: "offline-fallback-last-ditch", model_source: "offline_fallback_heuristic", degraded: true }
     };
   }
 };
