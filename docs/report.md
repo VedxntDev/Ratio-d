@@ -543,9 +543,10 @@ tool.
    implemented. Attachments are not scanned.
 6. **English only.** Pattern tables are English-only; no other language is
    covered.
-7. **24 hardcoded brands.** A typosquat of a company not on the list is
+7. **28 hardcoded brands.** A typosquat of a company not on the list is
    invisible to the homoglyph and Levenshtein checks and can only be caught by
-   the generic pattern rules.
+   the generic pattern rules. *(This count was 24 in an earlier revision; the
+   brand table has since grown. The underlying limitation is unchanged.)*
 8. **Dead code.** `extension/background.js` implements an `ANALYZE_EMAIL`
    message handler that `content-script.js` never calls, by deliberate design.
    It implies an architecture the code abandoned.
@@ -576,6 +577,104 @@ tool.
 6. Add a labelled evaluation corpus and publish real precision/recall, so the
    "model" claim can be made honestly.
 7. Delete `extension/background.js`, or wire it up and document why it exists.
+
+## 6A. Build status & roadmap
+
+*This section separates what exists and was verified from what is planned.
+Nothing in the "built" table is aspirational, and nothing in the roadmap is
+claimed as done. Each roadmap item names the specific limitation from §6 that
+it closes, so the plan can be checked against reality.*
+
+### 6A.1 Correction to the release-roadmap summary
+
+The project summary slide describes the service as a *"local Express rule
+server"*. **That is not what this repository contains.** `server.js:18` uses
+Node's built-in `http` module (`http.createServer`), and `package.json`
+declares no `dependencies` key at all — the project has **zero runtime
+dependencies**, which is the property the architecture is actually built
+around and which the test suites assert. The rest of the slide's phase-01
+claims (client-side redaction, GSAP pipeline, Manifest V3 extension) are
+accurate and verified below.
+
+This is recorded here rather than quietly corrected because §6A is the part
+of the report a reader is most likely to quote.
+
+### 6A.2 Built to date — verified 26 September 2026
+
+**Phase 01 — hackathon prototype: complete and demo-ready.**
+
+| # | Delivered | Evidence |
+| --- | --- | --- |
+| 1 | Client-side PII redaction; raw content never leaves the browser | `extension/content-script.js`, `js/redactor.js`; asserted by `test-ui-contract.js` |
+| 2 | Zero-dependency analysis server | `server.js:18` `require("http")`; `package.json` has no `dependencies` key |
+| 3 | Deterministic rule engine — the real detector | `server/rules/engine.js`; 28 brands, 10 social-engineering families, 6 structural signals, 22 official brand domains |
+| 4 | Chrome Manifest V3 Gmail extension | `extension/manifest.json` (`manifest_version: 3`, `version: 1.2.0`) |
+| 5 | Shadow DOM warning banner | `extension/banner.js` |
+| 6 | Live pipeline animation (web console) | `index.html:29` GSAP 3.12.5 via CDN; `js/architecture.js` |
+| 7 | Web console UI | `index.html`, `js/` |
+| 8 | Grounded explanations — every flag cites a verbatim span | `server/llm/explain.js`; enforced by the corpus suite |
+| 9 | Two real-world corpora | `server/fixtures/scam-corpus.txt` (A: 20), `real-world-mixed.txt` (B: 9 scam + 2 ham) |
+| 10 | 15 automated suites, 424 passing assertions, 0 failures | `npm run test:all` |
+| 11 | CI workflow that starts the server before testing | `.github/workflows/test.yml` |
+| 12 | Machine-readable project context, generated and staleness-checked | `docs/project-context.json`, `tools/build-context.js`, `test-context-manifest.js` |
+| 13 | Reproducible release archives | `tools/build-zips.js` → `ratiod-extension.zip` (10 files), `ratiod-full-project.zip` (72 files) |
+| 14 | Offline fallback for both clients, parity-tested | `extension/fallback-engine.js`, `js/fallback-engine.js`, `test-fallback-parity.js` |
+
+**Measured, not estimated:** corpus A recall 85.0% (17/20); corpus B recall
+100% (9/9) with 100% specificity on 2 ham; **0 false positives across 15
+adversarial legitimate messages**. ~8,700 lines of JavaScript, zero runtime
+dependencies, 48 commits.
+
+> **Two honesty notes on the numbers above.** Specificity and precision are
+> computed against only **two** genuine legitimate messages, so they are
+> regression signals that will catch a newly introduced false positive — they
+> are **not** accuracy estimates and must not be published as such. Separately,
+> "Laya" is a hand-weighted heuristic, **not a trained model**; nothing in this
+> project was learned or fitted.
+
+### 6A.3 What will be built next
+
+Planned, not implemented. Ordered so that each phase produces something
+demonstrable, and so that the items which most improve *honesty* come before
+the items which most improve *reach*.
+
+#### Phase 02 — Campus pilot
+
+| Planned item | Closes §6 limitation | Notes and risk |
+| --- | --- | --- |
+| Custom domain lookalike database for campus brands (college, portal, HR, canteen, library, exam systems) | 7 (24 hardcoded brands) | Makes the brand list a loadable data file instead of a code constant, so a new campus deploy needs no code change. **The check that matters:** the homoglyph/Levenshtein rules must keep a 0-false-positive record on the 15 adversarial legitimate messages as this list grows. |
+| Organizational phishing alerts | 3 (body text only) | Needs sender and subject extracted from Gmail's header DOM, which is the real unlock. Highest-value item in this phase. |
+| Standalone Laya container integration for a real MSRIT rollout | 1 (no trained model) | **Biggest honesty risk in the project.** This only changes the project's claims if a genuinely trained model is added. A container around the current hand-weighted heuristic adds deployment convenience and no detection capability, and must not be described as "AI-powered". |
+
+#### Phase 03 — Public release
+
+| Planned item | Closes §6 limitation | Notes and risk |
+| --- | --- | --- |
+| Zero-knowledge encrypted telemetry API | — | Today `server/privacy/log.js` only `console.log`s counts to the terminal; there is no network egress and no encryption. This is new infrastructure, and it is the one item that could *weaken* the project's strongest real property, so it needs a design review before any code. |
+| Multi-browser extensions (Firefox, Edge) | 4 (fragile Gmail selectors) | Firefox MV3 is close but not identical; Edge should be near-free once MV3 works. The selector fragility is a separate problem and will not be fixed by porting. |
+| Enterprise security dashboard | 2 (OTP regex over-masks), 5 (no attachment/HTML analysis) | Renders existing verdicts. It is a view, not new detection, and should be scoped as such. |
+
+#### Carried-forward engineering debt
+
+Not on the slide, but owed before a public release — items 1–3 of §6's
+priority list remain open and are cheap:
+
+1. Extend `test-extension-package.js` to compare **every** archive entry
+   against its source bytes. The current guard drift-checks only the manifest,
+   `banner.js` and the file listings, which is how a stale 14 KB README shipped
+   inside a passing build.
+2. Require the OTP keyword in the redaction regex — it currently masks any
+   standalone 4–8 digit number, mangling order numbers and years.
+3. Wire `server/test-hero-legibility.js` into `test:all`, or delete it. It is
+   currently an orphan suite that never runs in CI.
+
+#### Explicitly not planned
+
+- No trained model, unless Phase 02 funding allows one. A heuristic that is
+  documented honestly is more useful than a small model presented as more
+  capable than it is.
+- No multi-language pattern support yet (§6.6). This is a large surface, not a
+  config change.
 
 ---
 
