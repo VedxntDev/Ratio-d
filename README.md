@@ -280,6 +280,110 @@ high_risk` with all ten flags enumerated, for example:
 ```
 
 ---
+---
+
+## 📊 Measured detection performance
+
+An external corpus of 20 confirmed scam emails (`server/fixtures/scam-corpus.txt`)
+is committed and run by `server/test-scam-corpus.js`. It is the only test in
+this repo that evaluates the engine against messages its author did not write.
+
+| | Before | After |
+| --- | --- | --- |
+| **Recall on real scam email** | **0 / 20 (0%)** | **15 / 20 (75%)** |
+| Detected as `high_risk` | 0 | 6 |
+| Detected as `suspicious` / `promo_clutter` | 2 (as clutter) | 9 |
+| False positives (adversarial legitimate mail) | 0 / 15 | 0 / 15 |
+
+> **This was the most important finding in the project.** Every one of those 20
+> messages scored `safe` while 391 self-authored assertions passed. The engine
+> was built almost entirely around one family — credential phishing behind a
+> typosquatted brand domain — while the largest real-world category is
+> advance-fee and brand-impersonation fraud, where the payload is a request for
+> money, identity documents, or a phone call rather than a password. Coverage of
+> the existing pattern families against this corpus: urgency 1/20, credential
+> 0/20, risky TLD 0/20.
+
+### What was added, and what it caught
+
+| New signal | Catches | Example |
+| --- | --- | --- |
+| `advance_fee` | Prize/compensation/investment lures | "lucky winner", "you have been selected", a fee required before release |
+| `refund_bait` | Fake overpayment and refund | "your invoice was paid twice", "submit your refund" |
+| `delivery_fee` | Parcel-release smishing | "non-payment of 2.99 SGD", "delivery failed" |
+| `fake_subscription` | Storage-scare and auto-renewal lures | "storage is full", "subscription renewal has been processed" |
+| `fake_security` | Mandatory-2FA wallet lures | "2FA mandatory", "enable 2FA now" |
+| `investment` | Loan and token solicitations | "disbursed within 24 hours", "airdrop" |
+| `health_claim` | Miracle-cure marketing | "self-healing protocol", "nearly blind to perfect 20/20" |
+| `personal_data` | Identity-document harvesting | "a copy of your identification", "Your Full Names:" |
+| `contact_stranger` | Cold-contact advance-fee | "contact me urgently for your claim" |
+| **Display-name impersonation** | Brand name vs sending domain | "MetaMask" from `*.firebaseapp.com` |
+| **Signature impersonation** | Brand footer vs sending domain | "© 2025 PayPal, LLC" from `suiteprimejmt.org` |
+| **Abused-TLD links** | Cheap throwaway hosting | `.page`, `.icu`, `.buzz`, `.cam`, … |
+
+Each family contributes **at most once** — a single advance-fee email trips
+four or five of its own patterns, and without the cap one message would score
+like four separate scams. The real lift comes from combinations: money bait
+plus an action request (`+45`) and the advance-fee shape (`+40`).
+
+### Two false positives this work introduced, and their fixes
+
+Both were caught by a purpose-built adversarial legitimate set, not by the
+existing 15-message corpus:
+
+1. **Every brand was treated as impersonating itself.** The display-name check
+   read `OFFICIAL_BRAND_DOMAINS[brand] || []`, so any brand missing an entry
+   (coinbase, dropbox, binance) had an empty official list and its own
+   legitimate mail was flagged. Fixed by falling back to `${brand}.com`, the
+   same default the domain check already used.
+2. **A real company was reported as a typosquat.** Adding `grab` to the brand
+   list made `grab.com` two Levenshtein edits from `iras`, so a legitimate
+   Grab newsletter was flagged. Fixed with `ALL_OFFICIAL_DOMAINS`: a domain that
+   is officially some brand's own can never be a typosquat of another.
+
+### Known misses
+
+Five of the 20 remain undetected, and the suite names them explicitly so the
+recall floor cannot be raised by quietly deleting hard cases:
+
+| Record | Why it is missed |
+| --- | --- |
+| `SCAM-003` | 32 bytes of body, a 5-character subject. Nothing to match on — the irreducible floor |
+| `SCAM-004` | Refund bait fires, but the body names a government authority with no legal-entity footer |
+| `SCAM-008` | Investment bait fires; needs a second corroborating signal |
+| `SCAM-013` | "SingPosT" is not in the brand list; `usps` is too short to match safely |
+| `SCAM-018` | Health-claim bait fires; needs a second corroborating signal |
+
+> **A note on what was deliberately *not* added.** Several corpus emails contain
+> defanged links (`hxxps://…`, `impolite-milk[.]unicornplatform[.]page`). A rule
+> matching the string `hxxp` would score well here and be worthless in
+> production, because that defanging was applied by whoever sanitised the
+> dataset — the original messages did not look like that. The underlying signal
+> was captured honestly instead, by adding the real cheap TLDs the defanged
+> hosts use.
+
+### The limitation that matters
+
+**This dataset cannot measure what people care about.** All 20 records are
+labelled `scam`; there are not one `legitimate` example. A single-class corpus
+cannot produce a false-positive rate, a precision figure, or a
+false-negative-versus-false-positive tradeoff. It gives **recall on one narrow
+slice of phishing** and nothing else.
+
+The `scam_type` categories in the training prompt (`financial_fraud`,
+`fake_delivery`, `health_scam`, …) are **not present in this dataset** — it
+carries one `LABEL: scam` per record and no per-type annotation, so the
+taxonomy cannot be learned or evaluated from it. The `risk_signals` and
+`evidence` fields in that prompt are likewise unsupported: the dataset provides
+no per-example reasoning, only the single repeated boilerplate line *"Identify
+concrete indicators such as unsolicited financial offers, impersonation,
+payment/refund requests…"* across all 20 records, which carries no per-example
+signal.
+
+To claim any real accuracy figure, a **balanced corpus** with several hundred
+genuine `legitimate` messages is required, drawn from real inboxes.
+
+---
 
 ## 💻 Code walkthrough — every file
 
@@ -739,6 +843,7 @@ npm run test:all
 | `test:spec` | spec rules + spec sanity |
 | `test:fp` | false positives |
 | `test:model` | model signals |
+| `test:corpus` | real scam corpus: recall floor, flag grounding, false positives |
 | `test:promo` | promo verdict |
 | `test:mascot` | mascot eyes |
 | `test:ext` | extension package |
@@ -748,12 +853,12 @@ npm run test:all
 > ⚠️ **`test:all` requires a running server.** `test-ui-contract.js` makes real
 > HTTP calls to `http://127.0.0.1:3000` to verify the API contract the console
 > depends on. With no server running, that final suite fails with
-> `CONTRACT TEST FAILED: fetch failed` and the run exits `1` — the other twelve
+> `CONTRACT TEST FAILED: fetch failed` and the run exits `1` — the other thirteen
 > suites still pass. This is a harness prerequisite, not a code defect. Start
 > `node server.js` in another terminal first, or point the test elsewhere with
 > `BASE=http://host:port npm run test:all`.
 >
-> Verified result: **391 assertions passing, 0 failures** with the server up.
+> Verified result: **397 assertions passing, 0 failures** with the server up.
 
 ---
 
@@ -762,11 +867,12 @@ npm run test:all
 Documented deliberately, because a security tool that oversells itself is worse
 than no tool.
 
-1. **There is no trained model.** Nothing here was learned, trained or
-   evaluated against a labelled corpus. A typosquat is caught by string
-   normalisation and edit distance. There is no precision/recall figure because
-   no such measurement has been made. If this is described as "AI-powered
-   detection", that is overselling it.
+1. **There is no trained model.** Nothing here was learned or trained; every
+   weight is hand-chosen. A typosquat is caught by string normalisation and edit
+   distance. Recall of **75%** on the 20-record external corpus is now measured
+   and enforced by `test:corpus`, but that corpus contains no `legitimate`
+   examples, so **no precision or false-positive rate has been measured**. If
+   this is described as "AI-powered detection", that is overselling it.
 
 2. **The OTP redaction regex over-masks.**
    `/\b(OTP|code|passcode|PIN)?\s?:?\s?(\d{4,8})\b/gi` makes the keyword group

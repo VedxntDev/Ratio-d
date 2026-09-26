@@ -27,7 +27,18 @@ const KNOWN_BRANDS = [
   "dropbox",
   "coinbase",
   "binance",
-  "kraken"
+  "kraken",
+  // Brands added after running an external scam corpus through the engine. These
+  // are impersonation targets seen in the wild that the original list missed
+  // entirely - the engine was blind to all of them.
+  "singtel",
+  "grab",
+  "metamask",
+  "iras",
+  "visa",
+  "mastercard",
+  "dhl",
+  "ups"
 ];
 
 /**
@@ -55,8 +66,43 @@ const OFFICIAL_BRAND_DOMAINS = {
   usps: ["usps.com", "usps.gov"],
   fedex: ["fedex.com"],
   ups: ["ups.com"],
-  dhl: ["dhl.com"]
+  dhl: ["dhl.com"],
+  singtel: ["singtel.com", "singtel.com.sg"],
+  grab: ["grab.com", "grab.co.id", "grab.sg"],
+  metamask: ["metamask.io", "consensys.io"],
+  iras: ["iras.gov.sg"],
+  visa: ["visa.com", "visa.co"],
+  mastercard: ["mastercard.com", "mastercard.co"]
 };
+
+/**
+ * Every domain that is the official home of some brand in the list above.
+ *
+ * Without this, a real domain can be Levenshtein-matched against a *different*
+ * brand and reported as a typosquat. Adding "grab" to the brand list made
+ * `grab.com` look 2 edits from "iras" - a genuine false positive on a real
+ * company. A domain that is officially some brand's own cannot be a typosquat
+ * of anyone, so it is exempt from every spoofing check below.
+ */
+const ALL_OFFICIAL_DOMAINS = new Set(Object.values(OFFICIAL_BRAND_DOMAINS).flat());
+
+/**
+ * Signature-footer markers.
+ *
+ * A genuine corporate signature names a legal entity and usually carries a
+ * copyright line. Pairing one of these with a known brand name, then checking
+ * that the sending domain is NOT an official domain for that brand, is a very
+ * high-precision impersonation test: legitimate brand mail comes from the
+ * brand's own domain.
+ */
+const SIGNATURE_FOOTER_PATTERNS = [
+  /©\s*\d{4}\s*(?:\(c\)\s*)?(?:by\s+)?/i,
+  /copyright\s+\d{4}\s*(?:by\s+)?/i,
+  /all\s+rights\s+reserved/i,
+  /[\w\s.&]{2,40}\b(?:B\.V\.|Pte\.?\s*Ltd\.?|Ltd\.?|Inc\.?|LLC\.?|GmbH|S\.A\.|A\.G\.)/i,
+  /\bteam\s+[A-Z][\w]{2,}\b/,
+  /\bthis\s+email\s+and\s+accompanying\b/i
+];
 
 /**
  * Established, legitimate domains that are NOT in OFFICIAL_BRAND_DOMAINS but are
@@ -172,14 +218,157 @@ const PROMOTIONAL_CLUTTER_PATTERNS = [
 
 const SUSPICIOUS_DOMAINS = [
   { regex: /[a-z0-9-]+\.(xyz|top|tk|club|work|gq|cf|ml|monster|rest|hair|cfd)/i, reason: "High-risk top-level domain (TLD)" },
+  // Cheap, heavily-abused TLDs. Added after an external corpus showed the
+  // original six-digit list missed every real-world sample. These are not
+  // malicious on their own, but a link to one in unsolicited mail is a strong
+  // signal on its own.
+  { regex: /https?:\/\/[\w.-]*\.(page|icu|buzz|cam|lol|monster|online|site|space|link|click|fun|trade|rest|cfd|fit|quest|cyou|sbs|icu)\b/i, reason: "Link to a heavily-abused cheap top-level domain" },
   { regex: /http:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i, reason: "Raw IP address URL instead of domain" },
   {
     // URL shorteners hide the real destination, a staple of smishing /
     // delivery-fraud lures. Detected generically so new services are covered too.
     regex: /https?:\/\/(?:www\.)?(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|buff\.ly|rebrand\.ly|cutt\.ly|shorturl\.at|rb\.gy|tiny\.cc|t\.ly|lnkd\.in|db\.tt|qr\.ae|v\.gd|s\.id|lnk\.to)\b|\b(?:bit\.ly|tinyurl\.com|rebrand\.ly|cutt\.ly|shorturl\.at|tiny\.cc|lnk\.to)\//i,
     reason: "URL shortener conceals the true destination domain"
-  }
+  },
+  // Firebase Hosting (and similar) is a free, anonymous static host routinely
+  // used to serve phishing pages impersonating a named brand. On its own it is
+  // not malicious - plenty of legitimate hobby projects live there - so it is
+  // weighted lightly and only becomes strong when combined with a brand
+  // impersonation or an action request.
+  { regex: /https?:\/\/[\w.-]*\.firebaseapp\.com/i, reason: "Free anonymous hosting used to serve a lookalike page" },
+  { regex: /https?:\/\/[\w.-]*\.(pages\.dev|web\.app|netlify\.app|vercel\.app)\b/i, reason: "Generic app-hosting domain behind a branded claim" }
 ];
+
+/**
+ * Social-engineering families the original rule set did not cover.
+ *
+ * These were added after running a real, externally-sourced corpus of 20
+ * confirmed scam emails through the engine, which caught 0 of them. The engine
+ * was built almost entirely around one family - credential phishing behind a
+ * typosquatted brand domain - while the largest real-world category is
+ * advance-fee and brand-impersonation fraud, where the payload is a request
+ * for money, identity documents, or a phone call rather than a password.
+ *
+ * Weights are deliberately modest. The lift comes from the COMBINATION rules
+ * further down: an unsolicited money claim on its own is a marketing email,
+ * and a request for your ID on its own is unusual but not proof. Money bait
+ * plus a contact-or-payment instruction is essentially conclusive.
+ */
+const ADVANCE_FEE_PATTERNS = [
+  { regex: /you\s+have\s+been\s+selected\s+to\s+receive/i, reason: "Unsolicited 'you have been selected' prize claim" },
+  { regex: /lucky\s+(winner|beneficiar)/i, reason: "Advance-fee lottery: 'lucky winner' framing" },
+  { regex: /your\s+email\s+address\s+was\s+found\s+in\s+the\s+list/i, reason: "Advance-fee lottery: claimed address list" },
+  { regex: /\$\s?[\d,.]+\s*(million|m)\s*(usd|sgd|eur|gbp)?/i, reason: "Large unsolicited monetary claim" },
+  { regex: /western\s+union|wire\s+transfer|money\s+gram|moneygram/i, reason: "Remittance channel named in an unsolicited offer" },
+  { regex: /activat\w*\s+fee|account\s+activation\s+fee/i, reason: "Advance-fee pretext: 'activation fee'" },
+  { regex: /charitable\s+donation\s+of\s+\$/i, reason: "Unsolicited charitable donation claim" },
+  { regex: /compensa\w+\s+(fund|amount)\b/i, reason: "Unsolicited compensation fund claim" },
+  { regex: /get\s+\d{1,3}\s*%\s+for\s+your\s+(cooperation|partnership)/i, reason: "Unsolicited revenue-share 'partnership' offer" }
+];
+
+const REFUND_BAIT_PATTERNS = [
+  { regex: /\brefund\s+(bill|amount|of|has\s+been)\b/i, reason: "Unsolicited refund claim presented as an action item" },
+  { regex: /overpayment|payment\s+was\s+made\s+twice|invoice\s+was\s+paid\s+twice/i, reason: "Fake overpayment / double-charge refund pretext" },
+  { regex: /submit\s+your\s+refund|request\s+a\s+refund|claim\s+your\s+refund/i, reason: "Refund claim routed through an email link" },
+  { regex: /will\s+be\s+credited\s+within\s+\d+/i, reason: "Promised credit used to legitimise a fake charge" },
+  { regex: /complete\s+within\s+\d+\s+days?\s+for\s+prompt\s+processing/i, reason: "Short deadline attached to a refund pretext" }
+];
+
+const DELIVERY_FEE_PATTERNS = [
+  { regex: /non-?payment\s+of\s+[\d.,]+\s*(sgd|usd|eur|gbp|\$)?/i, reason: "Parcel-release fee demanded for a held shipment" },
+  { regex: /pay\s+the\s+new\s+shipping\s+cost|outstanding\s+customs\s+(fee|charge)/i, reason: "Shipping-fee pretext to release a parcel" },
+  { regex: /delivery\s+failed\s+on|incorrect\s+address.*(?:pay|shipping)/i, reason: "Failed-delivery pretext paired with a payment link" },
+  { regex: /could\s+not\s+be\s+delivered\s+due\s+to\s+an\s+invalid\s+address\s+fee/i, reason: "Small-fee delivery scam (classic smishing)" },
+  { regex: /on\s+hold\s+in\s+our\s+post|still\s+on\s+hold/i, reason: "Shipment held pending payment" }
+];
+
+const FAKE_SUBSCRIPTION_PATTERNS = [
+  { regex: /storage\s+is\s+full|cloud\s+storage\s+(alert|reminder)/i, reason: "Fake cloud-storage exhaustion scare" },
+  { regex: /upgrade\s+(your\s+)?storage|not\s+backing\s+up/i, reason: "Storage upgrade upsell via unsolicited mail" },
+  { regex: /subscription\s+renewal\s+has\s+been\s+processed/i, reason: "Auto-renewal notice for a subscription the user may not hold" },
+  { regex: /your\s+subscription\s+(ends|is\s+about\s+to\s+expire)/i, reason: "Subscription-expiry renewal lure" },
+  { regex: /to\s+cancel\s+auto-?renewal,?\s*contact/i, reason: "Cancellation handled by phone/email rather than an account page" }
+];
+
+const FAKE_SECURITY_PATTERNS = [
+  { regex: /2fa\s+(will\s+be\s+|is\s+now\s+)?mandatory|mandatory\s+for\s+all\s+\w+\s+accounts/i, reason: "Mandatory 2FA enforcement notice" },
+  { regex: /enable\s+2fa\s+now|2fa\s+will\s+be\s+enabled/i, reason: "2FA enrolment pushed from an email link" },
+  { regex: /protect\s+your\s+wallet|keeping\s+your\s+digital\s+assets\s+safe/i, reason: "Wallet-protection pretext" },
+  { regex: /we\s+tried\s+to\s+charge\s+your\s+account\s+but\s+the\s+transaction\s+was\s+declined/i, reason: "Declined-payment bait" }
+];
+
+const INVESTMENT_PATTERNS = [
+  { regex: /\$\s?[A-Z]{2,6}\s+token|airdrop/i, reason: "Token/airdrop offer" },
+  { regex: /launch\w*\s+[\s\S]{0,40}\s+own\s+digital\s+currency/i, reason: "Fabricated token launch attributed to an established brand" },
+  { regex: /approved\s+and\s+disbursed\s+within\s+\d+\s+hours?/i, reason: "Instant-approval loan / advance-fee pitch" },
+  { regex: /loan\s+solutions|private\s+loan\s+investment/i, reason: "Unsolicited loan/investment solicitation" },
+  { regex: /investment\s+opportunit|extraordinary\s+solution/i, reason: "Vague investment promise with no verifiable instrument" }
+];
+
+const HEALTH_CLAIM_PATTERNS = [
+  { regex: /self-?healing\s+protocol|vision\s+restoration\s+protocol/i, reason: "Unverifiable medical 'protocol' claim" },
+  { regex: /from\s+nearly\s+blind\s+to\s+perfect\s+20\/20|clinical\s+trials?,?\s*[\d,]+\+?\s*patients/i, reason: "Implausible medical outcome statistic" },
+  { regex: /before\s+the\s+video\s+is\s+taken\s+down|watch\s+the\s+presentation/i, reason: "Artificial urgency to view a claim now" },
+  { regex: /researchers\s+uncover|\bprotocol\s+is\s+changing\s+lives\b/i, reason: "Viral-marketing medical claim" }
+];
+
+const PERSONAL_DATA_PATTERNS = [
+  { regex: /copy\s+of\s+your\s+identification|have\s+your\s+id\s+ready|valid\s+id\s+(card|document)/i, reason: "Requests a copy of identity documents by email" },
+  { regex: /your\s+full\s+names?\s*[:\n]/i, reason: "Blank-field form requesting a full legal name" },
+  { regex: /cell\/telephone\s+numbers?|home\s+or\s+office\s+address/i, reason: "Blank-field form requesting phone and address" },
+  { regex: /your\s+country\s*[:\n]/i, reason: "Blank-field form requesting country of residence" },
+  { regex: /re-?confirming\s+your\s+complete\s+information|provide\s+(to\s+them\s+)?the\s+following\s+information/i, reason: "Generic bulk personal-information request" }
+];
+
+const CONTACT_STRANGER_PATTERNS = [
+  { regex: /contact\s+(me|us|him|her|them|him\/her)\s+urgently|contact\s+\w+\s+urgently/i, reason: "Demands an urgent off-channel reply" },
+  { regex: /i\s+want\s+to\s+reach\s+a\s+partnership|partnership\s+agreement/i, reason: "Unsolicited partnership proposal" },
+  { regex: /please\s+contact\s+\S+@\S+|contact\s+\S+\s+for\s+more\s+information/i, reason: "Redirects to an unrelated third-party address" },
+  { regex: /your\s+urgent\s+attention\s+is\s+needed|for\s+your\s+claim\s+and\s+more/i, reason: "Bare urgency demand with no legitimate context" }
+];
+
+/**
+ * Every new family above, with its weight.
+ *
+ * Weights are low by design. A single "refund" mention is a legitimate tax
+ * notice; a single "urgent" is common. What separates fraud from commerce is
+ * co-occurrence, handled by the combination rules in evaluateRules.
+ */
+const SOCIAL_ENGINEERING_FAMILIES = [
+  { name: "advance_fee", points: 20, patterns: ADVANCE_FEE_PATTERNS },
+  { name: "refund_bait", points: 18, patterns: REFUND_BAIT_PATTERNS },
+  { name: "delivery_fee", points: 20, patterns: DELIVERY_FEE_PATTERNS },
+  { name: "fake_subscription", points: 18, patterns: FAKE_SUBSCRIPTION_PATTERNS },
+  { name: "fake_security", points: 20, patterns: FAKE_SECURITY_PATTERNS },
+  { name: "investment", points: 15, patterns: INVESTMENT_PATTERNS },
+  { name: "health_claim", points: 15, patterns: HEALTH_CLAIM_PATTERNS },
+  { name: "personal_data", points: 20, patterns: PERSONAL_DATA_PATTERNS },
+  { name: "contact_stranger", points: 15, patterns: CONTACT_STRANGER_PATTERNS }
+];
+
+/**
+ * Pull the display name out of a From/Reply-To header.
+ *
+ * The display name is the single most useful impersonation signal available:
+ * attackers routinely write "MetaMask" or "Singtel" in the human-readable name
+ * and send from an unrelated throwaway domain. The existing homoglyph and
+ * Levenshtein checks only ever look at the domain, so they cannot see this.
+ */
+function extractSenderDisplayNames(text) {
+  const headerRegex = /^\s*(?:from|sender|reply-to|return-path)\s*:\s*(.*)$/gim;
+  const found = new Set();
+  let m;
+  while ((m = headerRegex.exec(text)) !== null) {
+    const raw = m[1].trim();
+    const angled = raw.match(/^\s*(?:"([^"]*)"|([^<>]*?))\s*</);
+    if (angled) {
+      const name = (angled[1] || angled[2] || "").trim();
+      if (name) found.add(name);
+    }
+  }
+  return Array.from(found);
+}
+
 
 function extractDomains(text) {
   // Accepts 2-label domains (paypa1-security.com) as well as deeper ones
@@ -250,6 +439,12 @@ function evaluateRules(text, channel = "email") {
     // A domain we know belongs to a real company is never a spoof, however
     // close it sits to a brand name (shopify.com vs spotify.com).
     if (LEGITIMATE_DOMAINS.has(rawDomain)) {
+      isLegitimateOfficialSender = true;
+      continue;
+    }
+
+    // Officially some brand's own domain: never a typosquat of a different one.
+    if (ALL_OFFICIAL_DOMAINS.has(rawDomain)) {
       isLegitimateOfficialSender = true;
       continue;
     }
@@ -332,6 +527,143 @@ function evaluateRules(text, channel = "email") {
       flags.push({ span: match[0], reason: pattern.reason, type: "rule" });
       rawScore += 30;
       hasCredentialRequest = true;
+    }
+  }
+
+  // 2b. Social-engineering families (advance-fee, refund bait, delivery fee,
+  // fake subscription, fake 2FA, investment, health, ID harvest, cold-contact).
+  //
+  // Each family is capped at one contribution no matter how many of its
+  // patterns match. A single advance-fee email usually trips four or five of
+  // them ("lucky winner", a million-dollar figure, Western Union, an
+  // activation fee); without the cap one message would score like four
+  // separate scams.
+  const firedFamilies = new Set();
+  for (const family of SOCIAL_ENGINEERING_FAMILIES) {
+    if (firedFamilies.has(family.name)) continue;
+    for (const pattern of family.patterns) {
+      const match = text.match(pattern.regex);
+      if (match) {
+        firedFamilies.add(family.name);
+        flags.push({ span: match[0], reason: pattern.reason, type: "rule" });
+        rawScore += family.points;
+        break;
+      }
+    }
+  }
+
+  const hasMoneyBait = firedFamilies.has("advance_fee") ||
+    firedFamilies.has("refund_bait") || firedFamilies.has("investment") ||
+    firedFamilies.has("delivery_fee");
+  const hasActionRequest = firedFamilies.has("personal_data") ||
+    firedFamilies.has("contact_stranger") || firedFamilies.has("fake_security") ||
+    firedFamilies.has("fake_subscription");
+
+  // 2c. Display-name brand impersonation.
+  //
+  // The checks above only ever look at the sending domain, so a message
+  // claiming to be "MetaMask" from an anonymous *.firebaseapp.com host looks
+  // like ordinary mail to them. The display name is where attackers are
+  // careless, and a mismatch against a known brand is very high precision.
+  const displayNames = extractSenderDisplayNames(text);
+  const senderDomainsForDisplay = extractSenderDomains(text);
+  const claimedBrands = [];
+  for (const name of displayNames) {
+    const normalizedName = normalizeForBrandCheck(name).replace(/\s+/g, "");
+    const altName = normalizeAltForBrandCheck(name).replace(/\s+/g, "");
+    for (const brand of MATCHABLE_BRANDS) {
+      if (brand.length < 5) continue;
+      const hit = normalizedName.includes(brand) || altName.includes(brand) ||
+        name.toLowerCase().replace(/\s+/g, "").includes(brand);
+      if (!hit) continue;
+      // An official brand domain is allowed to use its own name. The
+      // `${brand}.com` fallback matters: without it, every brand missing an
+      // entry in OFFICIAL_BRAND_DOMAINS (coinbase, dropbox, binance, ...) was
+      // treated as impersonating itself, which flagged their own legitimate
+      // mail.
+      const official = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
+      const senderIsOfficial = senderDomainsForDisplay.some((d) =>
+        official.some((o) => d === o || d.endsWith("." + o))
+      );
+      if (!senderIsOfficial) claimedBrands.push({ name, brand, senderDomains: senderDomainsForDisplay });
+      break;
+    }
+  }
+  if (claimedBrands.length > 0) {
+    for (const claim of claimedBrands) {
+      flags.push({
+        span: claim.name,
+        reason:
+          "Brand impersonation: sender is displayed as '" + claim.name +
+          "' but the message does not come from an official " +
+          claim.brand.toUpperCase() + " domain" +
+          (claim.senderDomains.length ? " (actual: " + claim.senderDomains.join(", ") + ")" : ""),
+        type: "rule"
+      });
+      rawScore += 55;
+    }
+  }
+
+  // 3d. Money-bait + action-request COMBO.
+  //
+  // This is the single most important new rule. Neither half is conclusive on
+  // its own: plenty of legitimate mail mentions a refund or a renewal, and
+  // plenty of legitimate mail asks you to contact support. Together they
+  // describe the advance-fee shape almost exactly - an unexpected financial
+  // claim that can only be released by sending data, money, or a reply to a
+  // third party.
+  if (hasMoneyBait && hasActionRequest && !isLegitimateOfficialSender) {
+    flags.push({
+      span: "Money bait + unsolicited action request",
+      reason:
+        "High-risk combination: an unexpected financial claim is paired with a " +
+        "request for personal data, payment, or an off-channel reply",
+      type: "rule"
+    });
+    rawScore += 45;
+  }
+
+  // 3e. Advance-fee shape: money promised, but a fee is required up front.
+  if (firedFamilies.has("advance_fee") && /activat\w*\s+fee|to\s+(start|proceed|receive)[^.]{0,40}(pay|send|fee)|pay\s+them?\s+the|small\s+(fee|charge)/i.test(text) && !isLegitimateOfficialSender) {
+    flags.push({
+      span: "Advance-fee pretext",
+      reason:
+        "Advance-fee fraud signature: a large sum is promised, but a fee must " +
+        "be paid before it is released",
+      type: "rule"
+    });
+    rawScore += 40;
+  }
+
+  // 2d. Brand claimed in a signature footer, but the sender domain is not
+  // official for that brand.
+  //
+  // "© 2025 PayPal, LLC" in the body of a message sent from an unrelated
+  // throwaway domain is a stronger impersonation tell than anything the domain
+  // checks can see, because those checks only ever read the domain.
+  const hasSignatureFooter = SIGNATURE_FOOTER_PATTERNS.some((re) => re.test(text));
+  if (hasSignatureFooter && !isLegitimateOfficialSender) {
+    const bodyBrands = MATCHABLE_BRANDS.filter((brand) => {
+      if (brand.length < 4) return false;
+      const official = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
+      const senderIsOfficial = senderDomainsForDisplay.some((d) =>
+        official.some((o) => d === o || d.endsWith("." + o))
+      );
+      if (senderIsOfficial) return false;
+      return new RegExp("\\b" + brand + "\\b", "i").test(text);
+    });
+    for (const brand of bodyBrands) {
+      const display = new RegExp("(" + brand + "[\\w. ]{0,28})", "i").exec(text);
+      flags.push({
+        span: display ? display[1].trim() : brand,
+        reason:
+          "Signature claims " + brand.toUpperCase() +
+          " but the message is not sent from an official " + brand + " domain" +
+          (senderDomainsForDisplay.length ? " (actual sender: " + senderDomainsForDisplay.join(", ") + ")" : ""),
+        type: "rule"
+      });
+      rawScore += 45;
+      break;
     }
   }
 

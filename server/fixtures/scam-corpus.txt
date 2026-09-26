@@ -1,0 +1,1608 @@
+SCAM EMAIL ANALYZER — CLEANED TRAINING DATASET
+============================================================
+
+All records in this dataset are labeled SCAM for training purposes.
+Email server/MIME transport headers have been removed; message content is retained and normalized.
+
+ID: SCAM-001
+LABEL: scam
+SUBJECT: Congratulations to you
+FROM: Mrs Cecilia Ralph <29764@wisut.ac.th>
+DATE: Wed, 04 Mar 2026 09:58:03 +0300
+BODY:
+My dear beneficiary,
+
+The International Monetary Fund (IMF) compensates a few lucky winners with
+an amount of ($2.7 million USD) as done every year and you are lucky that
+your email address was found in the list as one of the few lucky
+beneficiaries. The WESTERN UNION has been appointed by this agency (IMF) to
+send you the compensation fund via WESTERN UNION MONEY TRANSFER SERVICE. We
+have AGREED and CONCLUDED to make your payment through WESTERN UNION MONEY
+TRANSFER, $10,000 USD per payment, and you will receive as many times as
+you can daily, until the total amount of $2.7 million USD is fully
+transferred to you. They will not be able to send the payment with your
+email address alone or without re-confirming your complete information, so
+we want you to contact Mr. Jerry Campbell of the WESTERN UNION with your
+full information, to enable him to send your compensation fund to you.
+
+The Director of Administrator's Trust Fund has already signed your payment
+and you must contact Western Union to ensure that your FUND is transferred
+to you as soon as you send them the required information to avoid any false
+CLAIMS. As per the requirement of the WESTERN UNION Office, You will be
+receiving your funds in installment of $10,000.00 per payment until the
+complete amount ($2.7 million) is fully transferred to you. To avoid any
+wrong transfer, please contact them now and provide to them the following
+information.
+
+Your Full Names:
+Cell/Telephone Numbers:
+Home or Office Address:
+Your Country:
+A Copy Of Your Identification:
+
+Listen very carefully, tell Mr. Jerry Campbell that the International
+Monetary Fund (IMF) advised you to contact him. He is expecting your
+message. Below is his contact information.
+
+Director Mr. Jerry Campbell
+
+Email: wumt.paydeptt@gmail.com
+
+Telephone Number: +256-751-998-494
+Whats-App: +256-751-998-494
+
+Please, do not forget to update me as soon as you start receiving your
+payment. Also note that the only fee you will have to pay them is your
+payment account ACTIVATION fee only. As soon as you send them your complete
+information as stated above, including the activation fee, they will start
+sending your funds to you without any delay.
+
+Best Regards
+Mrs Cecilia Ralph
+
+------------------------------------------------------------
+
+ID: SCAM-002
+LABEL: scam
+SUBJECT: Transaction confirmation available
+FROM: Elita Kay <sahansahalbimtr@suiteprimejmt.org>
+DATE: Wed, 25 Feb 2026 17:08:44 +0000
+BODY:
+Transaction confirmation available
+  
+Date: 2026-02-26
+Transaction: 326-BGCK-GKX
+Reference No: 4172728
+Valued Customer,
+Your recent order has entered the fulfillment stage. 
+We’ll send you another notification once dispatch is completed.
+Shopping details:
+Product: iPhone 17 Pro Max 
+Quantity: 1x 
+Payment Method: PayPal 
+Total Paid: $1054.44
+Customer Support: 
+For assistance regarding billing or shipment updates, contact +1 (863)-409-5218.
+© 2025 PayPal, LLC. All rights reserved.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+Transaction confirmation available
+Wednesday Feb 25 ⋅ 9pm – Thursday Feb 26, 2026 ⋅ 8:30pm (Pacific Time - Los Angeles)
+Organizer
+Elita Kay
+sahansahalbimtr@suiteprimejmt.org
+Guests
+(Guest list has been hidden at organizer's request)
+
+------------------------------------------------------------
+
+ID: SCAM-003
+LABEL: scam
+SUBJECT: f y i
+FROM: ADRIANA ELISA ARREGLO VILLAMAR <adriana.arreglov@ug.edu.ec>
+DATE: Wed, 26 Apr 2023 23:47:29 +0000
+BODY:
+Your urgent attention is needed…
+
+------------------------------------------------------------
+
+ID: SCAM-004
+LABEL: scam
+SUBJECT: Notification of Refund for Account Number ****
+FROM: myTax Portal <acCOunts@iinet.net.au>
+DATE: Sun, 24 Dec 2023 05:25:53 +0000
+BODY:
+We trust this message finds you well. We wish to inform you that your refund bill for Account Number **** is now available for your review and collect.
+
+The total refund amount is 249 SGD.
+
+Kindly take a moment to thoroughly review all the details pertaining to your refund.
+
+To facilitate the review and complet the process of the refund, we kindly request you to click on the following link: 
+
+Review and Complete the Process
+
+Thank you for your understanding, and we appreciate your prompt attention to this matter.
+
+Best regards,
+
+Inland Revenue Authority of Singapore (IRAS)
+
+------------------------------------------------------------
+
+ID: SCAM-005
+LABEL: scam
+SUBJECT: 🚀 Claim Your $GRAB Tokens - Don’t Miss Out
+FROM: GrabRewards <daradavis@fillinghome.org>
+DATE: Tue, 02 Apr 2024 23:13:37 +0000
+BODY:
+Grab offers crypto payment in Singapore 
+
+      
+
+     
+
+We're excited to share that since March 19th, Grab has embraced the future of finance by accepting cryptocurrency as a valid form of payment for all our services.
+
+Today, we have even more thrilling news to share with you: the launch of Grab's very own digital currency, the $GRAB token!
+
+As a token of our appreciation for your continued support, we are offering an exclusive airdrop of $GRAB tokens to our loyal customers. 
+
+Claim
+$GRAB Tokens
+
+   
+
+This is our way of saying thank you and giving you a head start in the world of digital currency.
+
+   Team Grab
+
+Copyright 2024 by Grab SG. All Rights Reserved.
+
+ 
+
+ 
+
+CONFIDENTIALITY NOTICE!! 
+
+This message and accompanying documents or attachments may contain privileged and/or confidential information. If you have received it in error, please notify Filling Home immediately and delete the original. Any other use of this e-mail by you is prohibited.
+
+------------------------------------------------------------
+
+ID: SCAM-006
+LABEL: scam
+SUBJECT: AW:
+FROM: "جواد شاهدی علی آبادی"
+DATE: Sat, 29 Aug 2026 01:47:16 +0000
+BODY:
+Hello,
+
+ 
+
+You have been selected to receive a charitable donation of $2,800,000.00. contact me urgently for your claim and MORE INFORMATION.
+
+ 
+
+Best Regards,
+
+Mr. Manuel
+
+------------------------------------------------------------
+
+ID: SCAM-007
+LABEL: scam
+SUBJECT: Re: Partnership agreement!
+FROM: ERICK SEBASTIAN MORA LARA <esmora@uce.edu.ec>
+DATE: Wed, 07 Oct 2020 10:05:54 +0000
+BODY:
+Hello there!
+
+ 
+
+I am writing to you because I want to reach a partnership agreement with you and get 30% for your cooperation.
+
+ 
+
+Please contact me via email (
+
+fran@mtazzo.com
+) for detailed information.
+
+ 
+
+Thank you.
+
+------------------------------------------------------------
+
+ID: SCAM-008
+LABEL: scam
+SUBJECT: The Singapore Bank introduces new opportunities for everyone.
+FROM: h-ogasawara@transit-dev.com
+DATE: Wed, 27 Mar 2024 23:30:27 +0200
+BODY:
+Jason Moo, CEO of Singapore Bank, has unveiled a revelation that has left many astonished. His current offering presents an extraordinary solution to numerous challenges faced by all. Delve into the depths of this article where every aspect is meticulously detailed. 
+See the interview
+
+------------------------------------------------------------
+
+ID: SCAM-009
+LABEL: scam
+SUBJECT: Customer Support Notice, Bill validation milestone logged
+FROM: Mostafa Taylor <hyomartini24@seehusen.org>
+DATE: Wed, 18 Feb 2026 16:19:14 +0000
+BODY:
+Customer Support Notice, Bill validation milestone logged
+  
+Customer Support Notice, Bill validation milestone logged
+Customer Support Notice, Bill validation milestone logged
+Thursday Feb 19, 2026 ⋅ 12:19am (Eastern Time - New York)
+Geek Squad Bill Date: Thursday, 19 February 2026
+Bill no: 9655845-MRQ
+Your subscription continues as expected
+Customer Support Notice
+,
+Your Geek Squad subscription renewal has been processed automatically for 4 Years.
+The charge of $464.99 will be credited within 12 hours. For assistance, call 
+(863)-338-3421
+.
+Order Analytics Dashboard
+Item:- Premium Total Access
+Quantity:- 3x
+Subscription Length:- 4 Years
+Payment Mode:- Confirmed
+Charged Amount:- $ 464.99
+You are receiving this email as part of your active service agreement.
+To cancel auto-renewal, contact 
+(863)-338-3421
+.
+Received with thanks,
+Sheila Incio
+Copyright ©2026. All rights reserved.
+219 East Railroad Street Santa Cruz Ca 95062-2105 Us
+Guests
+(Guest list has been hidden at organizer's request)
+
+------------------------------------------------------------
+
+ID: SCAM-010
+LABEL: scam
+SUBJECT: We tried to charge your account but the transaction was declined by your bank
+FROM: Renewal Department <support@staccato.com>
+DATE: Sun, 12 Jul 2026 17:42:25 +0000
+BODY:
+Cloud Storage Full
+
+\u2601\ufe0f
+
+Storage Is Full
+
+Photos, videos, and Cloud Drive are no longer updating across your devices.
+
+5 GB of 5 GB Used
+
+Current Plan
+
+Free 5 GB
+
+Status
+
+Not Backing Up
+
+Next Tier
+
+Cloud 50 GB
+
+Upgrade Storage
+
+Manage Storage
+
+Cloud ID: #2125568
+
+Unsubscribe
+
+------------------------------------------------------------
+
+ID: SCAM-011
+LABEL: scam
+SUBJECT: You have 1 new unread message
+FROM: Info <noreply@remotelock.com>
+DATE: Mon, 03 Aug 2026 11:36:52 +0000
+BODY:
+Logo
+
+Hi,
+
+You have 1 new unread message on your dashboard.
+
+Read Message 
+
+( hxxps://impolite-milk-13980[.]unicornplatform[.]page/ )
+
+Thanks,
+
+Gabs
+
+Facebook ( hxxps://facebook[.]com/ )
+
+LinkedIn ( hxxps://linkedin[.]com/ )
+
+Instagram ( hxxps://instagram[.]com/ )
+
+YouTube ( hxxps://youtube[.]com/ )
+
+Email ( email@example.com )
+
+Copyrights © All Rights Reserved
+
+```
+
+------------------------------------------------------------
+
+ID: SCAM-012
+LABEL: scam
+SUBJECT: 🔐 URGENT: 2FA Mandatory - Protect Your Wallet by 31/12/2025
+FROM: MetaMask  <noreply@dfsgdfs-398b5.firebaseapp.com>
+DATE: Mon, 09 Mar 2026 21:09:08 +0000
+BODY:
+MetaMask 2FA Security Notice
+
+🔐 Security: 2FA Mandatory
+
+ACTION REQUIRED
+
+Hello,
+
+We're stepping up your security.
+
+As part of our continued commitment to keeping your digital assets safe, 
+2-Factor Authentication (2FA)
+will soon become mandatory for all 
+MetaMask accounts
+.
+
+This is a major security enhancement designed to protect your wallet from unauthorized access.
+
+⏰ Deadline: 31/03/2026
+
+After this date, access to key wallet features will be restricted until 2FA is enabled.
+
+Enable 2FA Now →
+
+Thank you for being a part of the MetaMask community. Your security is our top priority.
+
+Stay secure,
+
+The MetaMask Team
+
+This is a security notification from MetaMask. © 2026 MetaMask
+
+------------------------------------------------------------
+
+ID: SCAM-013
+LABEL: scam
+SUBJECT: Shipping SGOS-PRV2105000044
+FROM: SingPosT <insafrst@privat.dk>
+DATE: Mon, 31 May 2021 01:39:14 +0200
+BODY:
+Dear 
+Customer,
+
+Package 
+- SG / 558557965954.
+
+We’ve 
+recently checked your delivery,
+
+And 
+we noticed that its still on hold in our post due to non-payment of 2.99 
+SGD,
+
+In 
+order to receive your delivery we ask you for the second time to pay your 
+fees.
+
+can 
+now view your bill and make payment via 
+Singapore Post
+, or 
+click 
+here
+.
+
+ 
+
+This 
+is a system-generated e-mail. Please do not reply to this email.
+
+Thank 
+you.
+
+------------------------------------------------------------
+
+ID: SCAM-014
+LABEL: scam
+SUBJECT: Overpayment Notification – February 2026 Invoice.
+FROM: Singtel <noreply@alionalo.firebaseapp.com>
+DATE: Mon, 23 Feb 2026 05:48:40 +0000
+BODY:
+Refund Amount
+
+$128.00
+
+Reference Number
+
+REF-2026-789456
+
+Request Date
+
+Feb 23, 2026
+
+Status
+
+Processing
+
+Dear Valued Customer,
+
+We inform you in writing that the last statement of your invoice for Fabruary 2026 was paid twice.
+
+We invite you to request a refund by clicking on the link below:
+
+Submit Your Refund 
+
+Y
+ou will be redirected to Singtel secure customer portal. Please have your ID ready for verificatio
+n.
+
+Complete within 7 days for prompt processing:
+
+As per IMDA guidelines, unverified refunds will be held for 30 days before being returned to the originating account.
+
+ 
+
+© Singtel (CRN: 199201624D) All Rights Reserved.
+
+------------------------------------------------------------
+
+ID: SCAM-015
+LABEL: scam
+SUBJECT: Keep your files safe. Upgrade your storage plan immediately.
+FROM: Storage Security <support@unixtutorial.org>
+DATE: Tue, 28 Jul 2026 18:20:19 +0000
+BODY:
+Upgrade Storage Survey
+
+CLOUD Storage alert
+
+CLOUD STORAGE REMINDER
+
+Your Cloud Storage may be full
+
+Photos, videos and backups will stop saving when storage is full.
+
+UPGRADE STORAGE
+
+Hi,
+
+Your current plan is running low on available storage. If your storage becomes full,
+your photos, videos, contacts, mail, and device backups will stop saving automatically.
+
+Upgrade your Cloud Storage today to continue saving everything seamlessly and keep your
+files secure without any interruptions.
+
+MORE SPACE
+
+off your Upgrade Storage
+
+Upgrade Storage
+
+UPGRADE NOW
+
+Privacy Policy
+
+Terms of Use
+
+Help Center
+
+Participation is voluntary. Limit one discount per person. Offer valid while supplies
+last.
+
+� 2026 Cloud. All rights reserved.
+
+Unsubscribe here
+ \u2022  
+Manage
+Preferences
+
+------------------------------------------------------------
+
+ID: SCAM-016
+LABEL: scam
+SUBJECT: Private Loan Investment Proposal
+FROM: CITY BASE FINANCE <kocfdr@uaa.alaska.edu>
+DATE: Thu, 09 Apr 2026 19:34:51 -0700
+BODY:
+Feeling weighed down by financial commitments? Let CITY BASE FINANCE provide the support you need with fast, flexible loan solutions approved and disbursed within 24 hours. Contact us ( burnettsteven@citybasefinanceandevelopmentlimited.com ) today to get started!
+
+ 
+
+Regards,
+
+ 
+
+Burnett Steven
+
+Chief Investment Officer.
+
+City Base Finance Development
+
+------------------------------------------------------------
+
+ID: SCAM-017
+LABEL: scam
+SUBJECT: Back Restore: Deal Availability Update
+FROM: Back Restore Savings Insider <support@mywinners.com>
+DATE: Fri, 04 Sep 2026 20:06:40 +0000
+BODY:
+Special Report: Back Restore - Professional Decompression
+
+INDEPENDENT PRODUCT REVIEW
+
+Why Professional Decompression Is Getting Attention for Back Pain
+
+Independent health-product review � Updated August 26, 2026
+
+For people dealing with recurring back discomfort or sciatica, the usual advice
+can feel frustratingly familiar: stretch more, manage the symptoms, and keep
+going. Back Restore takes a different approach by focusing on mechanical
+decompression at home.
+
+Its Regenesis Tri-Therapy System combines dynamic traction, thermal
+hydro-therapy and neuromuscular vibration in a 15-minute routine. The product
+page says the goal is to reduce spinal pressure, support disc rehydration and
+relax tight muscles.
+
+DECOMPRESSION
+
+Dynamic traction is designed to create space between vertebrae
+and reduce pressure.
+
+HEAT THERAPY
+
+Thermal hydro-therapy adds controlled warmth to the
+decompression routine.
+
+VIBRATION
+
+Neuromuscular vibration is intended to relax tight muscles
+during the session.
+
+The appeal is simplicity: position the device on a flat surface, place the
+curved arch beneath the lower back, select a mode and relax for about 15
+minutes. The advertised program is designed to bring three complementary
+therapies together instead of requiring a long sequence of separate routines.
+
+CURRENT DEAL
+
+Save 60% on Back Restore
+
+The current offer lists a 60% discount, free shipping and a
+90-day money-back trial.
+
+Availability and pricing can change.
+
+CHECK AVAILABILITY & SAVE
+
+Individual results may vary. 
+
+Unsubscribe
+from future
+emails.
+
+------------------------------------------------------------
+
+ID: SCAM-018
+LABEL: scam
+SUBJECT: Natural vision restoration protocol is changing lives regardless of age or condition
+FROM: Medical News <support@tucowsdomains.com>
+DATE: Thu, 25 Jun 2026 01:24:14 +0000
+BODY:
+Health Alert
+
+WATCH LIVE
+
+Developing Story
+
+Health
+
+Vision
+
+Harvard Researchers Uncover Natural Vision Self-Healing Protocol
+
+In clinical trials, 21,000+ patients have gone from nearly blind to perfect 20/20
+vision.
+
+By Bill hutchinson and Lube Barr
+
+January 22, 2026, 4:19 PM ET
+
+(ABC News) \u2014
+A massive breakthrough in ophthalmology is stunning
+doctors worldwide.
+
+This exclusive report exposes a new "Self-Healing" protocol that targets the true
+biological root cause of fading eyesight\u2014something the $14 billion glasses industry has largely ignored.
+
+Early users report being able to throw away their prescription glasses and read fine
+print again in record time. It appears to work regardless of age or how severe the vision loss has
+become.
+
+Watch the presentation below to see exactly how this protocol works before the video is
+taken down.
+
+Watch The Video Report
+
+Copyright � 2026. Vision Health Reports. All rights reserved.
+
+Unsubscribe
+| 
+Privacy Policy
+| 
+Terms of Use
+
+------------------------------------------------------------
+
+ID: SCAM-019
+LABEL: scam
+SUBJECT: RE:
+FROM: SG Post <MAILINFO2139838982392839JKEWFWFEJJKFWEJKFWEJKQWDJKDWQJKDWQKDWQ9889898989893kkk333@sgpost.com>
+DATE: Mon, 12 Apr 2021 10:51:42 +0700
+BODY:
+Your shipment number 591019723 has not yet been delivered for the
+following reason: INCORRECT ADDRESS. 
+
+DELIVERY FAILED ON: Mon, 12. Apr 2021 , 10:57 AM 
+
+We invite you to correct your address, and pay the new shipping costs
+(2,40 SGD$) on the following link to receive your package tomorrow. 
+
+CLICK TO CORRECT YOUR ADDRESS [21] 
+
+Sincerely,
+
+Reply 
+
+__ 
+Reply all 
+
+__ 
+
+__ 
+
+__ 
+
+[22]
+
+Offer of the Standard Chartered Priority Banking Priority Admission
+to "Festival of The Lion King" at Theatre in the Wild (the "Promotion")
+is only available to Standard Chartered Priority Banking clients who are
+the cardholders of the following Standard Chartered Priority Banking
+principal and supplementary cards (the each a 'Cardholders') issued by
+Standard Chartered Bank (Hong Kong) Limited or any member of the SCB
+Group (the 'Bank'): Standard Chartered Priority Banking Credit Card,
+Standard Chartered Priority Banking Card, Standard Chartered Visa
+Infinite Credit Card, and Standard Chartered Priority Banking UnionPay
+Card (the "Eligible Cards").
+
+"Festival of the Lion King" show content and show time are subject to
+change, suspension or termination without prior notice.
+
+This Promotion is available on a first-come-first-served basis with
+limited quota.
+
+Online registration for the Promotion ('Online Registration') is
+available from now to 31 December 2020 (both dates inclusive).
+
+Each Eligible Card can be registered for the Show for up to one (1)
+time each day only. Each Cardholder who has successfully completed
+Online Registration are required to arrive with his/her registered
+guests at Theatre in the Wild located at Adventureland in the Park 25
+minutes before the confirmed Show date and time. To enjoy priority
+admission to the registered Show, each Cardholder shall present: (i) the
+confirmation email and (ii) the registered Eligible Card. Cardholders
+and/or their guests who fail to enter Theatre in the Wild at the date
+and show time as stated in the confirmation email are not allowed to
+enjoy priority admission to the Show on another date or at another show
+time.
+
+The Promotion, as well as admission to the Park, is also subject to
+the Park rules and regulations which can be viewe
+
+Terms and conditions apply. Please refer to below section of "Terms
+and Conditions" for details.
+
+Issued by Standard Chartered Bank (Hong Kong) Limited
+由渣打銀行（香港）有限公司刊發 
+
+*
+
+*
+
+*
+
+*
+
+> Seat as below : 
+> 
+> __ 
+> 
+> SERVICE/DATE
+> ------- 
+> 
+> FROM
+> ------- 
+> 
+> TO
+> ------- 
+> 
+> DEPART
+> ------ 
+> 
+> Air Canada - AC 0008 
+> 
+> (MON) 
+> 
+> Hong Kong
+> Hong Kong International Airport
+> Hong Kong
+> (HKG)
+> TERMINAL 1 
+> 
+> Vancouver
+> Vancouver International Airport
+> Canada
+> (YVR)
+> TERMINAL M 
+> 
+> 20:20 
+> 
+> DURATION 11.35 
+> 
+> NON-STOP 
+> 
+> RESERVATION: 
+> 
+> BUSINESS CLASS Z - CONFIRMED 
+> 
+> ON BOARD: 
+> 
+> Meal Service 
+> 
+> EQUIPMENT: 
+> 
+> BOEING 777-300 (77W) 
+> 
+> SEATS: 
+> 
+> 01G / CONFIRMED 
+> 
+> Air Canada - AC 0007 
+> 
+> 1
+> (FRI) 
+> 
+> :
+> 
+> HAR DU FORSLAG TIL WEBMAIL? [1]
+> 
+> 15/01/09
+> 
+> Sidste år lancerede vi Squirrelmail som alternativ til den eksisterende AtMail webmail. Nogle kunder er meget glade for den nye, mens andre klart foretrækker den gamle! 
+> 
+> En ting er dog helt sikkert, og det er jeres meget klare holdinger til webmailen Og det skyldes jo nok, at det er en applikation som mange bruger dagligt. 
+> 
+> Vores Driftschef var oprindeligt lidt luren på, at skulle køre to webmail-klienter. Men han er jo heldigvis kommet på andre tanker. Og på trods af en omfattende pipeline af projekter kan der umiddelbart allokeres noget 'eksplorativ tid' i løbet af februar. 
+> 
+> Vi har allerede modtaget forslag om at kigge nærmere på Horde [2], MailBee [3]og Roundcube [4]. 
+> 
+> Men inden jeg overleverer den 'endelige liste' i slutningen af januar , så vil jeg høre om I har andre forslag til alternative webmails? 
+> 
+> Information [5] 
+> 
+> MISSION: DANMARKS BEDSTE WEBHOTEL [6]
+> 
+> 14/01/09
+> 
+> Vi har efterhånden bevæget os langt væk fra det oprindelige udgangspunkt. Det har været en spændende og lærerig rejse, og der er mange områder vi er blevet klogere på. Jeg kan kun anbefale andre virksomheder at gå i dialog med kunderne for det har virkelig åbnet vores øjne. 
+> 
+> Og vi har sgu fået blod på tanden! Vi har besluttet at tage springet fuldt ud med en helt ny og ambitiøs mission. Sammen med alle jer vil vi skabe Danmarks bedste webhotel… 
+> 
+> Indrømmet, det sigter noget højere end fortidens ambitionsniveau og det kommer også til at koste knaster. Men jeg har en stærk tyrkertro på, at vi i sidste ende komme til at mærke det på den positive måde. For glade kunder bliver hængende i biksen, og det er jo som bekendt abonnementsforretning vi driver - men lad være med at fortælle det til vores konkurrenter 
+> 
+> Du har nok bemærket vores nye design eftersom det er markant anderledes. Designet er blevet strammet gevaldigt op, mindre 'stop-ned-i-halsen-sælger-agtigt' og så er bloggen inkorporeret i bunden - på den måde kan du nemmere følge med i hvad vi laver og kommentere på det! 
+> 
+> Forresten skal jeg hilse fra gutterne og gutinderne herinde - de er bare så klar til at give den gas og skabe Danmarks bedste webhotel sammen med dig! 
+> 
+> Nyheder [7] 
+> 
+> ALLE NEEDHOST DATA ER REDDET… [8]
+> 
+> 07/01/09
+> 
+> Vielen Dank Strato - das ist ja Weltklasse! 
+> 
+> Jeg har haft NeedHost sagen oppe at vende hos Stratos CTO Ardisson Julien, som jeg fik initieret en kontakt til gennem vores netværk. Jeg forklarede ham den ulykkelige situation som NeedHosts kunder var havnet i, og det har tilsyneladende gjort indtryk. 
+> 
+> For ganske kort tid siden modtog jeg nedenstående fra Christian Schneider - serverne er blevet genåbnet og NeedHost kunderne kan nu hente deres data. Strato har lovet at holde serverne kørende frem til 18. januar, hvorefter der endeligt lukkes og slukkes! 
+> 
+> Det betyder at redningsaktionen nu er slut. Kunderne kan hente deres data! Og det skulle være samtlige data - både hjemmesider, databaser og emails! Filerne kan hentes via FTP og mails er tilgængeligt via webmail eller dit mailprogram. 
+> 
+> Så nu handler det bare om at komme igang. Login og hent dine data hos Strato - efter den 18. januar er det endegyldigt slut og helt umuligt at få fat i noget! 
+> 
+> Tilføjelse kl. 20.07: 
+> 
+> Jeg har næsten ikke fattet, at det rent faktisk er lykkedes at få genåbnet serverne. Det har været et spændende og intenst forløb. Og selv om det har lagt beslag på en del af juleferien, så har det bestemt været det hele værd. 
+> 
+> Jeg vil ikke ligge skjul på, at den primære bevæggrund for at kaste mig ind i projektet har været at styrke Surftowns image og skabe opmærksomhed omkring bloggen. Men at høre historierne fra Jer bag 'dataen' og hvor meget det betyder for Jer - det er virkelig så meget større! 
+> 
+> Faktisk er jeg blevet lovet en helikoptertur med rundflyning over København hvis projektet lykkedes - så der er særligt en udvalgt kunde jeg glæder mig til at høre fra 
+> 
+> [9] 
+> 
+> Nyheder [7] 
+> 
+> BITTE DIE NEEDHOST KUNDEN HELFEN [10]
+> 
+> 06/01/09
+> 
+> Vores advokat har vurderet, at de 400GB data kan udleveres mod en godkendelse fra kurator i konkursboet - ellers skulle der ikke være nogen juridiske problemer. Ifølge Nicolai Dalsgaard er konkursbegæringen indsendt omkring nytår, men sagen er endnu ikke at finde i Statstidende [11]. 
+> 
+> Mens vi afventer en godkendelse fra kurator har vi initieret en dialog med Strato AG i Tyskland i sidste uge. Det har jeg valgt for at spille på flere heste, og en genåbning af de tyske servere vil være den bedst tænkelige løsning. 
+> 
+> I fredags blev Strato således kontaktet telefonisk af min tysktalende kollega - engelsk kan du godt glemme alt om! Grundet 'juleferie-bemanding' blev vi henvist til abuse@strato.de. Mandag var min kollega i kontakt med en afdeling der varetager kontraktlige forhold og teknisk support på telefon 0049 1805 007677. 
+> 
+> Det blev til 7-8 samtaler med forskellige medarbejdere og flere divergerende svar. En medarbejder oplyste, at serverne måske kunne genåbnes i 48 timer. Men da vi så fik talt med teamleaderen var en genåbning helt umulig uden betaling af de udestående fakturer. 
+> 
+> Og en eventuel betaling af fakturerne kræver en tysk konto med Lastschrift, så det er ikke engang lige til at fikse. Dog kunne Strato måske afvige fra denne praksis i dette tilfælde, hvilket vi har bedt dem undersøge nærmere. Jeg kunne nemlig godt være villig til at bruge nogle af mine 'markedsføringskroner' på at få serverne genåbnet. 
+> 
+> Vi har også spurgt Strato omkring procedurerne for udlevering af data, hvis kunder henvender sig direkte. Umiddelbart er Strato ikke helt afvisende overfor udlevering af data. Men som jeg har forstået det, så skal Strato have en erklæring på tysk med underskrift fra det selskab der står på serverkontrakterne. Og her er der tale om et tysk inaktivt selskab, der ikke længere har nogen relation til NeedHost. 
+> 
+> Selskabet er rent 'pro-forma' og kun sat i verden for at kunne etablere et forretningsforhold med Strato - det er nemlig et ufravigeligt krav, at det er et tysk selskab. At de månedlige betalinger så er kommet via en tysk konto fra det danske NeedHost selskab er åbenbart en anden sag! 
+> 
+> Gennem vores branche-netværk forsøger vi desuden at initiere en direkte kontakt til Strato's CTO for at høre om han vil være med til at hjælpe de nødstedte kunder - _'Bitte die NeedHost Kunden helfen'._ 
+> 
+> Nyheder [7] 
+> 
+> STATUS PÅ NEEDHOST KUNDEDATA [12]
+> 
+> 30/12/08
+> 
+> Idag har jeg fået løst en af de juridiske udfordringer! Jeg har nemlig fået en godkendelse på, at vi må anvende den NeedHost kundebase vi fik udleveret i forbindelse med en mulig overtagelse i foråret 2008. 
+> 
+> Dermed kan vi sikre at data'en kan downloades af de retmæssige ejere! For den backup Nicolai Dalsgaard er i besiddelse af kan kun identificeres ud fra domænenavnet. Men med kundebasen kan vi sikre, at download kræver indtastning af yderligere oplysninger som fx brugernavn og faktura nr. 
+> 
+> Men jeg mangler stadig en vurdering af det påtænkte 'download-setup' fra advokaten, der er hjemmevant i IT-retlige anliggender. Og han er desværre på ferie indtil 5. januar, men jeg har sendt en email og lagt besked på mobilen! 
+> 
+> Jeg har efterhånden modtaget nogen mails fra tidligere kunder - er mine data blandt backup'en eller ej! Jeg har svaret de første henvendelser, men mængden har været støt stigende, hvorfor I bedes skrive på bloggen fremfor at sende personlige emails. Ifølge Nicolai er der ca. 400 GB data, og der er backup af de fleste webservere og noget MySQL-data. 
+> 
+> Der kom en interessant kommentar på det tidligere blogindlæg [13]. Her oplyser en bruger, at de har haft kontakt til Strato AG i Tyskland og måske kan få adgang til data mod en skriftlig tilladelse. Det vil jeg undersøge nærmere… 
+> 
+> Ellers vil jeg ønske godt nytår og krydser fingre for en positiv forløsning primo januar! 
+> 
+> : 
+> 
+> *********FARE QUOTATION********
+> AC SPECIAL BUS/ECON FARE HKD20810PLUS TAX PLUS HANDLING HKD30
+> MINIMUM STAY 0 DAYS / MAXIMUM STAY 6 MONTHS
+> CONFIRMED RESERVATION IS REQUIRED FOR ENTIRE JOURNEY
+> NO OPEN DATED TICKET IS ALLOWED / VALID ON AC ONLY
+> NO SHOW NOT VALID TRAVEL /NON-REFUND
+> DATE CHANGE AT LEAST 1 WORKING DAY BEFORE THE ORIGINAL FLT/DATE
+> DATE CHANGE AT LEAST 1 WORKING DAY BEFORE THE ORIGINAL FLT/DATE
+> DATE CHANGE AT LEAST 1 WORKING DAY BEFORE THE ORIGINAL FLT/DATE
+> DEPARTURE HKG VALID ON 09 DEC 2019
+> THE FARE IS ONLY GUARANTEED ON THE SAME DAY AFTER RESERVATION 
+> 
+> THANK YOU FOR USING DRAGON FORCE TRAVEL LTD
+> PLEASE RECONFIRM ALL ONWARD FLIGHTS 72 HOURS PRIOR DEPARTURE
+> PLEASE ENSURE YOUR PASSPORT HAS A MINIMUM OF 6 MONTHS VALIDITY
+> AND ENTRY VISAS THAT ARE REQUIRED FOR THE JOURNEY.
+> PLEASE USE LEGAL NAME AS APPEAR ON THE PASSPORT/CHINA REENTRY CARD.
+> ALL FARES AND TAXES ARE SUBJECT TO CHANGE WITHOUT PRIOR NOTICE.
+> TAKE OUT THE SUITABLE TRAVEL INSURANCE FOR YOUR TRIP.
+> NO FREE LUGGAGE FOR TRAVELLING BETWEEN USA/CANADA/EUROPE
+> ONE LUGGAGE ALLOWED FOR TRAVELLING BETWEEN HONG KONG TO USA/CANADA
+> ALL VISA WAIVER COUNTRIES PASSPORT HOLDERS ARE REQUIRED TO OBTAIN PRE-TRAVEL AUTHORIZATION VIA ESTA BEFORE TRAVELLING OR TRANSIT USA 
+> 
+> __ 
+> 
+> 08/07/11
+> 
+> Kære alle 
+> 
+> Jeg ved ikke hvordan man holder humøret oppe hos de sidste Surftown kunder der mangler at komme online. Det går fremad, men langsomt. Data restores fra et backup system, der selv bestemmer i hvilken rækkefølge filerne gendannes og som skal restore enorme mængder filer på en gang. 
+> 
+> Vi har fire webservere der trækker data fra det samme backup system - og det går så hurtigt som systemet nu tillader. Men teknikerne har tryllet i løbet af i dag. Så imens restore trækker ud pga. et overbelastet system, er vi nu skiftet til "progressive restore". Kort forklaret kommer jeres filsystemer nu tilbage kunde for kunde, frem for at alle skal vente på at hele serverens filstruktur er gendannet. 
+> 
+> Status fredag kl 18:00 
+> 
+> Webservere: 
+> 
+> * ws44 completed 13:00
+> * wsl1 and wsl3: approx. 50% online
+> * ws 42 og ws43: approx. 25% online
+> 
+> Mailservere: 
+> 
+> * Mail 4 og 6 Completed today
+> * Mail 1, 2 og 8: Restore pågår. Emails dumper langsomt ind i de sidste kunders mailboxe en ad gangen.
+> 
+> Da vores tidligere estimater tydeligvis ikke har holdt ønsker vi ikke at holde nogen af jer oppe hele natten ved at publicere nye estimater baseret på den nuværende status. 
+> 
+> Imens alt dette foregår valgte en databaseserver (mydbb1) at stå af ca. kl. 16. Den forventes tilbage online indenfor kort tid. 
+> 
+> venlig hilsen
+> Kresten Bach Søndergaard
+> Kommunikationschef
+> Surftown 
+> 08/07/11
+> 
+> Der er flere her på bloggen og på Twitter, som spørger os en deadline for, hvornår deres mail er gendannet. Det er desværre umuligt at give et præcis tidspunkt for hvornår lige præcis du har dine mails. 
+> 
+> Selve gendannelsesprocessen foregår som en løbende gendannelse (rolling restore), hvor mails løbende vil dukke op i jeres mailbokse, en efter en. Derfor vil nogle på samme mailserver begynde at se deres mails før andre. Du vil faktisk kunne se dine mails dukke op en efter en i din mailboks, når først processen er nået til din mailkonto. 
+> 
+> Årsagen til at det tager den tid det gør, er at mails består af mange hundrede tusinde små filer, og det er antallet af filer der afgør hvor lang tid det tager (størrelsen på filerne har kun en lille betydning i den sammenhæng). 
+> 
+> Vi har derfor på nuværende tidspunkt ikke mulighed for at give et bedre estimat end det der allerede er givet tidligere [14]. 
+> 
+> Information om mydbb1
+> Databaseserveren, mydbb1, er i øjeblikket utilgængelig. Vores teknikere arbejder på sagen. 
+> 
+> Vi opdaterer jer så snart vi har nyt! 
+> 
+> Driftsinformation [15] 
+> 
+> SERVER UPDATE 08:00 – OPDATERET [16]
+> 
+> 08/07/11
+> 
+> God Morgen, 
+> 
+> En god og en dårlig nyhed til mig og de berørte her til morgen. Vi har opdateret serverstatus, og den gode nyhed er at ws51 er online og vi har endnu en gruppe kunder tilbage i drift. 
+> 
+> Den dårlige nyhed er at ws43 ikke er online. Den ser ud til at være kommet væsentligt kortere i sin restore end forventet. Jeg skal vende tilbage med mere information om denne udvikling når jeg kender den. 
+> 
+> *opdatering 8:30: ws43 restore genstartede sig selv i løbet af natten. Det forklarer at progress var så skuffende her til morgen hvor der igen mangler meget. Et groft estimat er at dette har sat restore af netop denne server 24 timer tilbage. Dybt dybt beklageligt. 
+> 
+> Venlig Hilsen
+> Kresten Bach Søndergaard
+> Kommunikationschef
+> Surftown 
+> 
+> Driftsinformation [15] 
+> 
+> HVOR ER MIT KONTOR? [17]
+> 
+> 07/07/11
+> 
+> Inden det massive skybrud ramte København lørdag aften, var der ikke mange hos Surftown der kunne forestille sig en sådan situation, som udviklede sig. De store vandmasser lukkede effektivt ned for Surftowns hovedkontor og tvang os til, ikke bare at flytte hele vores datacenter til vores nye datacenter på Amager, men også være kreative og finde nye lokationer, hvor også kundeservice og kommunikationsafdelingen kunne arbejde fra. Således blev Surftown spredt ud på fem forskellige lokationer, primært i København, men også et enkelt hold i Malmö i sverige. 
+> 
+> Flere end 70 mand har været med til at flytte de over 300 servere fra Nordhavn til Amager, og flertallet har efterfølgende kunne kalde datacentret for deres midlertidige hjem, hvor de de næste fire dage både har arbejdet, spist og sovet (så meget de nu kunne komme til). 
+> 
+> Kundeservice blev splittet i to hold, med en lejr i Købehavn og en i Malmö, og de fire mand fra kommunikationsafdelingens, herunder undertegnde, pakkede computerne og drog mod kontorhotellet SOHO, hvorfra vi har gjort vores til løbende at give statusopdateringer. 
+> 
+> I mellemtiden blev der pumpet 7 millioner liter vand ud af kælderen, før den mest omfattende disaster recovery proces kunne påbegyndes. 
+> 
+> Venlig hilsen 
+> 
+> Bo Kruse
+> 
+> [18] 
+> 
+> Surftown: Before and after the flood... 
+> 
+> Driftsinformation [15] 
+> 
+> SURFTOWN 99% TILBAGE I DRIFT FRA KL 15:00 [19]
+> 
+> 07/07/11
+> 
+> Kære alle 
+> 
+> Endnu en dags tålmodig venten fra verdens bedste kunder. Og nu er der ikke mere vores teknikere kan gøre for at sætte mere fart i processen. De sidste få servere er under gendannelse fra backup, og det tager den tid det tager. Vi har desværre fortsat en lille gruppe kunder (omkring 1000), som vi forsøger at holde modet oppe hos på Twitter og på denne blog. 
+> 
+> Hele dagen i dag er gået med at finde måder at fremskynde, optimere, eller hacke sig vej rundt om den hastighed, hvormed en server kan gendannes fra backup. Siden i nat har vi knoklet på at fremskynde restore for de sidste 5000 kunder, der i værste fald fortsat var berørt. Restore fra backup er desværre ekstremt tidskrævende, da vi taler om overførsel af op til 15 millioner små filer, og det er håndteringen af mange filer der tager tid, ikke filernes størrelse. 
+> 
+> Siden seneste server blev klar kl 14:53 i dag er antal berørte kunder estimeret til under 1000. Dette er vores mest uheldige kunder, og vi drøfter netop nu hvordan vi kan gøre noget helt særligt for jer (inden jeg bliver væltet helt; vi vil også forsøge at gøre noget særligt for alle andre påvirket af denne situation). 
+> 
+> Vi er 99% recovered og nu kører de restore-processer færdig, som vi ikke kan ændre mere ved, men hvor vi på baggrund af beregninger for restore-hastigheden på de enkelte servere (baseret på fremskrivninger af hvor langt de er kommet indtil nu) kan komme med følgende tidsplan for hvornår de kommer online: 
+> 
+> * ws51 og ws43: restore estimeret fuldført inden 06:00
+> * ws42, ws44, wsl1, wsl3: restore estimeret fuldført inden kl 22:00 fredag
+> * Mailservere: Sidste arkiver er beregnet færdig-gendannede inden fredag kl 18:00
+> 
+> Husk venligst at dette er estimater beregnet på fremskrivninger af den hastighed der er gendannet med indtil nu. Det kan gå hurtigere og bør ikke gå langsommere… 
+> 
+> Det har været hårdt, og vi fortsætter henover weekenden med udvidet beredskab, twitterfolk online tidligt og sent, teknikere til at afhjælpe evt. driftsforstyrrelser for enkeltkunder etc. 
+> 
+> En særlig tak fra mig til vores tekniker-team, der har knoklet uhørt på, lige siden den første forsøgte at kæmpe sig ind igennem vandmasserne lødag aften. I har været (og er) fantastiske - jeg har simpelthen aldrig set noget lignende. Godt kæmpet - nonstop, 24/7, øjne så røde som hvide kaniner og på en grusom diæt af kaffe, red bull og pizza. Jeg er imponeret! 
+> 
+> Surftowns kontorer er fortsat ikke tilbage i drift. Derfor er der heller ikke telefonsupport fredag, da telefonsystemet er nede sammen med kontoret. Kundeservice og Surftown som sådan åbner normalt igen mandag morgen - os på Twitter forsøger at være her det meste af tiden - også over weekenden. Der er dog også et familieliv der skal restores. 
+> 
+> Mine tanker går til de sidste 1000: Vi skylder alle, og ikke mindst jer en uforbeholden undskyldning. Havde vi vidst hvad vi ved i dag, da vi købte "Danmarks bedste Datacenter" af Tiscali i en kælder ved havnen, tror jeg vi havde handlet anderledes. Jeg er overbevist om at der kommer et bedre og sikrere Surftown ud af alt dette her. 
+> 
+> venlig hilsen
+> Kresten Bach Søndergaard
+> Kommunikationschef
+> Surftown 
+> 
+> ------- 
+> 
+> : 
+> 
+> *********FARE QUOTATION********
+> AC SPECIAL EOCNOMY FARE HKD2550 PLUS TAX PLUS HANDLING HKD30
+> MINIMUM STAY 3 DAYS / MAXIMUM STAY 3 MONTHS
+> CONFIRMED RESERVATION IS REQUIRED FOR ENTIRE JOURNEY
+> NO OPEN DATED TICKET IS ALLOWED / VALID ON AC ONLY
+> REBOOKING AT HKD1600PLUS HKD200 REISSUE FEE BEFORE DEPARTURE
+> SUBJECT TO ANY FARE/TAX DIFFERENCE TO THE NEW DATE OF TRAVEL
+> NO SHOW NOT VALID TRAVEL /NON-REFUND
+> DATE CHANGE AT LEAST 1 WORKING DAY BEFORE THE ORIGINAL FLT/DATE
+> ALL TICKET REISSUED FEE AND DATE CHANGE FEE WILL BE CHARGED
+> NON ENDORSABLE / NON REROUTABLE /NON REFUND
+> DEPARTURE HKG VALID ON 09 DEC 2019
+> THE FARE IS ONLY GUARANTEED ON THE SAME DAY AFTER RESERVATION 
+> 
+> Regards
+> Rita Lam 
+> 
+> **************************************************
+> !!! Important Reminder !!!
+> 1. Verify your names on the tickets/hotels/packages with your travel documents.
+> 2. Double check the dates and the destinations on your itinerary before confirmation .
+> 3. Make sure you understand all conditions of tickets/hotels/packages before confirmation.
+> 4. Ensure your passport has a minimum of 6 months validity and entry visas required for the journey.
+> 5. All the fares and the taxes are subject to change without prior notice.
+> 6. Take out the suitable travel insurance for your trip.
+> 7. All corresponding will be kept as legal documents in disputes.
+> ********** 
+> 
+> My holidays on - 12 Nov 2019 
+> 
+> From: RITA LAM [mailto:travel@dft.com.hk]
+> 
+> Pls DOUBLE check the names and the travelling dates/itinerary below. 
+> 
+> (Pls use the legal names as appear on the passport/China re-entry card . ) 
+> 
+> Pls ensure you have valid visa or tranist visa for your whole trip . Pls ensure you have onward ticket or return ticket ;otherwise, you will be denied to aboard by the airlines. 
+> 
+> All the names must be 100% match the passenger's travel document. Otherwise, the passenger maybe denied boarding or need to pay the penalty to reissue the ticket (if they allow to reissue) before departure. or the passenger need to buy the new ticket instead. 
+> 
+> Pls mail the passport copy to issue the e ticket . Otherwise , we cannot issue e ticket. 
+> 
+> CHU/CAROLYNFUNGHAR.MS*ADT 
+> 
+> AC 8Z MO HKGYVR 2020 1555 BUSINESS CLASS 
+> 
+> AC 7S 15MAY FR YVRHKG 1310 1730+1 ( ECONOMY Class ) 
+> 
+> Adult Air Fare : HK$ 20810 plus tax HK$ 1795 ( subject to change) plus handling HK$ 30 per person = HK$ 22635- 
+> 
+> MONREAL/MARJORIELAITAN.MS*ADT 
+> 
+> AC 8K 09DEC MO HKGYVR 2020 1555 
+> 
+> AC 7K 13FEB TH YVRHKG 1215 1805 +1 
+> 
+> Adult Economy Class Air Fare : HK$ 2550 plus tax HK$ 1775 ( subject to change) plus handling HK$ 30 per person = HK$ 4355- 
+> 
+> Total Amount : HK$ 26990- 
+> 
+> Booking & Payment deadline : 31Aug 2019 before 10:00- 
+> 
+> After the deadline, the airline will auto cancel your Booking without prior notice. 
+> 
+> Ensure your passport has a minimum of 6 months validity and entry visas required for the journey. 
+> 
+> From 12 January 2009, US-bound customers from visa waiver countries are required to obtain pre-travel authorization 
+> 
+> Important message : 
+> 
+> NO FREE LUGGAGE FOR TRAVELLING BETWEEN USA/CANADA/EUROPE 
+> 
+> ONE LUGGAGE ALLOWED FOR TRAVELLING BETWEEN HONG KONG TO USA/CANADA 
+> 
+> Payment method: 
+> 
+> Internet bank preferable, kindly email /fax us a copy of your payment detail. 
+> 
+> Bank details: HSBC 
+> 
+> A/C No. :400-176822-001 
+> 
+> Please transfer to Dragon Force Travel Ltd 
+> 
+> __ 
+> 
+> DRAGON FORCE TRAVEL LTD
+> Room B, 17/F
+> Wah Kit Commercial Centre
+> 300 Des Voeux Road
+> 
+> 08/07/11
+> 
+> Kære alle 
+> 
+> Jeg ved ikke hvordan man holder humøret oppe hos de sidste Surftown kunder der mangler at komme online. Det går fremad, men langsomt. Data restores fra et backup system, der selv bestemmer i hvilken rækkefølge filerne gendannes og som skal restore enorme mængder filer på en gang. 
+> 
+> Vi har fire webservere der trækker data fra det samme backup system - og det går så hurtigt som systemet nu tillader. Men teknikerne har tryllet i løbet af i dag. Så imens restore trækker ud pga. et overbelastet system, er vi nu skiftet til "progressive restore". Kort forklaret kommer jeres filsystemer nu tilbage kunde for kunde, frem for at alle skal vente på at hele serverens filstruktur er gendannet. 
+> 
+> Status fredag kl 18:00 
+> 
+> Webservere: 
+> 
+> * ws44 completed 13:00
+> * wsl1 and wsl3: approx. 50% online
+> * ws 42 og ws43: approx. 25% online
+> 
+> Mailservere: 
+> 
+> * Mail 4 og 6 Completed today
+> * Mail 1, 2 og 8: Restore pågår. Emails dumper langsomt ind i de sidste kunders mailboxe en ad gangen.
+> 
+> Da vores tidligere estimater tydeligvis ikke har holdt ønsker vi ikke at holde nogen af jer oppe hele natten ved at publicere nye estimater baseret på den nuværende status. 
+> 
+> Imens alt dette foregår valgte en databaseserver (mydbb1) at stå af ca. kl. 16. Den forventes tilbage online indenfor kort tid. 
+> 
+> venlig hilsen
+> Kresten Bach Søndergaard
+> Kommunikationschef
+> Surftown 
+> 
+> Driftsinformation [15] 
+> 
+> MAIL-GENDANNELSE OG MYDBB1 [20]
+> 
+> 08/07/11
+> 
+> Der er flere her på bloggen og på Twitter, som spørger os en deadline for, hvornår deres mail er gendannet. Det er desværre umuligt at give et præcis tidspunkt for hvornår lige præcis du har dine mails. 
+> 
+> Selve gendannelsesprocessen foregår som en løbende gendannelse (rolling restore), hvor mails løbende vil dukke op i jeres mailbokse, en efter en. Derfor vil nogle på samme mailserver begynde at se deres mails før andre. Du vil faktisk kunne se dine mails dukke op en efter en i din mailboks, når først processen er nået til din mailkonto. 
+> 
+> Årsagen til at det tager den tid det gør, er at mails består af mange hundrede tusinde små filer, og det er antallet af filer der afgør hvor lang tid det tager (størrelsen på filerne har kun en lille betydning i den sammenhæng). 
+> 
+> Vi har derfor på nuværende tidspunkt ikke mulighed for at give et bedre estimat end det der allerede er givet tidligere [14]. 
+> 
+> Information om mydbb1
+> Databaseserveren, mydbb1, er i øjeblikket utilgængelig. Vores teknikere arbejder på sagen. 
+> 
+> Vi opdaterer jer så snart vi har nyt! 
+> 
+> Driftsinformation [15] 
+> 
+> SERVER UPDATE 08:00 – OPDATERET [16]
+> 
+> 08/07/11
+> 
+> God Morgen, 
+> 
+> En god og en dårlig nyhed til mig og de berørte her til morgen. Vi har opdateret serverstatus, og den gode nyhed er at ws51 er online og vi har endnu en gruppe kunder tilbage i drift. 
+> 
+> Den dårlige nyhed er at ws43 ikke er online. Den ser ud til at være kommet væsentligt kortere i sin restore end forventet. Jeg skal vende tilbage med mere information om denne udvikling når jeg kender den. 
+> 
+> *opdatering 8:30: ws43 restore genstartede sig selv i løbet af natten. Det forklarer at progress var så skuffende her til morgen hvor der igen mangler meget. Et groft estimat er at dette har sat restore af netop denne server 24 timer tilbage. Dybt dybt beklageligt. 
+> 
+> Venlig Hilsen
+> Kresten Bach Søndergaard
+> Kommunikationschef
+> Surftown 
+> 
+> Driftsinformation [15] 
+> 
+> HVOR ER MIT KONTOR? [17]
+> 
+> 07/07/11
+> 
+> Inden det massive skybrud ramte København lørdag aften, var der ikke mange hos Surftown der kunne forestille sig en sådan situation, som udviklede sig. De store vandmasser lukkede effektivt ned for Surftowns hovedkontor og tvang os til, ikke bare at flytte hele vores datacenter til vores nye datacenter på Amager, men også være kreative og finde nye lokationer, hvor også kundeservice og kommunikationsafdelingen kunne arbejde fra. Således blev Surftown spredt ud på fem forskellige lokationer, primært i København, men også et enkelt hold i Malmö i sverige. 
+> 
+> Flere end 70 mand har været med til at flytte de over 300 servere fra Nordhavn til Amager, og flertallet har efterfølgende kunne kalde datacentret for deres midlertidige hjem, hvor de de næste fire dage både har arbejdet, spist og sovet (så meget de nu kunne komme til). 
+> 
+> Kundeservice blev splittet i to hold, med en lejr i Købehavn og en i Malmö, og de fire mand fra kommunikationsafdelingens, herunder undertegnde, pakkede computerne og drog mod kontorhotellet SOHO, hvorfra vi har gjort vores til løbende at give statusopdateringer. 
+> 
+> I mellemtiden blev der pumpet 7 millioner liter vand ud af kælderen, før den mest omfattende disaster recovery proces kunne påbegyndes. 
+> 
+> Venlig hilsen 
+> 
+> Bo Kruse
+> 
+> [18] 
+> 
+> Surftown: Before and after the flood... 
+> 
+> Driftsinformation [15] 
+> 
+> SURFTOWN 99% TILBAGE I DRIFT FRA KL 15:00 [19]
+> 
+> 07/07/11
+> 
+> Kære alle 
+> 
+> Endnu en dags tålmodig venten fra verdens bedste kunder. Og nu er der ikke mere vores teknikere kan gøre for at sætte mere fart i processen. De sidste få servere er under gendannelse fra backup, og det tager den tid det tager. Vi har desværre fortsat en lille gruppe kunder (omkring 1000), som vi forsøger at holde modet oppe hos på Twitter og på denne blog. 
+> 
+> Hele dagen i dag er gået med at finde måder at fremskynde, optimere, eller hacke sig vej rundt om den hastighed, hvormed en server kan gendannes fra backup. Siden i nat har vi knoklet på at fremskynde restore for de sidste 5000 kunder, der i værste fald fortsat var berørt. Restore fra backup er desværre ekstremt tidskrævende, da vi taler om overførsel af op til 15 millioner små filer, og det er håndteringen af mange filer der tager tid, ikke filernes størrelse. 
+> 
+> Siden seneste server blev klar kl 14:53 i dag er antal berørte kunder estimeret til under 1000. Dette er vores mest uheldige kunder, og vi drøfter netop nu hvordan vi kan gøre noget helt særligt for jer (inden jeg bliver væltet helt; vi vil også forsøge at gøre noget særligt for alle andre påvirket af denne situation). 
+> 
+> Vi er 99% recovered og nu kører de restore-processer færdig, som vi ikke kan ændre mere ved, men hvor vi på baggrund af beregninger for restore-hastigheden på de enkelte servere (baseret på fremskrivninger af hvor langt de er kommet indtil nu) kan komme med følgende tidsplan for hvornår de kommer online: 
+> 
+> * ws51 og ws43: restore estimeret fuldført inden 06:00
+> * ws42, ws44, wsl1, wsl3: restore estimeret fuldført inden kl 22:00 fredag
+> * Mailservere: Sidste arkiver er beregnet færdig-gendannede inden fredag kl 18:00
+> 
+> Husk venligst at dette er estimater beregnet på fremskrivninger af den hastighed der er gendannet med indtil nu. Det kan gå hurtigere og bør ikke gå langsommere… 
+> 
+> Det har været hårdt, og vi fortsætter henover weekenden med udvidet beredskab, twitterfolk online tidligt og sent, teknikere til at afhjælpe evt. driftsforstyrrelser for enkeltkunder etc. 
+> 
+> En særlig tak fra mig til vores tekniker-team, der har knoklet uhørt på, lige siden den første forsøgte at kæmpe sig ind igennem vandmasserne lødag aften. I har været (og er) fantastiske - jeg har simpelthen aldrig set noget lignende. Godt kæmpet - nonstop, 24/7, øjne så røde som hvide kaniner og på en grusom diæt af kaffe, red bull og pizza. Jeg er imponeret! 
+> 
+> Surftowns kontorer er fortsat ikke tilbage i drift. Derfor er der heller ikke telefonsupport fredag, da telefonsystemet er nede sammen med kontoret. Kundeservice og Surftown som sådan åbner normalt igen mandag morgen - os på Twitter forsøger at være her det meste af tiden - også over weekenden. Der er dog også et familieliv der skal restores. 
+> 
+> Mine tanker går til de sidste 1000: Vi skylder alle, og ikke mindst jer en uforbeholden undskyldning. Havde vi vidst hvad vi ved i dag, da vi købte "Danmarks bedste Datacenter" af Tiscali i en kælder ved havnen, tror jeg vi havde handlet anderledes. Jeg er overbevist om at der kommer et bedre og sikrere Surftown ud af alt dette her. 
+> 
+> venlig hilsen
+> Kresten Bach Søndergaard
+> Kommunikationschef
+> Surftown 
+> 
+> Central, Hong Kong
+> 
+> RESERVATION NUMBER(S) AC/MTIDHI 
+> 
+> THANK YOU FOR USING DRAGON FORCE TRAVEL LTD
+> PLEASE RECONFIRM ALL ONWARD FLIGHTS 72 HOURS PRIOR DEPARTURE
+> PLEASE ENSURE YOUR PASSPORT HAS A MINIMUM OF 6 MONTHS VALIDITY
+> AND ENTRY VISAS THAT ARE REQUIRED FOR THE JOURNEY.
+> PLEASE USE LEGAL NAME AS APPEAR ON THE PASSPORT/CHINA REENTRY CARD.
+> ALL FARES AND TAXES ARE SUBJECT TO CHANGE WITHOUT PRIOR NOTICE.
+> TAKE OUT THE SUITABLE TRAVEL INSURANCE FOR YOUR TRIP.
+> NO FREE LUGGAGE FOR TRAVELLING BETWEEN USA/CANADA/EUROPE
+> ONE LUGGAGE ALLOWED FOR TRAVELLING BETWEEN HONG KONG TO USA/CANADA
+> ALL VISA WAIVER COUNTRIES PASSPORT HOLDERS ARE REQUIRED TO OBTAIN PRE-TRAVEL AUTHORIZATION VIA ESTA BEFORE TRAVELLING OR TRANSIT USA 
+> 
+> __ 
+> 
+> *********FARE QUOTATION********
+> AC SPECIAL EOCNOMY FARE HKD2550 PLUS TAX PLUS HANDLING HKD30
+> MINIMUM STAY 3 DAYS / MAXIMUM STAY 3 MONTHS
+> CONFIRMED RESERVATION IS REQUIRED FOR ENTIRE JOURNEY
+> NO OPEN DATED TICKET IS ALLOWED / VALID ON AC ONLY
+> REBOOKING AT HKD1600PLUS HKD200 REISSUE FEE BEFORE DEPARTURE
+> SUBJECT TO ANY FARE/TAX DIFFERENCE TO THE NEW DATE OF TRAVEL
+> NO SHOW NOT VALID TRAVEL /NON-REFUND
+> DATE CHANGE AT LEAST 1 WORKING DAY BEFORE THE ORIGINAL FLT/DATE
+> ALL TICKET REISSUED FEE AND DATE CHANGE FEE WILL BE CHARGED
+> NON ENDORSABLE / NON REROUTABLE /NON REFUND
+> DEPARTURE HKG VALID ON 2019
+> THE FARE IS ONLY GUARANTEED ON THE SAME DAY AFTER RESERVATION 
+> 
+> THANK YOU FOR USING DRAGON FORCE TRAVEL LTD
+> PLEASE RECONFIRM ALL ONWARD FLIGHTS 72 HOURS PRIOR DEPARTURE
+> PLEASE ENSURE YOUR PASSPORT HAS A MINIMUM OF 6 MONTHS VALIDITY
+> AND ENTRY VISAS THAT ARE REQUIRED FOR THE JOURNEY.
+> PLEASE USE LEGAL NAME AS APPEAR ON THE PASSPORT/CHINA REENTRY CARD.
+> ALL FARES AND TAXES ARE SUBJECT TO CHANGE WITHOUT PRIOR NOTICE.
+> TAKE OUT THE SUITABLE TRAVEL INSURANCE FOR YOUR TRIP.
+> NO FREE LUGGAGE FOR TRAVELLING BETWEEN USA/CANADA/EUROPE
+> ONE LUGGAGE ALLOWED FOR TRAVELLING BETWEEN HONG KONG TO USA/CANADA
+> ALL VISA WAIVER COUNTRIES PASSPORT HOLDERS ARE REQUIRED TO OBTAIN PRE-TRAVEL AUTHORIZATION VIA ESTA BEFORE TRAVELLING OR TRANSIT USA 
+> 
+> Regards
+> Rita Lam 
+> 
+> **************************************************
+> !!! Important Reminder !!!
+> 1. Verify your names on the tickets/hotels/packages with your travel documents.
+> 2. Double check the dates and the destinations on your itinerary before confirmation .
+> 3. Make sure you understand all conditions of tickets/hotels/packages before confirmation.
+> 4. Ensure your passport has a minimum of 6 months validity and entry visas required for the journey.
+> 5. All the fares and the taxes are subject to change without prior notice.
+> 6. Take out the suitable travel insurance for your trip.
+> 7. All corresponding will be kept as legal documents in disputes.
+> **********************************************************************
+> Dragon Force Travel Ltd.
+> Room B, 17/F. , Wah Kit Commercial Ctr. 
+> 300 Des Voeux Road Central , Hong Kong
+
+[23]
+
+[24]
+
+[25]
+
+__ 
+
+__ 
+
+__ 
+
+[26]
+[27]
+[28]
+
+__ 
+
+__ 
+
+__ 
+
+__ 
+
+。 
+
+__ 
+
+Links:
+------
+[1] hxxps://blog[.]surftown[.]dk/har-du-forslag-til-webmail/
+[2] hxxps://www[.]horde[.]org/imp/screenshots/
+[3] hxxps://www[.]afterlogic[.]com/products/webmail-pro-screenshots
+[4] hxxps://roundcube[.]net/screens
+[5] hxxps://blog[.]surftown[.]dk/category/information/
+[6] hxxps://blog[.]surftown[.]dk/mission-danmarks-bedste-webhotel/
+[7] hxxps://blog[.]surftown[.]dk/category/nyheder/
+[8] hxxps://blog[.]surftown[.]dk/alle-needhost-data-er-reddet/
+[9] hxxps://blog[.]surftown[.]dk/wp-content/uploads/mail-from-strato[.]jpg
+[10] hxxps://blog[.]surftown[.]dk/bitte-die-needhost-kunden-helfen/
+[11] hxxps://www[.]statstidende[.]dk/
+[12] hxxps://blog[.]surftown[.]dk/status-paa-needhost-kundedata/
+[13] hxxps://blog[.]surftown[.]dk/?p=1239
+[14]
+hxxps://surftowndk[.]wordpress[.]com/2011/07/07/surftown-99-tilbage-i-drift-fra-kl-1500/
+[15] hxxps://blog[.]surftown[.]dk/category/driftsinformation/
+[16] hxxps://blog[.]surftown[.]dk/server-update-0800/
+[17] hxxps://blog[.]surftown[.]dk/hvor-er-mit-kontor/
+[18]
+hxxps://blog[.]surftown[.]dk/wp-content/uploads/surftown-before_and_after_the_flood[.]png
+[19] hxxps://blog[.]surftown[.]dk/surftown-99-tilbage-i-drift-fra-kl-1500/
+[20] hxxps://blog[.]surftown[.]dk/mail-gendannelse-og-mydbb1/
+[21] hxxp://laiverpol[.]tumblr[.]com/
+[22] hxxps://8mmapps[.]com/link[.]php?M=5976021&N=439&L=446&F=H
+[23] hxxp://t[.]mbhk[.]moneyback[.]com[.]hk/r/?id=h9d8b9c8,687c91d,687b633
+[24] hxxp://t[.]mbhk[.]moneyback[.]com[.]hk/r/?id=h9d8b9c8,687c91d,687b634
+[25] hxxp://t[.]mbhk[.]moneyback[.]com[.]hk/r/?id=h9d8b9c8,687c91d,687b635
+[26] hxxp://t[.]mbhk[.]moneyback[.]com[.]hk/r/?id=h9d8b9c8,687c91d,687b636
+[27] hxxp://t[.]mbhk[.]moneyback[.]com[.]hk/r/?id=h9d8b9c8,687c91d,687b637
+[28] hxxp://t[.]mbhk[.]moneyback[.]com[.]hk/r/?id=h9d8b9c8,687c91d,687b638
+
+------------------------------------------------------------
+
+ID: SCAM-020
+LABEL: scam
+SUBJECT: Subscription Renewal
+FROM: ServiceCustomer <noreply@busbuddie.co.uk>
+DATE: Mon, 11 May 2026 01:59:55 +0000
+BODY:
+Netflix - Subscription Renewal
+
+If you are having trouble viewing this email, 
+click here
+.
+
+NETFLIX
+
+Subscription Renewal
+
+Your subscription is about to expire
+
+Hello,
+Your Netflix subscription ends on 
+May 24, 2026
+. To continue enjoying your favorite movies, shows, and documentaries without interruption, we invite you to renew your subscription now.
+
+Renew Subscription
+
+By renewing, you keep all your profiles, watchlists, and personalized recommendations.
+If you do not wish to renew, you can ignore this email. Your account will remain accessible until the expiration date.
+
+This email was sent automatically by Netflix. Please do not reply.
+To learn more about managing your subscription, visit our 
+Help Center
+.
+
+Help Center
+
+Terms of Use
+
+Privacy
+
+Cookie Preferences
+
+Netflix International B.V.
+
+------------------------------------------------------------
+
