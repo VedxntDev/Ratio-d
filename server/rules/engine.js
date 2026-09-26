@@ -87,6 +87,39 @@ const OFFICIAL_BRAND_DOMAINS = {
 const ALL_OFFICIAL_DOMAINS = new Set(Object.values(OFFICIAL_BRAND_DOMAINS).flat());
 
 /**
+ * Free webmail and consumer mail providers.
+ *
+ * These MUST NOT confer "official sender" status. Several of them appear in
+ * OFFICIAL_BRAND_DOMAINS - gmail.com legitimately belongs to Google - and the
+ * brand loop sets `isLegitimateOfficialSender` when a domain matches any
+ * brand's official list. The consequence was severe and silent: every scam sent
+ * from a Gmail address was treated as legitimate, its score was capped at 25,
+ * and the severe-domain disqualifiers were skipped entirely.
+ *
+ * No legitimate brand sends its transactional mail from a consumer mailbox, so
+ * exempting these costs nothing and closes a large false-negative channel.
+ */
+const FREE_MAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "hotmail.co.uk",
+  "live.com", "msn.com", "yahoo.com", "yahoo.co.uk", "yahoo.co.in", "ymail.com",
+  "aol.com", "icloud.com", "me.com", "mac.com", "protonmail.com", "proton.me",
+  "gmx.com", "gmx.de", "mail.com", "zoho.com", "yandex.com", "yandex.ru",
+  "qq.com", "163.com", "126.com", "naver.com", "hanmail.net", "rediffmail.com"
+]);
+
+/** A domain that can never make a message look official. */
+function isFreeMailDomain(domain) {
+  if (!domain) return false;
+  const d = domain.toLowerCase().replace(/^www\./, "");
+  if (FREE_MAIL_DOMAINS.has(d)) return true;
+  // Any subdomain of a consumer provider counts too.
+  for (const free of FREE_MAIL_DOMAINS) {
+    if (d.endsWith("." + free)) return true;
+  }
+  return false;
+}
+
+/**
  * Signature-footer markers.
  *
  * A genuine corporate signature names a legal entity and usually carries a
@@ -263,7 +296,11 @@ const ADVANCE_FEE_PATTERNS = [
   { regex: /activat\w*\s+fee|account\s+activation\s+fee/i, reason: "Advance-fee pretext: 'activation fee'" },
   { regex: /charitable\s+donation\s+of\s+\$/i, reason: "Unsolicited charitable donation claim" },
   { regex: /compensa\w+\s+(fund|amount)\b/i, reason: "Unsolicited compensation fund claim" },
-  { regex: /get\s+\d{1,3}\s*%\s+for\s+your\s+(cooperation|partnership)/i, reason: "Unsolicited revenue-share 'partnership' offer" }
+  { regex: /get\s+\d{1,3}\s*%\s+for\s+your\s+(cooperation|partnership)/i, reason: "Unsolicited revenue-share 'partnership' offer" },
+  { regex: /lottery\s+winnings?|grant\s+sum\s+of|grant\s+of\s+[€$£]|compensation\s+payment|irrevocable\s+compensation/i, reason: "Unsolicited grant, lottery or compensation payout claim" },
+  { regex: /respond\s+(back\s+)?to\s+this\s+email|reply\s+(back\s+)?to\s+this\s+email\b/i, reason: "Claim released only by emailing back a stranger" },
+  { regex: /international\s+certified\s+bank\s+draft|finance\s+house|contact\s+agent\b/i, reason: "Named 'finance house' acting as a payout intermediary" },
+  { regex: /(?:currency\s+of\s+)?\d[\d,.]*\s*(?:million|m)\b[^.]{0,40}(?:usd|sgd|eur|gbp|rm)|(?:usd|sgd|eur|gbp|rm)\s?\d[\d,.]*\s*(?:million|m)\b/i, reason: "Multi-million advance-fee amount" }
 ];
 
 const REFUND_BAIT_PATTERNS = [
@@ -279,7 +316,9 @@ const DELIVERY_FEE_PATTERNS = [
   { regex: /pay\s+the\s+new\s+shipping\s+cost|outstanding\s+customs\s+(fee|charge)/i, reason: "Shipping-fee pretext to release a parcel" },
   { regex: /delivery\s+failed\s+on|incorrect\s+address.*(?:pay|shipping)/i, reason: "Failed-delivery pretext paired with a payment link" },
   { regex: /could\s+not\s+be\s+delivered\s+due\s+to\s+an\s+invalid\s+address\s+fee/i, reason: "Small-fee delivery scam (classic smishing)" },
-  { regex: /on\s+hold\s+in\s+our\s+post|still\s+on\s+hold/i, reason: "Shipment held pending payment" }
+  { regex: /on\s+hold\s+in\s+our\s+post|still\s+on\s+hold/i, reason: "Shipment held pending payment" },
+  { regex: /unable\s+to\s+deliver|were\s+unable\s+to\s+deliver|parcel\s+could\s+not\s+be\s+delivered/i, reason: "Failed-delivery notice used to drive a click" },
+  { regex: /confirm\s+the\s+next\s+steps\s+to\s+reschedule/i, reason: "Delivery reschedule routed through an email link" }
 ];
 
 const FAKE_SUBSCRIPTION_PATTERNS = [
@@ -287,7 +326,9 @@ const FAKE_SUBSCRIPTION_PATTERNS = [
   { regex: /upgrade\s+(your\s+)?storage|not\s+backing\s+up/i, reason: "Storage upgrade upsell via unsolicited mail" },
   { regex: /subscription\s+renewal\s+has\s+been\s+processed/i, reason: "Auto-renewal notice for a subscription the user may not hold" },
   { regex: /your\s+subscription\s+(ends|is\s+about\s+to\s+expire)/i, reason: "Subscription-expiry renewal lure" },
-  { regex: /to\s+cancel\s+auto-?renewal,?\s*contact/i, reason: "Cancellation handled by phone/email rather than an account page" }
+  { regex: /to\s+cancel\s+auto-?renewal,?\s*contact/i, reason: "Cancellation handled by phone/email rather than an account page" },
+  { regex: /rewards?\s+will\s+expire|rewards?\s+expire\s+in\s+\d+|your\s+rewards?\b/i, reason: "Unsolicited 'your rewards expire' bait" },
+  { regex: /claim\s+your\s+reward|get\s+\d+\s*(?:sgd|usd|eur|gbp|rm)\s+now/i, reason: "Reward claim pushed from unsolicited mail" }
 ];
 
 const FAKE_SECURITY_PATTERNS = [
@@ -328,6 +369,38 @@ const CONTACT_STRANGER_PATTERNS = [
 ];
 
 /**
+ * Inheritance and estate ("next of kin") fraud.
+ *
+ * A distinct and heavily-used family: the sender claims a mutual ancestor,
+ * a deceased relative who shared the recipient's surname, or a dying stranger
+ * who needs a trustworthy stranger to hold their estate. The ask is always
+ * the same - reply with contact details so a "law firm" or "finance house"
+ * can proceed. It appeared twice in an eleven-message real-world sample, and
+ * neither message contained a brand name, a money figure, or an action
+ * request, so nothing else in the engine could see it.
+ */
+const INHERITANCE_PATTERNS = [
+  { regex: /shared\s+your\s+surname|relative\s+to\s+(you|our\s+family)/i, reason: "Inheritance fraud: claims a shared surname" },
+  { regex: /no\s+known\s+heirs?\b|without\s+any\s+known\s+heirs?/i, reason: "Inheritance fraud: claims the deceased has no heirs" },
+  { regex: /passed\s+away\s+(recently|abroad)?|recently\s+(passed\s+away|died)/i, reason: "Inheritance fraud: invokes a recent death" },
+  { regex: /\bwidow\s+(with|of)\b|stage\s+\d\s+cancer|my\s+days\s+are\s+numbered/i, reason: "Inheritance fraud: sympathy pretext" },
+  { regex: /utili[sz]e\s+the\s+proceeds\s+realized|from\s+my\s+estates?\b/i, reason: "Inheritance fraud: offers an estate's proceeds" },
+  { regex: /entrust\s+the\s+money\s+in\s+your\s+care|give\s+me\s+your\s+word\s+never\s+to\s+betray/i, reason: "Inheritance fraud: asks for an oath of trust" },
+  { regex: /legal\s+representative\s+of\s+the\s+late|law\s+chambers/i, reason: "Inheritance fraud: unverified legal representative" }
+];
+
+/**
+ * Large monetary amounts written with a currency word or code rather than a
+ * bare "$" sign.
+ *
+ * The advance-fee table's amount pattern requires a literal "$", which misses
+ * "EUR 1.5m", "US $ 700,000.00" and "€2.7 million" - the majority of
+ * international advance-fee lures. Matching the code or symbol as well as the
+ * bare sign closed that gap.
+ */
+const LARGE_AMOUNT_SOURCE = "(?:[$€£]\\s?\\d[\\d,.]*\\s*(?:million|m\\b|k\\b)|(?:us\\s?[$€£]|eur|usd|sgd|gbp|rm|myr|idr|inr|pkr|zar)\\s?[$€£]?\\s?\\d[\\d,.]*\\s*(?:million|m\\b))";
+
+/**
  * Every new family above, with its weight.
  *
  * Weights are low by design. A single "refund" mention is a legitimate tax
@@ -342,9 +415,29 @@ const SOCIAL_ENGINEERING_FAMILIES = [
   { name: "fake_security", points: 20, patterns: FAKE_SECURITY_PATTERNS },
   { name: "investment", points: 15, patterns: INVESTMENT_PATTERNS },
   { name: "health_claim", points: 15, patterns: HEALTH_CLAIM_PATTERNS },
-  { name: "personal_data", points: 20, patterns: PERSONAL_DATA_PATTERNS },
-  { name: "contact_stranger", points: 15, patterns: CONTACT_STRANGER_PATTERNS }
+  { name: "personal_data", points: 15, patterns: PERSONAL_DATA_PATTERNS, corroboration: false },
+  { name: "contact_stranger", points: 15, patterns: CONTACT_STRANGER_PATTERNS },
+  { name: "inheritance", points: 25, patterns: INHERITANCE_PATTERNS }
 ];
+
+/**
+ * Any six-figure-or-larger amount with a currency marker.
+ *
+ * Deliberately broad - a plain "$250,000.00" carries no "million" or "k"
+ * suffix, and the earlier suffix-requiring pattern missed the majority of
+ * international advance-fee lures. On its own this proves nothing: legitimate
+ * invoices quote six-figure amounts all the time. It is only ever used as one
+ * half of a combination.
+ */
+const SIX_FIGURE_AMOUNT_RE =
+  /[$€£]\s?\d{2,3}(?:,\d{3})+(?:\.\d{2})?|\b\d{2,3}(?:,\d{3})+\s*(?:usd|eur|gbp|sgd|rm|dollars|euros)\b/i;
+
+/** Large-amount matcher, shared by the money-bait helpers below. */
+const LARGE_AMOUNT_RE = new RegExp(LARGE_AMOUNT_SOURCE, "i");
+
+/** Senders whose domain is a free, anonymous or abused host. */
+const ABUSED_HOSTING_RE =
+  /(^|\.)(firebaseapp\.com|pages\.dev|web\.app|netlify\.app|vercel\.app|blogspot\.[a-z]+|weebly\.com|wixsite\.com|glitch\.me|repl\.co|codesandbox\.io|000webhostapp\.com|duckdns\.org|no-ip\.org|ngrok\.io|trycloudflare\.com)$/i;
 
 /**
  * Pull the display name out of a From/Reply-To header.
@@ -408,6 +501,73 @@ function extractSenderDomains(text) {
   return Array.from(found);
 }
 
+/**
+ * The From: domain alone, ignoring Reply-To.
+ *
+ * Kept separate from extractSenderDomains because the two being *different* is
+ * itself a strong phishing signal: a message that appears to come from an
+ * institution but whose replies are redirected to a free webmail or lookalike
+ * domain exists to defeat reply-path filtering on the receiving side.
+ */
+function extractFromDomains(text) {
+  const found = new Set();
+  const re = /^\s*from\s*:\s*.*?@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gim;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    found.add(m[1].toLowerCase().replace(/^www\./, ""));
+  }
+  return Array.from(found);
+}
+
+/** The Reply-To: domain alone. */
+function extractReplyToDomains(text) {
+  const found = new Set();
+  const re = /^\s*(?:reply-to|return-path)\s*:\s*.*?@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gim;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    found.add(m[1].toLowerCase().replace(/^www\./, ""));
+  }
+  return Array.from(found);
+}
+
+/**
+ * Mixed-script homoglyph detection.
+ *
+ * A word that is almost entirely Latin but contains one or two Cyrillic or
+ * Greek characters - a Cyrillic "о" inside "Yоurs", for example - is
+ * invisible to a human reader and is used to defeat string-matching filters
+ * and to spoof a bank name in a signature. Legitimate English business mail
+ * essentially never mixes scripts mid-word, so this is high precision.
+ *
+ * Only characters from the Cyrillic and Greek blocks are considered, and only
+ * when the surrounding text is otherwise Latin. Names written entirely in one
+ * non-Latin script are ignored, since a Russian-language email is not an
+ * attack.
+ */
+const CYRILLIC_OR_GREEK = /[\u0370-\u03FF\u0400-\u04FF]/g;
+
+function findMixedScriptTokens(text) {
+  const hits = [];
+  // Words of letters, optionally containing internal punctuation.
+  const tokenRe = /[A-Za-z\u0370-\u03FF\u0400-\u04FF][A-Za-z0-9\u0370-\u03FF\u0400-\u04FF'.-]*/g;
+  let m;
+  while ((m = tokenRe.exec(text)) !== null) {
+    const token = m[0];
+    CYRILLIC_OR_GREEK.lastIndex = 0;
+    const nonLatin = token.match(CYRILLIC_OR_GREEK);
+    if (!nonLatin) continue;
+    const latinCount = (token.match(/[A-Za-z]/g) || []).length;
+    // Require the token to be predominantly Latin, so a genuinely Cyrillic
+    // word is not reported.
+    if (latinCount < token.length * 0.5) continue;
+    // A single stray non-Latin character inside an otherwise-Latin word is the
+    // exact shape of a homoglyph attack; require at least one, but not all.
+    hits.push({ token, nonLatin: nonLatin.slice(0, 3) });
+    if (hits.length >= 5) break;
+  }
+  return hits;
+}
+
 /** Domains that appear as clickable link targets in the body. */
 function extractLinkDomains(text) {
   const urlRegex = /https?:\/\/([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)/gi;
@@ -444,7 +604,9 @@ function evaluateRules(text, channel = "email") {
     }
 
     // Officially some brand's own domain: never a typosquat of a different one.
-    if (ALL_OFFICIAL_DOMAINS.has(rawDomain)) {
+    // Free webmail is excluded - gmail.com belongs to Google, but a message
+    // sent from a personal mailbox is not an official Google message.
+    if (ALL_OFFICIAL_DOMAINS.has(rawDomain) && !isFreeMailDomain(rawDomain)) {
       isLegitimateOfficialSender = true;
       continue;
     }
@@ -461,7 +623,10 @@ function evaluateRules(text, channel = "email") {
       const isOfficial = officialDomains.some(official => rawDomain === official || rawDomain.endsWith(`.${official}`));
 
       if (isOfficial) {
-        isLegitimateOfficialSender = true;
+        // A free mailbox is never an official sender, even when the domain
+        // genuinely belongs to the brand (gmail.com is Google's, but a message
+        // sent from a personal Gmail is not a message from Google).
+        if (!isFreeMailDomain(rawDomain)) isLegitimateOfficialSender = true;
         continue;
       }
 
@@ -541,14 +706,26 @@ function evaluateRules(text, channel = "email") {
   const firedFamilies = new Set();
   for (const family of SOCIAL_ENGINEERING_FAMILIES) {
     if (firedFamilies.has(family.name)) continue;
+    let hits = 0;
     for (const pattern of family.patterns) {
       const match = text.match(pattern.regex);
-      if (match) {
-        firedFamilies.add(family.name);
-        flags.push({ span: match[0], reason: pattern.reason, type: "rule" });
-        rawScore += family.points;
-        break;
-      }
+      if (!match) continue;
+      firedFamilies.add(family.name);
+      flags.push({ span: match[0], reason: pattern.reason, type: "rule" });
+      rawScore += family.points;
+      hits++;
+      // A second corroborating pattern from the same family is real additional
+      // evidence, but it is worth less than the first: an advance-fee email
+      // matches many of its own patterns, and counting them all would let one
+      // family outvote a genuine cross-family combination. Half value, and
+      // never more than two contributions per family.
+      //
+      // Families can opt out. personal_data does, because its patterns are
+      // interchangeable spellings of a single request - a legitimate HR form
+      // asking for "Your Full Names:", "Your Country:" and "Cell/Telephone
+      // Number:" trips three of them and is not three times more suspicious.
+      if (hits >= 2 || family.corroboration === false) break;
+      rawScore += Math.round(family.points * 0.5);
     }
   }
 
@@ -558,6 +735,69 @@ function evaluateRules(text, channel = "email") {
   const hasActionRequest = firedFamilies.has("personal_data") ||
     firedFamilies.has("contact_stranger") || firedFamilies.has("fake_security") ||
     firedFamilies.has("fake_subscription");
+
+  // 2b-1. Reply-To points somewhere other than the sending domain.
+  //
+  // A From: that looks institutional while Reply-To: is a free webmail or
+  // lookalike host is a deliberate attempt to defeat reply-path filtering on
+  // the receiving organisation. This fires independently of any brand list, so
+  // it works for institutions the engine has never heard of.
+  const fromDomains = extractFromDomains(text);
+  const replyToDomains = extractReplyToDomains(text);
+  const replyToRedirect = replyToDomains.find(
+    (rt) => !fromDomains.some((fd) => rt === fd || rt.endsWith("." + fd) || fd.endsWith("." + rt))
+  );
+  if (replyToRedirect) {
+    flags.push({
+      span: replyToRedirect,
+      reason:
+        "Reply-To redirect: replies are routed to " + replyToRedirect +
+        (fromDomains.length ? " instead of the sending domain " + fromDomains.join(", ") : ""),
+      type: "rule"
+    });
+    rawScore += 25;
+  }
+
+  // 2b-2. Mixed-script homoglyphs inside otherwise-Latin words.
+  const mixedScript = findMixedScriptTokens(text);
+  if (mixedScript.length > 0) {
+    flags.push({
+      span: mixedScript[0].token,
+      reason:
+        "Mixed-script homoglyph: '" + mixedScript[0].token +
+        "' contains non-Latin characters (U+" +
+        mixedScript[0].nonLatin.map((c) => c.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0")).join(" U+") +
+        "), which is invisible to the reader and used to spoof a brand",
+      type: "rule"
+    });
+    rawScore += 30;
+  }
+
+  // 2b-3. Sender on free / anonymous hosting.
+  //
+  // Checked against the From: domain, not only links in the body: a lookalike
+  // bank notice is routinely sent straight from Firebase Hosting with no link
+  // in the body at all, so the existing body-only rule never sees it.
+  const abusedHostSender = fromDomains.find((d) => ABUSED_HOSTING_RE.test(d));
+  if (abusedHostSender) {
+    flags.push({
+      span: abusedHostSender,
+      reason: "Sender domain is free anonymous hosting, commonly used to serve brand lookalikes",
+      type: "rule"
+    });
+    rawScore += 20;
+  }
+
+  // 2b-4. A large monetary amount with a currency code or symbol.
+  if (LARGE_AMOUNT_RE.test(text) && !firedFamilies.has("advance_fee")) {
+    const amt = text.match(LARGE_AMOUNT_RE);
+    flags.push({
+      span: amt[0].trim(),
+      reason: "Large monetary amount quoted unsolicited",
+      type: "rule"
+    });
+    rawScore += 15;
+  }
 
   // 2c. Display-name brand impersonation.
   //
@@ -582,8 +822,10 @@ function evaluateRules(text, channel = "email") {
       // treated as impersonating itself, which flagged their own legitimate
       // mail.
       const official = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
-      const senderIsOfficial = senderDomainsForDisplay.some((d) =>
-        official.some((o) => d === o || d.endsWith("." + o))
+      // Free webmail never counts as official: "MetaMask" from a personal
+      // Gmail address is impersonation, not a message from MetaMask.
+      const senderIsOfficial = senderDomainsForDisplay.some(
+        (d) => !isFreeMailDomain(d) && official.some((o) => d === o || d.endsWith("." + o))
       );
       if (!senderIsOfficial) claimedBrands.push({ name, brand, senderDomains: senderDomainsForDisplay });
       break;
@@ -646,8 +888,8 @@ function evaluateRules(text, channel = "email") {
     const bodyBrands = MATCHABLE_BRANDS.filter((brand) => {
       if (brand.length < 4) return false;
       const official = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
-      const senderIsOfficial = senderDomainsForDisplay.some((d) =>
-        official.some((o) => d === o || d.endsWith("." + o))
+      const senderIsOfficial = senderDomainsForDisplay.some(
+        (d) => !isFreeMailDomain(d) && official.some((o) => d === o || d.endsWith("." + o))
       );
       if (senderIsOfficial) return false;
       return new RegExp("\\b" + brand + "\\b", "i").test(text);
@@ -665,6 +907,23 @@ function evaluateRules(text, channel = "email") {
       rawScore += 45;
       break;
     }
+  }
+
+  // 3d-1. Advance-fee claim that also quotes a concrete large sum.
+  //
+  // Neither half is decisive alone: a newsletter can mention a lottery win, and
+  // an invoice quotes a six-figure total every day. Together they describe the
+  // advance-fee shape - an unsolicited payout claim with a specific amount,
+  // delivered to someone who never asked for it.
+  if (firedFamilies.has("advance_fee") && SIX_FIGURE_AMOUNT_RE.test(text) && !isLegitimateOfficialSender) {
+    flags.push({
+      span: "Unsolicited payout claim with a specific large amount",
+      reason:
+        "High-risk combination: an unsolicited prize, grant or compensation " +
+        "claim quotes a specific six-figure or larger sum",
+      type: "rule"
+    });
+    rawScore += 25;
   }
 
   // 3. Urgency + Credential harvesting COMBO Boost

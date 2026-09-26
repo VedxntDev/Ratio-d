@@ -325,6 +325,59 @@ Each family contributes **at most once** — a single advance-fee email trips
 four or five of its own patterns, and without the cap one message would score
 like four separate scams. The real lift comes from combinations: money bait
 plus an action request (`+45`) and the advance-fee shape (`+40`).
+### A second, mixed corpus — and the bug it exposed
+
+A later batch of 11 real messages arrived **with ham in it**: 2 legitimate
+corporate-training newsletters and 9 scams. This is the first corpus able to
+constrain specificity, and it immediately paid for itself.
+
+| Measure | Before | After |
+| --- | --- | --- |
+| **Recall on the 11-message mixed corpus** | **2 / 9 (22%)** | **9 / 9 (100%)** |
+| Specificity on its 2 legitimate messages | 2 / 2 (100%) | 2 / 2 (100%) |
+| Recall on the original 20-record corpus | 17 / 20 (85%) | 17 / 20 (85%) |
+| False positives, adversarial legitimate set | 0 / 15 | 0 / 15 |
+
+New signals this batch forced, all chosen because they generalise beyond the
+brands involved rather than to the eleven samples:
+
+| Signal | Rationale |
+| --- | --- |
+| **Reply-To ≠ From** | A message appearing to come from an institution whose replies go to a free mailbox exists to defeat reply-path filtering. Brand-list independent. |
+| **Mixed-script homoglyphs** | A Cyrillic `о` inside "Yоurs" (U+043E) is invisible to the reader and used to spoof a bank signature. New capability; the engine previously only compared domains. |
+| **Sender on free/anonymous hosting** | Checked against the *From* domain, not only body links — a lookalike bank notice is often sent straight from Firebase with no link in the body. |
+| **Inheritance / estate fraud** | A whole family the engine could not see: shared surname, no known heirs, recently passed away, "entrust the money in your care". Neither of the two inheritance samples contained a brand, a money figure, or an action request. |
+| **Currency-code amounts** | The advance-fee amount pattern required a literal `$` and missed "EUR 1.5m", "US $ 700,000.00", "€2.7 million" — most international lures. |
+| **Six-figure amount, as a combination only** | A plain "$250,000.00" has no million/k suffix. Used only paired with an advance-fee claim, never standalone, because invoices quote six figures daily. |
+
+### The most serious bug this batch found
+
+**Every scam sent from a Gmail address was being treated as a legitimate
+official sender.**
+
+`gmail.com` genuinely appears in `OFFICIAL_BRAND_DOMAINS.google`, so the brand
+loop set `isLegitimateOfficialSender` for it. The consequences were silent and
+severe: the score was capped at 25, the severe-domain disqualifiers were
+skipped, and every combination rule guarded by `!isLegitimateOfficialSender`
+was bypassed. A free mailbox now never confers official status — applied in all
+three places that check it, since the same flaw appeared three times.
+
+This was a pre-existing bug, not a regression from the earlier work. It is
+also the kind that only real ham-and-scam data exposes: a self-authored test
+set would never have sent a scam from `gmail.com`.
+
+### A second false positive, caught by the same corpus
+
+The HR-form legitimate message drifted from 20 to 38 once families were allowed
+a corroboration bonus: it asks for "Your Full Names:", "Your Country:" and
+"Cell/Telephone Number:", tripping three `personal_data` patterns that are
+interchangeable spellings of **one** request. `personal_data` now opts out of
+corroboration, and returns to 15.
+
+The general lesson, now enforced in the suite: **a family's patterns must be
+conceptually distinct for a second match to count as evidence.**
+
+---
 
 ### Two false positives this work introduced, and their fixes
 
@@ -365,10 +418,15 @@ recall floor cannot be raised by quietly deleting hard cases:
 ### The limitation that matters
 
 **This dataset cannot measure what people care about.** All 20 records are
-labelled `scam`; there are not one `legitimate` example. A single-class corpus
-cannot produce a false-positive rate, a precision figure, or a
-false-negative-versus-false-positive tradeoff. It gives **recall on one narrow
+The first corpus contains only `scam`; there is not one `legitimate` example. A
+single-class corpus cannot produce a false-positive rate, a precision figure, or
+a false-negative-versus-false-positive tradeoff. It gives **recall on one narrow
 slice of phishing** and nothing else.
+
+A later 11-message batch **did** include 2 legitimate newsletters, so specificity
+can finally be measured — but on **two** messages. That is far too few to
+conclude anything: 2/2 is 100% and also would have been 1/2, 0/2 and 100%-ish
+noise. Treat the specificity figures here as smoke tests, not measurements.
 
 The `scam_type` categories in the training prompt (`financial_fraud`,
 `fake_delivery`, `health_scam`, …) are **not present in this dataset** — it
@@ -858,7 +916,7 @@ npm run test:all
 > `node server.js` in another terminal first, or point the test elsewhere with
 > `BASE=http://host:port npm run test:all`.
 >
-> Verified result: **397 assertions passing, 0 failures** with the server up.
+> Verified result: **400 assertions passing, 0 failures** with the server up.
 
 ---
 
@@ -895,9 +953,13 @@ than no tool.
    Those are the highest-value signals in real phishing and none are
    implemented.
 
-6. **The brand list is 24 hardcoded names.** A typosquat of a company that is
-   not on that list is invisible to the homoglyph and Levenshtein checks; it
-   can only be caught by the generic pattern rules.
+6. **The brand list is only ~32 hardcoded names.** A typosquat of a company that
+   is not on that list is invisible to the homoglyph, Levenshtein, display-name
+   and signature checks, and can only be caught by the generic pattern and
+   structural rules. The new signals added for the mixed corpus — Reply-To
+   mismatch, mixed-script homoglyphs, free-hosting senders, inheritance
+   pretexts — were chosen specifically because they are brand-independent, and
+   that is the direction further work should take.
 
 7. **PII is never transmitted, but text can be.** With no local server, the
    extension falls back to `ratio-d.vercel.app`, so redacted message text does

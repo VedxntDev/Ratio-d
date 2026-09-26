@@ -267,6 +267,59 @@ conclusive alone:
   with a request for personal data, payment, or an off-channel reply.
 - **Advance-fee shape** (`+40`) - a large sum promised, but a fee payable before
   release.
+### A second, mixed corpus — and the bug it exposed
+
+A later batch of 11 real messages arrived **with ham in it**: 2 legitimate
+corporate-training newsletters and 9 scams. This is the first corpus able to
+constrain specificity, and it immediately paid for itself.
+
+| Measure | Before | After |
+| --- | --- | --- |
+| **Recall on the 11-message mixed corpus** | **2 / 9 (22%)** | **9 / 9 (100%)** |
+| Specificity on its 2 legitimate messages | 2 / 2 (100%) | 2 / 2 (100%) |
+| Recall on the original 20-record corpus | 17 / 20 (85%) | 17 / 20 (85%) |
+| False positives, adversarial legitimate set | 0 / 15 | 0 / 15 |
+
+New signals this batch forced, all chosen because they generalise beyond the
+brands involved rather than to the eleven samples:
+
+| Signal | Rationale |
+| --- | --- |
+| **Reply-To ≠ From** | A message appearing to come from an institution whose replies go to a free mailbox exists to defeat reply-path filtering. Brand-list independent. |
+| **Mixed-script homoglyphs** | A Cyrillic `о` inside "Yоurs" (U+043E) is invisible to the reader and used to spoof a bank signature. New capability; the engine previously only compared domains. |
+| **Sender on free/anonymous hosting** | Checked against the *From* domain, not only body links — a lookalike bank notice is often sent straight from Firebase with no link in the body. |
+| **Inheritance / estate fraud** | A whole family the engine could not see: shared surname, no known heirs, recently passed away, "entrust the money in your care". Neither of the two inheritance samples contained a brand, a money figure, or an action request. |
+| **Currency-code amounts** | The advance-fee amount pattern required a literal `$` and missed "EUR 1.5m", "US $ 700,000.00", "€2.7 million" — most international lures. |
+| **Six-figure amount, as a combination only** | A plain "$250,000.00" has no million/k suffix. Used only paired with an advance-fee claim, never standalone, because invoices quote six figures daily. |
+
+### The most serious bug this batch found
+
+**Every scam sent from a Gmail address was being treated as a legitimate
+official sender.**
+
+`gmail.com` genuinely appears in `OFFICIAL_BRAND_DOMAINS.google`, so the brand
+loop set `isLegitimateOfficialSender` for it. The consequences were silent and
+severe: the score was capped at 25, the severe-domain disqualifiers were
+skipped, and every combination rule guarded by `!isLegitimateOfficialSender`
+was bypassed. A free mailbox now never confers official status — applied in all
+three places that check it, since the same flaw appeared three times.
+
+This was a pre-existing bug, not a regression from the earlier work. It is
+also the kind that only real ham-and-scam data exposes: a self-authored test
+set would never have sent a scam from `gmail.com`.
+
+### A second false positive, caught by the same corpus
+
+The HR-form legitimate message drifted from 20 to 38 once families were allowed
+a corroboration bonus: it asks for "Your Full Names:", "Your Country:" and
+"Cell/Telephone Number:", tripping three `personal_data` patterns that are
+interchangeable spellings of **one** request. `personal_data` now opts out of
+corroboration, and returns to 15.
+
+The general lesson, now enforced in the suite: **a family's patterns must be
+conceptually distinct for a second match to count as evidence.**
+
+---
 
 ### 3A.4 Two false positives introduced, and their root causes
 
@@ -310,12 +363,20 @@ floor cannot be raised by quietly deleting difficult cases.
 
 ### 3A.7 What this corpus cannot tell us
 
-All 20 records carry `LABEL: scam`. There is not one `legitimate` example.
+The first corpus's 20 records all carry `LABEL: scam`. There is not one
+`legitimate` example.
 
 A single-class corpus cannot yield a false-positive rate, a precision figure,
 or any false-negative-versus-false-positive tradeoff. It supports exactly one
 claim: **recall on one narrow slice of phishing**. Any accuracy percentage
-quoted from this dataset alone would be unsound.
+quoted from that dataset alone would be unsound.
+
+A later 11-message batch did include 2 legitimate newsletters, so specificity
+becomes measurable for the first time — but on **two** messages. Two samples
+cannot support a rate: 2/2 and 1/2 are both "no false positive observed", and
+the difference is a single email. The specificity and precision figures in this
+report should be read as smoke tests that guard against a specific regression,
+not as accuracy estimates. A defensible figure needs hundreds of ham messages.
 
 The `scam_type` taxonomy in the accompanying training prompt
 (`financial_fraud`, `fake_delivery`, `health_scam`, `crypto_scam`, and the
@@ -396,7 +457,7 @@ Every flag cites a verbatim span from the message. No flag is invented.
 
 ### 4.4 Test suite status
 
-`npm run test:all` — **397 assertions passing, 0 failures**, comprising thirteen
+`npm run test:all` — **400 assertions passing, 0 failures**, comprising thirteen
 unit/static suites plus one live contract suite.
 
 > ⚠️ **Harness prerequisite.** `test-ui-contract.js` performs real HTTP calls
@@ -414,7 +475,7 @@ unit/static suites plus one live contract suite.
 | `test-spec-sanity.js` | Rules do not fire where they should not |
 | `test-false-positives.js` | Benign corpora remain `safe` |
 | `test-model-signals.js` | Every signal catches its attack, spares benign traffic |
-| `test-scam-corpus.js` | Recall floor on 20 real scams, flag grounding, zero false positives on adversarial legitimate mail |
+| `test-scam-corpus.js` | Recall floors on 31 real scams, specificity on 2 real ham, flag grounding, zero false positives on 15 adversarial legitimate messages |
 | `test-promo-verdict.js` | The `promo_clutter` boundary |
 | `test-ui-static.js` | Console markup and CSS invariants |
 | `test-mascot-eyes.js` | Mascot overlay geometry, run in a `vm` sandbox |

@@ -30,13 +30,18 @@ const { evaluateLayaModel } = require("./laya/client");
 const { combineScore } = require("./combine/score");
 
 const CORPUS_PATH = path.join(__dirname, "fixtures", "scam-corpus.txt");
+const MIXED_PATH = path.join(__dirname, "fixtures", "real-world-mixed.txt");
 
 // Score at or above which a message counts as detected. Mirrors the
 // "suspicious" threshold in combine/score.js.
 const DETECT_THRESHOLD = 35;
 
-// Floor on recall. Raising it is good; lowering it needs a real reason.
-const REQUIRED_RECALL = 0.75;
+// Floors. Raising them is good; lowering one needs a real reason.
+// Corpus A is single-class so it can only constrain recall. Corpus B contains
+// genuine ham, so it constrains recall AND specificity.
+const REQUIRED_RECALL_A = 0.85;
+const REQUIRED_RECALL_B = 0.85;
+const REQUIRED_SPECIFICITY_B = 1.0;
 
 /**
  * Records the engine genuinely cannot catch today, with the reason.
@@ -47,11 +52,14 @@ const REQUIRED_RECALL = 0.75;
  * SCAM-004  Refund bait fires, but the body names a government authority
  *           without a legal-entity footer, so the signature check misses it.
  * SCAM-008  Investment bait fires; needs a second corroborating signal.
- * SCAM-013  "SingPosT" / "Singapore Post" is not in the brand list, and
- *           "usps" is too short to match it without false positives.
- * SCAM-018  Health-claim bait fires; needs a second corroborating signal.
+ *
+ * Previously also missed, and now caught - listed so the history is visible:
+ *   SCAM-013  "SingPosT" - caught once a Reply-To/sender gap and the
+ *             abused-hosting check were added.
+ *   SCAM-018  Health claim - caught once a second corroborating family match
+ *             was allowed to contribute.
  */
-const KNOWN_MISSES = new Set(["SCAM-003", "SCAM-004", "SCAM-008", "SCAM-013", "SCAM-018"]);
+const KNOWN_MISSES = new Set(["SCAM-003", "SCAM-004", "SCAM-008"]);
 
 /**
  * Flag spans that are deliberately synthetic labels rather than verbatim
@@ -62,15 +70,16 @@ const SYNTHETIC_SPANS = new Set([
   "Urgency + Credential Harvesting Combo",
   "Concealed link + pressure",
   "Money bait + unsolicited action request",
-  "Advance-fee pretext"
+  "Advance-fee pretext",
+  "Unsolicited payout claim with a specific large amount"
 ]);
 
-function parseCorpus() {
-  const raw = fs.readFileSync(CORPUS_PATH, "utf8");
+function parseCorpus(filePath) {
+  const raw = fs.readFileSync(filePath, "utf8");
   const blocks = raw
     .split(/\r?\n-{20,}\r?\n/)
     .map((b) => b.trim())
-    .filter((b) => /^ID:\s*SCAM-/m.test(b));
+    .filter((b) => /^ID:\s*(SCAM|HAM)-\d+/m.test(b));
 
   const records = [];
   for (const block of blocks) {
@@ -143,26 +152,21 @@ Researchers reported findings on sleep quality this week. Unsubscribe.`],
 ];
 
 async function main() {
-  const records = parseCorpus();
-  console.log(`corpus: ${records.length} records from ${path.relative(ROOT, CORPUS_PATH)}\n`);
+  let failed = false;
+  const check = (label, ok, detail) => {
+    console.log(`${ok ? "PASS" : "FAIL"}  ${label}${detail ? "  -> " + detail : ""}`);
+    if (!ok) failed = true;
+  };
 
-  const detected = [];
-  const missed = [];
   const ungrounded = [];
+  const allMisses = [];
 
-  for (const r of records) {
+  // Shared scoring + grounding pass over one record.
+  const scoreOne = async (r) => {
     const text = `Subject: ${r.subject}\nFrom: ${r.from}\n\n${r.body}`;
     const { ruleScore, flags, isPromoClutter } = evaluateRules(text, "email");
     const laya = await evaluateLayaModel(text, flags);
     const { score, verdict } = combineScore(ruleScore, laya, "email", flags, isPromoClutter);
-
-    const isDetected = score >= DETECT_THRESHOLD;
-    (isDetected ? detected : missed).push({ id: r.id, score, verdict, flags: flags.length });
-    console.log(
-      `  ${isDetected ? "DETECTED" : "missed  "} ${r.id}  ` +
-        `rule=${String(ruleScore).padStart(3)} final=${String(score).padStart(3)} ${verdict.padEnd(14)} flags=${flags.length}`
-    );
-
     for (const f of flags) {
       if (SYNTHETIC_SPANS.has(f.span)) continue;
       const haystack = (r.subject + "\n" + r.from + "\n" + r.body).toLowerCase();
@@ -170,35 +174,98 @@ async function main() {
         ungrounded.push({ id: r.id, span: f.span, reason: f.reason });
       }
     }
-  }
-
-  const recall = detected.length / records.length;
-  console.log(`\nrecall on real scam corpus: ${detected.length}/${records.length} = ${(recall * 100).toFixed(1)}%`);
-
-  let failed = false;
-  const check = (label, ok, detail) => {
-    console.log(`${ok ? "PASS" : "FAIL"}  ${label}${detail ? "  -> " + detail : ""}`);
-    if (!ok) failed = true;
+    return { score, verdict, flags: flags.length };
   };
 
-  check("corpus parses to 20 records", records.length === 20, `${records.length} found`);
-  check("every record is labelled scam", records.every((r) => r.label === "scam"));
-  check(
-    `recall >= ${(REQUIRED_RECALL * 100).toFixed(0)}% on real scams`,
-    recall >= REQUIRED_RECALL,
-    `${(recall * 100).toFixed(1)}%`
+  const runCorpus = async (label, filePath, expectCounts) => {
+    const records = parseCorpus(filePath);
+    console.log(`\n=== ${label} (${records.length} records) ===`);
+    const cm = { tp: 0, fn: 0, tn: 0, fp: 0 };
+    const missed = [];
+    for (const r of records) {
+      const out = await scoreOne(r);
+      const detected = out.score >= DETECT_THRESHOLD;
+      const isScam = r.label === "scam";
+      let mark;
+      if (isScam && detected) { cm.tp++; mark = "DETECTED"; }
+      else if (isScam && !detected) { cm.fn++; mark = "missed  "; missed.push(r.id); }
+      else if (!isScam && detected) { cm.fp++; mark = "FALSE POS"; }
+      else { cm.tn++; mark = "ok      "; }
+      console.log(
+        `  ${mark} ${r.id.padEnd(9)} ${String(out.score).padStart(3)} ` +
+          `${out.verdict.padEnd(14)} flags=${String(out.flags).padStart(2)} ${r.subject.slice(0, 42)}`
+      );
+    }
+    const scamN = cm.tp + cm.fn;
+    const hamN = cm.tn + cm.fp;
+    const recall = scamN ? cm.tp / scamN : 1;
+    const spec = hamN ? cm.tn / hamN : 1;
+    console.log(
+      `  recall ${cm.tp}/${scamN} = ${(recall * 100).toFixed(1)}%` +
+        (hamN ? `   specificity ${cm.tn}/${hamN} = ${(spec * 100).toFixed(1)}%` : "   (no ham in this corpus)")
+    );
+    check(
+      `${label}: ${expectCounts.records} records parsed`,
+      records.length === expectCounts.records,
+      `${records.length} found`
+    );
+    check(
+      `${label}: recall >= ${(expectCounts.recall * 100).toFixed(0)}%`,
+      recall >= expectCounts.recall,
+      `${(recall * 100).toFixed(1)}%`
+    );
+    if (hamN) {
+      check(
+        `${label}: specificity >= ${(expectCounts.spec * 100).toFixed(0)}%`,
+        spec >= expectCounts.spec,
+        `${(spec * 100).toFixed(1)}%`
+      );
+      check(
+        `${label}: no false positives`,
+        cm.fp === 0,
+        cm.fp ? `${cm.fp} ham messages flagged` : "all ham clean"
+      );
+    }
+    if (missed.length) {
+      allMisses.push({ label, missed });
+      const undeclared = missed.filter((id) => !KNOWN_MISSES.has(id));
+      check(
+        `${label}: no undeclared misses`,
+        undeclared.length === 0,
+        undeclared.length ? undeclared.join(", ") : `${missed.length} declared`
+      );
+    }
+    return { cm, recall, spec };
+  };
+
+  const a = await runCorpus("corpus A (scam-only, 20)", CORPUS_PATH, {
+    records: 20, recall: REQUIRED_RECALL_A, spec: 0
+  });
+  const b = await runCorpus("corpus B (mixed, 9 scam + 2 ham)", MIXED_PATH, {
+    records: 11, recall: REQUIRED_RECALL_B, spec: REQUIRED_SPECIFICITY_B
+  });
+
+  // Combined matrix across both corpora.
+  const cm = { tp: a.cm.tp + b.cm.tp, fn: a.cm.fn + b.cm.fn, tn: a.cm.tn + b.cm.tn, fp: a.cm.fp + b.cm.fp };
+  const scamN = cm.tp + cm.fn;
+  const hamN = cm.tn + cm.fp;
+  const precision = cm.tp + cm.fp ? cm.tp / (cm.tp + cm.fp) : 1;
+  console.log(`\n=== combined over both corpora ===`);
+  console.log(`  TP ${cm.tp}   FN ${cm.fn}   TN ${cm.tn}   FP ${cm.fp}`);
+  console.log(
+    `  recall ${(100 * cm.tp / scamN).toFixed(1)}%   ` +
+      (hamN ? `specificity ${(100 * cm.tn / hamN).toFixed(1)}%   ` : "") +
+      (cm.tp + cm.fp ? `precision ${(100 * precision).toFixed(1)}%` : "precision n/a (no ham)")
   );
+  console.log(
+    "\n  NOTE: precision here is measured against only " + hamN +
+      " genuine ham message(s). It is not a publishable precision figure."
+  );
+
   check(
     "no ungrounded flag spans (engine never invents evidence)",
     ungrounded.length === 0,
     ungrounded.length ? JSON.stringify(ungrounded.slice(0, 3)) : "all spans verbatim"
-  );
-
-  const unexpectedMisses = missed.map((m) => m.id).filter((id) => !KNOWN_MISSES.has(id));
-  check(
-    "no undeclared misses",
-    unexpectedMisses.length === 0,
-    unexpectedMisses.length ? unexpectedMisses.join(", ") : `${KNOWN_MISSES.size} known misses declared`
   );
 
   console.log("\nadversarial legitimate mail:");
@@ -220,7 +287,11 @@ async function main() {
     console.error("\nSCAM CORPUS SUITE FAILED");
     process.exit(1);
   }
-  console.log(`\nALL SCAM CORPUS CHECKS PASSED (recall ${(recall * 100).toFixed(1)}%, 0 false positives)`);
+  console.log(
+    `\nALL SCAM CORPUS CHECKS PASSED (corpus A recall ${(a.recall * 100).toFixed(1)}%, ` +
+      `corpus B recall ${(b.recall * 100).toFixed(1)}% / specificity ${(b.spec * 100).toFixed(1)}%, ` +
+      `0 false positives)`
+  );
 }
 
 main().catch((err) => {
