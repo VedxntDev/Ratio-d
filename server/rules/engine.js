@@ -1011,4 +1011,64 @@ function evaluateRules(text, channel = "email") {
   };
 }
 
-module.exports = { evaluateRules, normalizeForBrandCheck, levenshteinDistance };
+module.exports = {
+  evaluateRules,
+  normalizeForBrandCheck,
+  normalizeAltForBrandCheck,
+  levenshteinDistance,
+  extractSenderDomains,
+  extractFromDomains,
+  extractReplyToDomains,
+  findMixedScriptTokens,
+  isFreeMailDomain,
+
+  /**
+   * Machine-readable description of the detection model.
+   *
+   * Exported so tooling can enumerate what the engine actually looks for
+   * instead of scraping the source or re-deriving it from prose. Anything
+   * added to the rule tables above should be reflected here; the taxonomy is
+   * derived from the same constants the engine runs on, so it cannot drift.
+   */
+  TAXONOMY: {
+    version: 2,
+    brands: MATCHABLE_BRANDS,
+    officialBrandDomains: OFFICIAL_BRAND_DOMAINS,
+    legitimateDomains: Array.from(LEGITIMATE_DOMAINS),
+    freeMailDomains: Array.from(FREE_MAIL_DOMAINS),
+    socialEngineeringFamilies: SOCIAL_ENGINEERING_FAMILIES.map((f) => ({
+      name: f.name,
+      points: f.points,
+      corroboration: f.corroboration !== false,
+      patternCount: f.patterns.length,
+      patterns: f.patterns.map((p) => p.reason),
+    })),
+    structuralSignals: require("../laya/client").STRUCTURAL_SIGNALS.map((s) => ({
+      name: s.name,
+      weight: s.weight,
+    })),
+    patternTables: {
+      urgency: URGENCY_PATTERNS.length,
+      credential: CREDENTIAL_PATTERNS.length,
+      promotionalClutter: PROMOTIONAL_CLUTTER_PATTERNS.length,
+      suspiciousDomains: SUSPICIOUS_DOMAINS.length,
+      advanceFee: ADVANCE_FEE_PATTERNS.length,
+      refundBait: REFUND_BAIT_PATTERNS.length,
+      deliveryFee: DELIVERY_FEE_PATTERNS.length,
+      fakeSubscription: FAKE_SUBSCRIPTION_PATTERNS.length,
+      fakeSecurity: FAKE_SECURITY_PATTERNS.length,
+      investment: INVESTMENT_PATTERNS.length,
+      healthClaim: HEALTH_CLAIM_PATTERNS.length,
+      personalData: PERSONAL_DATA_PATTERNS.length,
+      contactStranger: CONTACT_STRANGER_PATTERNS.length,
+      inheritance: INHERITANCE_PATTERNS.length,
+    },
+    scoring: {
+      minBrandLength: MIN_BRAND_LEN,
+      levenshteinMaxDistance: 2,
+      levenshteinMaxLengthDelta: 2,
+      confidenceFloor: 0.02,
+      confidenceCeiling: 0.99,
+    },
+  },
+};

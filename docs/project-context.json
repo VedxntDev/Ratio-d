@@ -1,0 +1,784 @@
+{
+  "name": "Ratio'd — Scam Risk Analyzer & Defense System",
+  "kind": "browser-extension + static-site + node-server",
+  "summary": "Privacy-first phishing/smishing triage. Redacts PII client-side, scores an email or SMS with a deterministic rule engine plus a hand-weighted signal scorer, and renders an isolated Shadow DOM banner in Gmail. No framework, no build step, no runtime dependencies, no database.",
+  "important_caveats": [
+    "There is NO trained machine-learning model. server/laya/client.js is a hand-weighted heuristic that hardcodes source 'laya_stub_heuristic', and that string is returned to the client in every response.",
+    "The optional LLM (server/llm/) only rephrases explanations. It is off unless RATIOD_LLM_API_KEY is set, it cannot change a score or verdict, and every phrase it returns must appear verbatim in the source text or the whole response is discarded.",
+    "Published recall figures come from small, narrow corpora (31 scam / 2 ham). They are regression guards, not accuracy estimates."
+  ],
+  "runtime": {
+    "language": "JavaScript (CommonJS on the server, window globals in the browser)",
+    "node_modules_required": 0,
+    "build_step": false,
+    "database": false,
+    "entrypoints": {
+      "server": "server.js",
+      "vercel_function": "api/index.js",
+      "extension_manifest": "extension/manifest.json",
+      "web_console": "index.html"
+    },
+    "commands": {
+      "start": "node server.js",
+      "test_all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-model-signals.js && node server/test-scam-corpus.js && node server/test-context-manifest.js && node server/test-promo-verdict.js && node server/test-ui-static.js && node server/test-mascot-eyes.js && node server/test-extension-package.js && node server/test-shape-waves.js && node server/test-architecture.js && node test-ui-contract.js",
+      "test_corpus": "node server/test-scam-corpus.js"
+    },
+    "test_prerequisite": "test:all REQUIRES a running server (node server.js) because test-ui-contract.js makes real HTTP calls to http://127.0.0.1:3000. Without it that final suite fails with 'CONTRACT TEST FAILED: fetch failed' and the run exits 1."
+  },
+  "pipeline": [
+    {
+      "stage": 0,
+      "name": "trigger",
+      "component": "extension/content-script.js",
+      "note": "MutationObserver + 1s poll on the Gmail read pane, deduped on text hash"
+    },
+    {
+      "stage": 1,
+      "name": "redact",
+      "component": "extension/content-script.js, js/redactor.js",
+      "note": "phones/emails/OTPs -> placeholders. PII never leaves the page."
+    },
+    {
+      "stage": 2,
+      "name": "transport",
+      "component": "extension/content-script.js, js/api.js",
+      "note": "direct fetch, NOT chrome.runtime messaging. Fallbacks: :3000 -> Vercel -> fully offline"
+    },
+    {
+      "stage": 3,
+      "name": "route",
+      "component": "server.js, server/routes/analyze.js",
+      "note": "one handler for localhost and Vercel"
+    },
+    {
+      "stage": 4,
+      "name": "rules",
+      "component": "server/rules/engine.js",
+      "note": "primary detector"
+    },
+    {
+      "stage": 5,
+      "name": "signals",
+      "component": "server/laya/client.js",
+      "note": "weighted structural signals -> probability"
+    },
+    {
+      "stage": 6,
+      "name": "combine",
+      "component": "server/combine/score.js",
+      "note": "0.70*rules + 0.30*signals, then disqualifying floors"
+    },
+    {
+      "stage": 7,
+      "name": "explain",
+      "component": "server/llm/explain.js",
+      "note": "deterministic template, or a grounded+verified LLM"
+    },
+    {
+      "stage": 8,
+      "name": "telemetry",
+      "component": "server/privacy/log.js",
+      "note": "counts only, never text"
+    },
+    {
+      "stage": 9,
+      "name": "render",
+      "component": "extension/banner.js, js/app.js",
+      "note": "Shadow DOM banner / animated console"
+    }
+  ],
+  "api_contract": {
+    "endpoint": "POST /analyze  (also /api/analyze, /api)",
+    "request": {
+      "text": "string, already client-redacted",
+      "channel": "\"email\" | \"sms\""
+    },
+    "response_fields": [
+      "score",
+      "verdict",
+      "flags",
+      "explanation",
+      "next_steps",
+      "privacy",
+      "engine"
+    ],
+    "verdicts": [
+      "safe",
+      "suspicious",
+      "high_risk",
+      "promo_clutter"
+    ],
+    "flag_shape": {
+      "span": "verbatim substring of the input",
+      "reason": "plain-language reason",
+      "type": "\"rule\" | \"promo\""
+    },
+    "other_endpoints": [
+      "GET /health"
+    ]
+  },
+  "scoring": {
+    "weights": {
+      "rules": 0.7,
+      "signals": 0.3
+    },
+    "thresholds": {
+      "high_risk": 66,
+      "suspicious": 35
+    },
+    "floors": {
+      "severeDomainSpoof": 82,
+      "severeRule": 75
+    },
+    "officialSenderCap": 25,
+    "promoClutterTrigger": ">=2 promotional signals and score <40",
+    "detectThresholdUsedByTests": 35
+  },
+  "detection": {
+    "rules": {
+      "version": 2,
+      "brands": [
+        "microsoft",
+        "google",
+        "apple",
+        "amazon",
+        "paypal",
+        "netflix",
+        "bankofamerica",
+        "chase",
+        "wellsfargo",
+        "stripe",
+        "github",
+        "linkedin",
+        "usps",
+        "fedex",
+        "facebook",
+        "instagram",
+        "twitter",
+        "spotify",
+        "dropbox",
+        "coinbase",
+        "binance",
+        "kraken",
+        "singtel",
+        "grab",
+        "metamask",
+        "iras",
+        "visa",
+        "mastercard"
+      ],
+      "officialBrandDomains": {
+        "microsoft": [
+          "microsoft.com",
+          "office.com",
+          "live.com",
+          "outlook.com",
+          "microsoftonline.com",
+          "accountprotection.microsoft.com"
+        ],
+        "google": [
+          "google.com",
+          "gmail.com",
+          "accounts.google.com"
+        ],
+        "apple": [
+          "apple.com",
+          "icloud.com"
+        ],
+        "amazon": [
+          "amazon.com",
+          "aws.amazon.com"
+        ],
+        "paypal": [
+          "paypal.com"
+        ],
+        "netflix": [
+          "netflix.com"
+        ],
+        "bankofamerica": [
+          "bankofamerica.com"
+        ],
+        "chase": [
+          "chase.com"
+        ],
+        "wellsfargo": [
+          "wellsfargo.com"
+        ],
+        "stripe": [
+          "stripe.com"
+        ],
+        "github": [
+          "github.com"
+        ],
+        "linkedin": [
+          "linkedin.com"
+        ],
+        "usps": [
+          "usps.com",
+          "usps.gov"
+        ],
+        "fedex": [
+          "fedex.com"
+        ],
+        "ups": [
+          "ups.com"
+        ],
+        "dhl": [
+          "dhl.com"
+        ],
+        "singtel": [
+          "singtel.com",
+          "singtel.com.sg"
+        ],
+        "grab": [
+          "grab.com",
+          "grab.co.id",
+          "grab.sg"
+        ],
+        "metamask": [
+          "metamask.io",
+          "consensys.io"
+        ],
+        "iras": [
+          "iras.gov.sg"
+        ],
+        "visa": [
+          "visa.com",
+          "visa.co"
+        ],
+        "mastercard": [
+          "mastercard.com",
+          "mastercard.co"
+        ]
+      },
+      "legitimateDomains": [
+        "shopify.com",
+        "wix.com",
+        "squarespace.com",
+        "weebly.com",
+        "bigcartel.com",
+        "stripe.com",
+        "square.com",
+        "paypal.me",
+        "wise.com",
+        "revolut.com",
+        "slack.com",
+        "zoom.us",
+        "webex.com",
+        "teams.microsoft.com",
+        "box.com",
+        "dropbox.com",
+        "icloud.com",
+        "onedrive.com",
+        "drive.google.com",
+        "mailchimp.com",
+        "hubspot.com",
+        "sendgrid.com",
+        "mailgun.com",
+        "postmark.com",
+        "twilio.com",
+        "intercom.com",
+        "zendesk.com",
+        "freshdesk.com",
+        "asana.com",
+        "trello.com",
+        "monday.com",
+        "atlassian.com",
+        "confluence.com",
+        "figma.com",
+        "canva.com",
+        "adobe.com",
+        "salesforce.com",
+        "oracle.com",
+        "ibm.com",
+        "intel.com",
+        "cisco.com",
+        "dell.com",
+        "hp.com",
+        "logitech.com",
+        "samsung.com",
+        "sony.com",
+        "nike.com",
+        "adidas.com",
+        "walmart.com",
+        "target.com",
+        "bestbuy.com",
+        "costco.com",
+        "etsy.com",
+        "ebay.com",
+        "soundcloud.com",
+        "bandcamp.com",
+        "discogs.com",
+        "medium.com",
+        "substack.com",
+        "notion.so",
+        "airtable.com",
+        "linear.app",
+        "vercel.app",
+        "netlify.app"
+      ],
+      "freeMailDomains": [
+        "gmail.com",
+        "googlemail.com",
+        "outlook.com",
+        "hotmail.com",
+        "hotmail.co.uk",
+        "live.com",
+        "msn.com",
+        "yahoo.com",
+        "yahoo.co.uk",
+        "yahoo.co.in",
+        "ymail.com",
+        "aol.com",
+        "icloud.com",
+        "me.com",
+        "mac.com",
+        "protonmail.com",
+        "proton.me",
+        "gmx.com",
+        "gmx.de",
+        "mail.com",
+        "zoho.com",
+        "yandex.com",
+        "yandex.ru",
+        "qq.com",
+        "163.com",
+        "126.com",
+        "naver.com",
+        "hanmail.net",
+        "rediffmail.com"
+      ],
+      "socialEngineeringFamilies": [
+        {
+          "name": "advance_fee",
+          "points": 20,
+          "corroboration": true,
+          "patternCount": 13,
+          "patterns": [
+            "Unsolicited 'you have been selected' prize claim",
+            "Advance-fee lottery: 'lucky winner' framing",
+            "Advance-fee lottery: claimed address list",
+            "Large unsolicited monetary claim",
+            "Remittance channel named in an unsolicited offer",
+            "Advance-fee pretext: 'activation fee'",
+            "Unsolicited charitable donation claim",
+            "Unsolicited compensation fund claim",
+            "Unsolicited revenue-share 'partnership' offer",
+            "Unsolicited grant, lottery or compensation payout claim",
+            "Claim released only by emailing back a stranger",
+            "Named 'finance house' acting as a payout intermediary",
+            "Multi-million advance-fee amount"
+          ]
+        },
+        {
+          "name": "refund_bait",
+          "points": 18,
+          "corroboration": true,
+          "patternCount": 5,
+          "patterns": [
+            "Unsolicited refund claim presented as an action item",
+            "Fake overpayment / double-charge refund pretext",
+            "Refund claim routed through an email link",
+            "Promised credit used to legitimise a fake charge",
+            "Short deadline attached to a refund pretext"
+          ]
+        },
+        {
+          "name": "delivery_fee",
+          "points": 20,
+          "corroboration": true,
+          "patternCount": 7,
+          "patterns": [
+            "Parcel-release fee demanded for a held shipment",
+            "Shipping-fee pretext to release a parcel",
+            "Failed-delivery pretext paired with a payment link",
+            "Small-fee delivery scam (classic smishing)",
+            "Shipment held pending payment",
+            "Failed-delivery notice used to drive a click",
+            "Delivery reschedule routed through an email link"
+          ]
+        },
+        {
+          "name": "fake_subscription",
+          "points": 18,
+          "corroboration": true,
+          "patternCount": 7,
+          "patterns": [
+            "Fake cloud-storage exhaustion scare",
+            "Storage upgrade upsell via unsolicited mail",
+            "Auto-renewal notice for a subscription the user may not hold",
+            "Subscription-expiry renewal lure",
+            "Cancellation handled by phone/email rather than an account page",
+            "Unsolicited 'your rewards expire' bait",
+            "Reward claim pushed from unsolicited mail"
+          ]
+        },
+        {
+          "name": "fake_security",
+          "points": 20,
+          "corroboration": true,
+          "patternCount": 4,
+          "patterns": [
+            "Mandatory 2FA enforcement notice",
+            "2FA enrolment pushed from an email link",
+            "Wallet-protection pretext",
+            "Declined-payment bait"
+          ]
+        },
+        {
+          "name": "investment",
+          "points": 15,
+          "corroboration": true,
+          "patternCount": 5,
+          "patterns": [
+            "Token/airdrop offer",
+            "Fabricated token launch attributed to an established brand",
+            "Instant-approval loan / advance-fee pitch",
+            "Unsolicited loan/investment solicitation",
+            "Vague investment promise with no verifiable instrument"
+          ]
+        },
+        {
+          "name": "health_claim",
+          "points": 15,
+          "corroboration": true,
+          "patternCount": 4,
+          "patterns": [
+            "Unverifiable medical 'protocol' claim",
+            "Implausible medical outcome statistic",
+            "Artificial urgency to view a claim now",
+            "Viral-marketing medical claim"
+          ]
+        },
+        {
+          "name": "personal_data",
+          "points": 15,
+          "corroboration": false,
+          "patternCount": 5,
+          "patterns": [
+            "Requests a copy of identity documents by email",
+            "Blank-field form requesting a full legal name",
+            "Blank-field form requesting phone and address",
+            "Blank-field form requesting country of residence",
+            "Generic bulk personal-information request"
+          ]
+        },
+        {
+          "name": "contact_stranger",
+          "points": 15,
+          "corroboration": true,
+          "patternCount": 4,
+          "patterns": [
+            "Demands an urgent off-channel reply",
+            "Unsolicited partnership proposal",
+            "Redirects to an unrelated third-party address",
+            "Bare urgency demand with no legitimate context"
+          ]
+        },
+        {
+          "name": "inheritance",
+          "points": 25,
+          "corroboration": true,
+          "patternCount": 7,
+          "patterns": [
+            "Inheritance fraud: claims a shared surname",
+            "Inheritance fraud: claims the deceased has no heirs",
+            "Inheritance fraud: invokes a recent death",
+            "Inheritance fraud: sympathy pretext",
+            "Inheritance fraud: offers an estate's proceeds",
+            "Inheritance fraud: asks for an oath of trust",
+            "Inheritance fraud: unverified legal representative"
+          ]
+        }
+      ],
+      "structuralSignals": [
+        {
+          "name": "punycode_host",
+          "weight": 0.34
+        },
+        {
+          "name": "ip_literal_link",
+          "weight": 0.34
+        },
+        {
+          "name": "data_uri",
+          "weight": 0.3
+        },
+        {
+          "name": "base64_blob",
+          "weight": 0.24
+        },
+        {
+          "name": "credential_or_wire",
+          "weight": 0.2
+        },
+        {
+          "name": "link_farm",
+          "weight": 0.18
+        }
+      ],
+      "patternTables": {
+        "urgency": 9,
+        "credential": 5,
+        "promotionalClutter": 4,
+        "suspiciousDomains": 6,
+        "advanceFee": 13,
+        "refundBait": 5,
+        "deliveryFee": 7,
+        "fakeSubscription": 7,
+        "fakeSecurity": 4,
+        "investment": 5,
+        "healthClaim": 4,
+        "personalData": 5,
+        "contactStranger": 4,
+        "inheritance": 7
+      },
+      "scoring": {
+        "minBrandLength": 4,
+        "levenshteinMaxDistance": 2,
+        "levenshteinMaxLengthDelta": 2,
+        "confidenceFloor": 0.02,
+        "confidenceCeiling": 0.99
+      }
+    },
+    "signals": {
+      "version": 2,
+      "kind": "hand_weighted_heuristic_not_trained",
+      "source": "laya_stub_heuristic",
+      "note": "Local typed-decision fallback model active (laya container offline).",
+      "formula": "clamp(ruleFlags*0.25 + tokenMatches*0.15 + sum(structuralWeights), 0.02, 0.99)",
+      "corroborationDamping": "signals beyond the second are damped by 0.06 each",
+      "tokenList": [
+        "urgent",
+        "verify",
+        "suspended",
+        "password",
+        "ssn",
+        "wire",
+        "paypa1",
+        "bit.ly",
+        "login"
+      ],
+      "labelThresholds": {
+        "high_risk": 0.65,
+        "suspicious": 0.3
+      },
+      "structuralSignals": [
+        {
+          "name": "punycode_host",
+          "weight": 0.34,
+          "test": "(t) => /https?:\\/\\/[^\\s/]*xn--/i.test(t)"
+        },
+        {
+          "name": "ip_literal_link",
+          "weight": 0.34,
+          "test": "(t) => /https?:\\/\\/\\d{1,3}(?:\\.\\d{1,3}){3}/.test(t)"
+        },
+        {
+          "name": "data_uri",
+          "weight": 0.3,
+          "test": "(t) => /data:(text\\/html|application\\/javascript|;base64)/i.test(t)"
+        },
+        {
+          "name": "base64_blob",
+          "weight": 0.24,
+          "test": "(t) => /[A-Za-z0-9+/]{120,}={0,2}/.test(t)"
+        },
+        {
+          "name": "credential_or_wire",
+          "weight": 0.2,
+          "test": "(t) =>\n      /(verify|confirm|update|validate|secure)\\s+(your\\s+)?(account|password|credentials|details|information)/i.test(t)\n      || /(gift\\s?card|bitcoin|crypto|wire\\s+transfer|western\\s+union|money\\s+gram)/i.test(t)"
+        },
+        {
+          "name": "link_farm",
+          "weight": 0.18,
+          "test": "(t) => {\n      const hosts = new Set((t.match(/https?:\\/\\/([^\\s/?#]+)/gi) || [])\n        .map((u) => u.replace(/^https?:\\/\\//i, \"\").toLowerCase()));\n      return hosts.size >= 5;\n  }"
+        }
+      ]
+    }
+  },
+  "corpora": [
+    {
+      "id": "A",
+      "file": "server/fixtures/scam-corpus.txt",
+      "records": 20,
+      "scam": 20,
+      "ham": 0,
+      "singleClass": true,
+      "detectThreshold": 35,
+      "note": "Scam-only. Can constrain recall, NOT specificity or precision.",
+      "knownMisses": [
+        "SCAM-003",
+        "SCAM-004",
+        "SCAM-008"
+      ]
+    },
+    {
+      "id": "B",
+      "file": "server/fixtures/real-world-mixed.txt",
+      "records": 11,
+      "scam": 9,
+      "ham": 2,
+      "singleClass": false,
+      "detectThreshold": 35,
+      "note": "Contains ham, so specificity is measurable - but on only 2 messages, which cannot support a rate.",
+      "knownMisses": []
+    }
+  ],
+  "measured": {
+    "assertions_passing": 410,
+    "failures": 0,
+    "corpusA": {
+      "recall": "17/20 (85.0%)",
+      "specificity": "not measurable (scam-only)"
+    },
+    "corpusB": {
+      "recall": "9/9 (100%)",
+      "specificity": "2/2 (100%)"
+    },
+    "combined_confusion": {
+      "tp": 26,
+      "fn": 3,
+      "tn": 2,
+      "fp": 0
+    },
+    "adversarial_legitimate_false_positives": "0/15",
+    "caveat": "Two ham messages cannot support a precision or false-positive rate."
+  },
+  "security_posture": [
+    "escapeHtml() on every banner interpolation - flags[].span is attacker-controlled",
+    "Shadow DOM isolation so Gmail CSS cannot reach the banner and vice versa",
+    "path-traversal guard in resolveWebFile() plus an ALLOWED_ENTRIES allowlist",
+    "extension requests only activeTab + storage",
+    "no raw message text is ever persisted anywhere"
+  ],
+  "known_limitations": [
+    "No trained model; every weight is hand-chosen.",
+    "No precision or false-positive rate has been measured - only 2 ham messages exist.",
+    "OTP redaction over-masks: the keyword group is optional, so any standalone 4-8 digit number is replaced.",
+    "Reads body text only - sender, subject, headers, SPF/DKIM and link hrefs are never inspected.",
+    "Gmail private selectors (.a3s.aiL etc.) break on a Google redesign, and the extension then fails silently.",
+    "English only; no attachment scanning and no HTML-phishing analysis (hidden text, form injection).",
+    "Brand list is 31 names but only 28 are matchable (MIN_BRAND_LEN=4 drops dhl and ups); typosquats of unlisted companies fall through to the generic rules.",
+    "extension/background.js is dead code - content-script.js deliberately avoids chrome.runtime messaging.",
+    "test:all silently requires a running server.",
+    "The archive test drift-checks only manifest.json and banner.js, not every entry."
+  ],
+  "conventions": [
+    "Server code is CommonJS with JSDoc; browser code is plain window globals, no modules.",
+    "Every new rule ships with a test in the same commit.",
+    "Flag spans must be verbatim from the input; test-scam-corpus.js enforces this.",
+    "Comments explain WHY, not what, and record the false positive that motivated a guard.",
+    "Both published .zip archives are generated - never hand-edited."
+  ],
+  "file_map": [
+    {
+      "path": "server.js",
+      "role": "Sole HTTP entrypoint; dual-mode (listener / exported handler)"
+    },
+    {
+      "path": "index.html",
+      "role": "Web console, single source of truth"
+    },
+    {
+      "path": "styles.css",
+      "role": "Playful Neo-Brutalist tokens and all styling"
+    },
+    {
+      "path": "api/index.js",
+      "role": "Re-exports the root handler for Vercel"
+    },
+    {
+      "path": "vercel.json",
+      "role": "Routing; 404s server/, docs/, extension/, dotfiles, package.json"
+    },
+    {
+      "path": "server/routes/analyze.js",
+      "role": "Orchestrates all five analysis subsystems"
+    },
+    {
+      "path": "server/rules/engine.js",
+      "role": "PRIMARY DETECTOR; also exports TAXONOMY"
+    },
+    {
+      "path": "server/laya/client.js",
+      "role": "Hand-weighted signal scorer; also exports TAXONOMY"
+    },
+    {
+      "path": "server/combine/score.js",
+      "role": "Blending, disqualifying floors, verdict ladder, next steps"
+    },
+    {
+      "path": "server/llm/explain.js",
+      "role": "Two explanation producers + isGrounded() gate"
+    },
+    {
+      "path": "server/llm/prompt.js",
+      "role": "System prompt, kept verbatim from spec"
+    },
+    {
+      "path": "server/privacy/log.js",
+      "role": "Aggregate counts only"
+    },
+    {
+      "path": "server/test-scam-corpus.js",
+      "role": "Recall/specificity floors, grounding, false positives"
+    },
+    {
+      "path": "server/fixtures/",
+      "role": "Real-world labelled corpora used by that suite"
+    },
+    {
+      "path": "extension/content-script.js",
+      "role": "Pipeline stages 0-2"
+    },
+    {
+      "path": "extension/banner.js",
+      "role": "Pipeline stage 9; Shadow DOM banner"
+    },
+    {
+      "path": "extension/background.js",
+      "role": "Service worker - currently DEAD CODE"
+    },
+    {
+      "path": "js/redactor.js",
+      "role": "Console-side PII redaction"
+    },
+    {
+      "path": "js/api.js",
+      "role": "Environment-aware API client with offline fallback engine"
+    },
+    {
+      "path": "js/app.js",
+      "role": "Console orchestrator"
+    },
+    {
+      "path": "js/architecture.js",
+      "role": "10-stage step-through board"
+    },
+    {
+      "path": "js/mascot-eyes.js",
+      "role": "Both mascot eye-follow mounts"
+    },
+    {
+      "path": "js/shape-waves.js",
+      "role": "Vanilla WebGPU hero background"
+    },
+    {
+      "path": "tools/build-context.js",
+      "role": "Generates docs/project-context.json from live modules"
+    },
+    {
+      "path": "tools/build-zips.js",
+      "role": "Generates both published archives"
+    },
+    {
+      "path": "docs/report.md",
+      "role": "Detailed project report"
+    },
+    {
+      "path": "AGENTS.md",
+      "role": "Dense project context for tooling and agents"
+    }
+  ]
+}

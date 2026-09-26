@@ -34,6 +34,16 @@ const STRUCTURAL_SIGNALS = [
   } },
 ];
 
+/**
+ * Tokens that count toward the threat signal.
+ *
+ * Module scope rather than function-local so the exported TAXONOMY can report
+ * exactly what this scorer looks for, without it drifting from the code path.
+ */
+const HIGH_RISK_TOKENS = [
+  "urgent", "verify", "suspended", "password", "ssn", "wire", "paypa1", "bit.ly", "login"
+];
+
 async function evaluateLayaModel(text, ruleFlags) {
   if (!text || typeof text !== "string") {
     return { label: "safe", probability: 0.05, source: "laya_stub_heuristic" };
@@ -46,7 +56,7 @@ async function evaluateLayaModel(text, ruleFlags) {
     threatSignal += ruleFlags.length * 0.25;
   }
 
-  const highRiskTokens = ["urgent", "verify", "suspended", "password", "ssn", "wire", "paypa1", "bit.ly", "login"];
+  const highRiskTokens = HIGH_RISK_TOKENS;
   const lowerText = text.toLowerCase();
   let tokenMatches = 0;
   for (const token of highRiskTokens) {
@@ -94,4 +104,28 @@ async function evaluateLayaModel(text, ruleFlags) {
   };
 }
 
-module.exports = { evaluateLayaModel };
+module.exports = {
+  evaluateLayaModel,
+  STRUCTURAL_SIGNALS,
+
+  /**
+   * Machine-readable description of the scorer, for tooling that needs to
+   * enumerate what it looks for without parsing source. Derived from the same
+   * constants the scorer runs on, so it cannot drift.
+   */
+  TAXONOMY: {
+    version: 2,
+    kind: "hand_weighted_heuristic_not_trained",
+    source: "laya_stub_heuristic",
+    note: "Local typed-decision fallback model active (laya container offline).",
+    formula: "clamp(ruleFlags*0.25 + tokenMatches*0.15 + sum(structuralWeights), 0.02, 0.99)",
+    corroborationDamping: "signals beyond the second are damped by 0.06 each",
+    tokenList: HIGH_RISK_TOKENS,
+    labelThresholds: { high_risk: 0.65, suspicious: 0.3 },
+    structuralSignals: STRUCTURAL_SIGNALS.map((s) => ({
+      name: s.name,
+      weight: s.weight,
+      test: String(s.test),
+    })),
+  },
+};

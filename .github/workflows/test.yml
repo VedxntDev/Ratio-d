@@ -1,0 +1,55 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # The project has zero runtime dependencies, so there is nothing to install.
+    # The only real prerequisite is a live server: test-ui-contract.js makes
+    # real HTTP calls, which is why `npm run test:all` fails without one.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Start the server
+        run: |
+          node server.js > /tmp/server.log 2>&1 &
+          echo $! > /tmp/server.pid
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3000/health > /dev/null; then
+              echo "server is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "server failed to start:"
+          cat /tmp/server.log
+          exit 1
+
+      - name: Health check
+        run: curl -sf http://127.0.0.1:3000/health
+
+      - name: Context manifest is in sync
+        run: node server/test-context-manifest.js
+
+      - name: Real-corpus recall and specificity
+        run: npm run test:corpus
+
+      - name: Full suite
+        run: npm run test:all
+
+      - name: Server log
+        if: always()
+        run: cat /tmp/server.log
+
+      - name: Stop the server
+        if: always()
+        run: kill "$(cat /tmp/server.pid)" 2>/dev/null || true

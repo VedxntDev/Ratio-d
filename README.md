@@ -36,6 +36,7 @@ It is a static site, a Chrome extension, and one small Node server.
 
 | Section | What it covers |
 | --- | --- |
+| [Machine context](#-machine-readable-project-context) | `AGENTS.md` and the generated JSON manifest for tooling |
 | [Mental model](#-the-60-second-mental-model) | One diagram of the whole system |
 | [Pipeline](#-the-pipeline-stage-by-stage) | "Email opened" → "banner shown", stage by stage |
 | [Code walkthrough](#-code-walkthrough--every-file) | What every single file does and why |
@@ -72,7 +73,40 @@ It is a static site, a Chrome extension, and one small Node server.
 
 ---
 
-## 🧭 The 60-second mental model
+## 🤖 Machine-readable project context
+
+For tooling, agents and extraction, two artefacts sit alongside this README:
+
+| Artefact | Purpose |
+| --- | --- |
+| [`AGENTS.md`](./AGENTS.md) | Dense, factual project context: data flow, scoring model, every threshold, API contract, security invariants, known limitations. No marketing. |
+| [`docs/project-context.json`](./docs/project-context.json) | The same context as structured JSON: pipeline stages, file map, scoring constants, the full detection taxonomy, corpus statistics, and the honesty caveats. |
+
+**The JSON is generated, never hand-edited.** Every number in it is read from
+the live modules at build time, so it cannot drift away from the code:
+
+```bash
+node tools/build-context.js
+```
+
+`server/test-context-manifest.js` runs in `test:all` and **fails if the manifest
+is stale**, cross-checking the family count, brand list and corpus sizes against
+the live engine and the fixture files. This exists because the published `.zip`
+archives previously drifted the same way, and a stale context file is worse than
+none — tooling would confidently report a detection model that no longer exists.
+
+The detection taxonomy itself is exported from the engine, so it is derived
+from the same constants the engine runs on:
+
+```js
+const { TAXONOMY } = require("./server/rules/engine");
+TAXONOMY.socialEngineeringFamilies;  // name, points, patternCount, pattern reasons
+TAXONOMY.structuralSignals;          // name, weight
+TAXONOMY.brands;                     // 28 matchable brand names
+```
+
+---
+
 
 ```
    ┌──────────── GMAIL (or paste into the web console) ─────────────┐
@@ -916,7 +950,7 @@ npm run test:all
 > `node server.js` in another terminal first, or point the test elsewhere with
 > `BASE=http://host:port npm run test:all`.
 >
-> Verified result: **400 assertions passing, 0 failures** with the server up.
+> Verified result: **410 assertions passing, 0 failures** with the server up.
 
 ---
 
@@ -953,13 +987,14 @@ than no tool.
    Those are the highest-value signals in real phishing and none are
    implemented.
 
-6. **The brand list is only ~32 hardcoded names.** A typosquat of a company that
-   is not on that list is invisible to the homoglyph, Levenshtein, display-name
-   and signature checks, and can only be caught by the generic pattern and
-   structural rules. The new signals added for the mixed corpus — Reply-To
-   mismatch, mixed-script homoglyphs, free-hosting senders, inheritance
-   pretexts — were chosen specifically because they are brand-independent, and
-   that is the direction further work should take.
+6. **The brand list is 31 names, 28 of them matchable** (`MIN_BRAND_LEN = 4`
+   drops `dhl` and `ups`). A typosquat of a company that is not on that list is
+   invisible to the homoglyph, Levenshtein, display-name and signature checks,
+   and can only be caught by the generic pattern and structural rules. The new
+   signals added for the mixed corpus — Reply-To mismatch, mixed-script
+   homoglyphs, free-hosting senders, inheritance pretexts — were chosen
+   specifically because they are brand-independent, and that is the direction
+   further work should take.
 
 7. **PII is never transmitted, but text can be.** With no local server, the
    extension falls back to `ratio-d.vercel.app`, so redacted message text does

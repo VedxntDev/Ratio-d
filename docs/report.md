@@ -457,7 +457,7 @@ Every flag cites a verbatim span from the message. No flag is invented.
 
 ### 4.4 Test suite status
 
-`npm run test:all` — **400 assertions passing, 0 failures**, comprising thirteen
+`npm run test:all` — **410 assertions passing, 0 failures**, comprising thirteen
 unit/static suites plus one live contract suite.
 
 > ⚠️ **Harness prerequisite.** `test-ui-contract.js` performs real HTTP calls
