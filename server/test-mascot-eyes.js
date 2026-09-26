@@ -16,6 +16,7 @@ const ROOT = path.join(__dirname, "..");
 const SRC = fs.readFileSync(path.join(ROOT, "js", "mascot-eyes.js"), "utf8");
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const css = fs.readFileSync(path.join(ROOT, "styles.css"), "utf8");
+const installJs = fs.readFileSync(path.join(ROOT, "js", "install.js"), "utf8");
 
 let failures = 0;
 function check(label, ok, detail) {
@@ -115,12 +116,25 @@ check("mascot button has an accessible name", /mascot-fab-label">[\s\S]{0,80}?Ge
 check("face slot is decorative", /mascot-fab-face" aria-hidden="true"/.test(html));
 check("mascot-fab styled", /\.mascot-fab \{/.test(css));
 check("mascot parts styled", [".mascot-shield", ".mascot-sclera", ".mascot-pupil", ".mascot-brow", ".mascot-smirk", ".mascot-glass"].every((s) => css.includes(s)));
-check("mascot pinned bottom-LEFT so it clears .dl-fab",
-  /\.mascot-fab \{[^}]*position: fixed;[^}]*left: 22px;[^}]*bottom: 22px/.test(css) &&
-  !/\.mascot-fab \{[^}]*right: 22px/.test(css));
-check("mobile override keeps the mascot on the left",
-  /@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*left: 16px/.test(css) &&
-  !/@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*right: 16px/.test(css));
+// The mascot is now the site's ONLY floating control, so it owns the
+// bottom-right corner outright. Asserting `right` (and not `left`) is what
+// stops a second "Get extension" button being re-added to the other corner.
+check("mascot pinned bottom-right as the single floating control",
+  /\.mascot-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
+  !/\.mascot-fab \{[^}]*left: 22px/.test(css));
+// Comments still name the old button to explain what replaced it, so the
+// removal is asserted against real code - markup, CSS rules and JS lookups -
+// rather than against the word appearing anywhere in the files.
+check("the old duplicate download fab is gone from markup, CSS and JS",
+  !/id="dl-fab"/.test(html) && !/class="[^"]*\bdl-fab\b/.test(html) &&
+  !/^\s*\.dl-fab[\s,{]/m.test(css) &&
+  !/getElementById\("dl-fab"\)/.test(installJs));
+// The narrow-screen override has to move to `right` as well. If it were left
+// as `left`, the base `right: 22px` plus a mobile `left: 16px` would stretch
+// the button across the whole viewport.
+check("mobile override keeps the mascot on the right",
+  /@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*right: 16px/.test(css) &&
+  !/@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*left: 16px/.test(css));
 check("reduced-motion honoured", /prefers-reduced-motion/.test(SRC));
 check("no innerHTML in the mascot module", !/innerHTML/.test(SRC));
 // Comments legitimately name the Framer packages; the code must not use them.

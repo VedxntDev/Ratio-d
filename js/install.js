@@ -102,18 +102,10 @@
     }
   }
 
-  /* ---------- floating download button ----------
-     Pinned to the bottom-left corner and visible at all times, on every
-     breakpoint. It is the persistent entry point to the install section, so it
-     deliberately does NOT hide while #install is on screen - that section is
-     tall and the button would otherwise blink out and back on scroll. */
-  (function () {
-    var fab = document.getElementById("dl-fab");
-    if (!fab) return;
-    // No observers, no thresholds: visible from first paint. The CSS default is
-    // the visible state, this class is belt-and-braces for older markup.
-    fab.classList.add("is-visible");
-  })();
+  /* The floating entry point to the install section is the mascot button
+     (#mascot-fab). It is CSS-visible from first paint, so there is nothing to
+     set up here: the old .dl-fab needed a JS class to become visible, and it
+     has been replaced. */
 
   /* ---------- copy to clipboard ---------- */
   function flash(button, message) {

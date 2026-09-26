@@ -1169,38 +1169,20 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
 }
 .promo-close:hover { background: var(--color-primary); color: #fff; transform: rotate(90deg); }
 
-/* ---- floating download button ----
-   Pinned bottom-RIGHT and visible from first paint at every breakpoint. The
-   visible state is the DEFAULT so the button can never be missing if JS is
-   blocked or slow; .is-visible is kept as a no-op-compatible hook. */
-.dl-fab {
-  position: fixed; right: 22px; bottom: 22px; z-index: 80;
-  display: inline-flex; align-items: center; gap: 9px;
-  background: var(--color-primary); color: #fff;
-  font-family: var(--font-display); font-size: 0.92rem; font-weight: 800;
-  text-decoration: none; padding: 13px 20px;
-  border: var(--bw) solid var(--color-ink); border-radius: 999px;
-  box-shadow: 5px 5px 0 var(--color-ink);
-  opacity: 1; visibility: visible; transform: none;
-  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.25s;
-}
-.dl-fab.is-visible { opacity: 1; visibility: visible; transform: none; }
-.dl-fab:hover { transform: translate(2px, -2px); box-shadow: 7px 7px 0 var(--color-ink); }
-.dl-fab-icon { font-size: 1.05rem; }
-
 /* ---- Mascot eye-follow button (port of Framer's "Eye Follow Button") ----
    A dependency-free port of the Framer component of the same name, wearing
    the Ratio'd shield mascot. js/mascot-eyes.js moves the two pupils toward
    the cursor with a spring; everything here is the static art around them.
 
-   Pinned bottom-LEFT on purpose: .dl-fab already owns the bottom-right corner
-   permanently, and two fixed controls fighting over one corner is exactly the
-   kind of overlap that only shows up on a real phone. */
+   This is the site's single persistent entry point to the install section,
+   pinned bottom-RIGHT and visible from first paint at every breakpoint. It
+   replaces the old plain .dl-fab, so there is exactly one floating control
+   and no chance of two of them fighting over a corner on a small screen. */
 
 .mascot-fab {
-  position: fixed; left: 22px; bottom: 22px; z-index: 80;
+  position: fixed; right: 22px; bottom: 22px; z-index: 80;
   display: inline-flex; align-items: center; gap: 12px;
-  padding: 8px 20px 8px 8px;
+  padding: 8px 8px 8px 20px;
   background: var(--color-surface);
   color: var(--color-ink);
   text-decoration: none;
@@ -1256,11 +1238,8 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
      column that overflows the viewport. */
   .promo-text { order: 3; flex: 1 0 100%; width: 100%; }
   .promo-actions { margin-left: auto; }
-  .dl-fab-text { display: none; }
-  .dl-fab { padding: 14px; right: 16px; bottom: 16px; }
-  /* Same treatment for the mascot: face only, no label, so the two fixed
-     controls stay small enough to sit side by side on a phone. */
-  .mascot-fab { padding: 6px; left: 16px; bottom: 16px; }
+  /* Face only, no label: the full pill would eat a third of a phone screen. */
+  .mascot-fab { padding: 6px; right: 16px; bottom: 16px; }
   .mascot-fab-label { display: none; }
   .mascot-fab-face { width: 46px; height: 46px; flex-basis: 46px; }
 }

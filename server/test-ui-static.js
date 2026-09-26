@@ -98,22 +98,41 @@ check("step ids match markup",
 check("dismissible promo bar present", /id="promo-bar"/.test(html) && /id="promo-close"/.test(html));
 check("promo bar starts hidden (shown by JS only)", /id="promo-bar"[^>]*hidden/.test(html));
 check("promo dismissal remembered", /ratiod\.promo\.dismissed/.test(installJs));
-check("floating download button present", /id="dl-fab"/.test(html));
-// The fab is now a permanent bottom-right control, so it must NOT be gated on
+// The floating entry point to #install is the mascot button. It replaced the
+// old plain .dl-fab, so these checks now pin the mascot rather than a button
+// that no longer exists - and assert the old one really is gone, which is what
+// stops a duplicate "Get extension" control creeping back in.
+check("mascot floating button present", /id="mascot-fab"/.test(html));
+// Comments still name the old button to explain what replaced it, so the check
+// targets real code - markup, CSS rules and the JS lookup - not the word.
+check("old duplicate download fab removed",
+  !/id="dl-fab"/.test(html) && !/class="[^"]*\bdl-fab\b/.test(html) &&
+  !/^\s*\.dl-fab[\s,{]/m.test(css) &&
+  !/getElementById\("dl-fab"\)/.test(installJs));
+check("exactly one floating control links to #install",
+  (html.match(/<a href="#install"[^>]*class="[^"]*fab/g) || []).length === 1);
+// The fab is a permanent bottom-right control, so it must NOT be gated on
 // scroll position any more (that used to hide it past the hero / on #install).
 check("fab is always visible (no scroll gating)", !/pastHero|installVisible/.test(installJs));
 check("fab is pinned bottom-right in CSS",
-  /\.dl-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
-  !/\.dl-fab \{[^}]*left: 22px/.test(css));
+  /\.mascot-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
+  !/\.mascot-fab \{[^}]*left: 22px/.test(css));
 // The narrow-screen override must move to `right` too, or the base `right`
 // plus a mobile `left` would stretch the button across the viewport.
 check("mobile fab override also uses right",
-  /@media \(max-width: 600px\)[\s\S]*?\.dl-fab \{[^}]*right: 16px/.test(css) &&
-  !/@media \(max-width: 600px\)[\s\S]*?\.dl-fab \{[^}]*left: 16px/.test(css));
+  /@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*right: 16px/.test(css) &&
+  !/@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*left: 16px/.test(css));
+// The control is CSS-visible from first paint: its base rule must not hide it
+// behind opacity/visibility, or the only entry point to #install would vanish
+// whenever JS is blocked or slow.
+const mascotFabRule = (css.match(/\.mascot-fab \{[^}]*\}/) || [""])[0];
 check("fab visible state is the CSS default (works without JS)",
-  /\.dl-fab \{[^}]*opacity: 1;[^}]*visibility: visible/.test(css));
+  /position:\s*fixed/.test(mascotFabRule) &&
+  !/opacity:\s*0/.test(mascotFabRule) &&
+  !/visibility:\s*hidden/.test(mascotFabRule),
+  mascotFabRule.slice(0, 56).replace(/\s+/g, " ") + "...");
 check("promo bar has a download link", /id="promo-bar"[\s\S]{0,600}?ratiod-extension\.zip/.test(html));
-check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.dl-fab \{/.test(css));
+check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.mascot-fab \{/.test(css));
 check("promo bar responsive", /@media \(max-width: 600px\)[\s\S]*?\.promo-inner/.test(css));
 
 /* ---- author credit ---- */

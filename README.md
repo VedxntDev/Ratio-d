@@ -53,10 +53,12 @@ banner (exposed via `web_accessible_resources`).
 
 ## 👁️ Mascot Eye-Follow Button
 
-The floating mascot in the bottom-left corner is a dependency-free port of
+The floating mascot in the bottom-right corner is a dependency-free port of
 Framer's [`<Eye Follow Button />`](https://framer.com/m/Eye-Follow-Button-yMBK.js@UiZdcXLPs68fBczUfQ27),
 restyled as the Ratio'd shield. Its pupils track the cursor with a spring and
-blink on a timer.
+blink on a timer. It is the site's only floating control and its persistent
+entry point to the install section — it replaced the plain red "Get Extension"
+button that used to sit in the same corner, so there is now exactly one.
 
 **Why a port, not the component.** The original ships as a compiled Framer
 module that imports `framer`, `framer-motion` and `react/jsx-runtime` from
