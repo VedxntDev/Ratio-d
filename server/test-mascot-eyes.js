@@ -53,15 +53,29 @@ class El {
     walk(this);
     return out;
   }
-  // The face is a 120x120 viewBox rendered into a 120px box.
+  // The face is a 120x120 viewBox rendered into a 120px box; the hero overlay is
+  // a 760x760 viewBox over the artwork, so each mount reports its own size.
   getBoundingClientRect() {
-    return { left: 0, top: 0, width: 120, height: 120, right: 120, bottom: 120 };
+    const r = this._rect;
+    return r
+      ? { left: r.left, top: r.top, width: r.width, height: r.height, right: r.left + r.width, bottom: r.top + r.height }
+      : { left: 0, top: 0, width: 120, height: 120, right: 120, bottom: 120 };
   }
 }
 
-/** Boot the module against a stub DOM. */
-function boot({ reduceMotion = false, hover = true } = {}) {
-  const root = new El("a");
+/**
+ * Boot the module against a stub DOM.
+ *
+ * `roots` is the list of `[data-mascot-eyes]` mounts, so the same harness can
+ * drive the floating button on its own or the real page (both mounts at once).
+ */
+function boot({ reduceMotion = false, hover = true, modes = ["face"] } = {}) {
+  const mounts = modes.map((mode) => {
+    const el = new El("div");
+    el.setAttribute("data-mascot-eyes", mode);
+    return el;
+  });
+  const root = mounts[0];
   const timers = { intervals: [], timeouts: [] };
   const raf = [];
   let now = 0;
@@ -81,6 +95,7 @@ function boot({ reduceMotion = false, hover = true } = {}) {
 
   const doc = {
     querySelector: (sel) => (sel === "[data-mascot-eyes]" ? root : null),
+    querySelectorAll: (sel) => (sel === "[data-mascot-eyes]" ? mounts.slice() : []),
     createElementNS: (_ns, tag) => new El(tag),
   };
   win.document = doc;
@@ -104,7 +119,7 @@ function boot({ reduceMotion = false, hover = true } = {}) {
   // Count how many frames the loop actually ran, to prove it parks.
   const framesRun = () => raf.length;
 
-  return { root, win, tick, timers, move, framesRun };
+  return { root, mounts, win, tick, timers, move, framesRun };
 }
 
 
@@ -310,6 +325,136 @@ console.log("\n── blink ──");
     root.querySelector(".mascot-eye-placed").getAttribute("transform") === "translate(42.5 52)");
 }
 
+console.log("\n── hero overlay (the hero card's painted eyes) ──");
+{
+  // The hero artwork is a flat JPEG, so the live eyes are a sibling SVG drawn
+  // over it. These checks pin the wiring and the geometry that has to match the
+  // artwork, because a silent drift here is invisible in the source and only
+  // shows up as a mascot looking slightly cross-eyed.
+  check("hero mascot wrapper present", /class="mascot-figure"[^>]*data-mascot-eyes="overlay"/.test(html));
+  check("hero artwork still rendered", /<img[^>]*src="assets\/mascot\.jpg"[^>]*class="mascot-img"/.test(html));
+  check("overlay layer is styled and positioned",
+    /\.mascot-figure \{[^}]*position: relative/.test(css) && /\.mascot-eyes-layer \{[^}]*position: absolute/.test(css));
+  // The bob must live on the WRAPPER, not the image: the layer is a sibling of
+  // the image, so animating only the image would slide the eyes off the art.
+  check("bob animation moved to the wrapper so art and eyes move together",
+    /\.mascot-figure \{[^}]*animation: bob/.test(css) &&
+    !/\.mascot-img \{[^}]*animation: bob/.test(css));
+
+  const { mounts, timers } = boot({ modes: ["overlay"] });
+  const hero = mounts[0];
+  // Squashing the overlay's eyes would uncover the painted eye underneath, so
+  // the blink is deliberately limited to the button. With an overlay-only page
+  // there is nothing to blink and no timer is registered at all.
+  check("the hero's eyes do not blink (they overlay painted art)",
+    timers.intervals.length === 0, `${timers.intervals.length} intervals`);
+  const layer = hero.querySelector(".mascot-eyes-layer");
+  check("overlay svg built on the hero mount", !!layer);
+  check("overlay uses the artwork's own 760 viewBox", layer && layer.getAttribute("viewBox") === "0 0 760 760");
+  check("overlay svg is hidden from assistive tech", layer && layer.getAttribute("aria-hidden") === "true");
+  check("overlay draws exactly two eyes", hero.querySelectorAll(".mascot-eye").length === 2);
+  check("overlay draws two pupils and two catchlights",
+    hero.querySelectorAll(".mascot-pupil").length === 2 && hero.querySelectorAll(".mascot-glint").length === 2);
+  // The overlay must NOT redraw the character - only the eyes are covered.
+  check("overlay does not redraw the mascot body",
+    !hero.querySelector(".mascot-shield") && !hero.querySelector(".mascot-glass") && !hero.querySelector(".mascot-brow"));
+
+  // The painted ring must be fully covered or it shows through as a dark
+  // fringe. The stroke is centred on its path, so the path radius has to be
+  // the sclera plus HALF the ring for the ink to start exactly at the edge; the
+  // slop widens both together, which moves only the OUTER edge.
+  const sclera = hero.querySelectorAll(".mascot-sclera");
+  const RING = 10, SLOP = 2;
+  const stroke = RING + SLOP * 2;
+  const offset = RING / 2 + SLOP;
+  check("both eyes carry the measured ring width plus slop",
+    sclera.length === 2 && sclera.every((e) => String(e.style.strokeWidth) === String(stroke)),
+    sclera.map((e) => e.style.strokeWidth).join(" | "));
+  const gotRx = sclera.map((e) => +e.getAttribute("rx"));
+  const scleraRx = [45, 47];
+  check("path radius is offset by half the stroke so the ink starts at the sclera",
+    gotRx.every((v, i) => near(v, scleraRx[i] + offset)), gotRx.join(" | "));
+  // The invariant that makes the overlay invisible: stroke/2 back off the path
+  // must land exactly on the measured sclera, so the white neither shrinks nor
+  // grows and the original ring is fully covered.
+  check("ink inner edge coincides with the sclera (no fringe, no shrink)",
+    gotRx.every((v, i) => near(v - stroke / 2, scleraRx[i])),
+    gotRx.map((v) => (v - stroke / 2).toFixed(1)).join(" | "));
+  check("the drawn ink reaches past the painted ring",
+    gotRx.every((v, i) => v + stroke / 2 > scleraRx[i] + RING),
+    gotRx.map((v) => (v + stroke / 2).toFixed(1)).join(" | "));
+
+  const m = hero.mascotEyes;
+  check("overlay exposes the tracking hook", !!m && m.eyes.length === 2);
+  // Geometry, in the artwork's 760x760 pixel space.
+  const [L, R] = m.eyes;
+  check("left eye sits at its measured centre", L.cx === 308 && L.cy === 244, `(${L.cx}, ${L.cy})`);
+  check("right eye sits at its measured centre", R.cx === 446.5 && R.cy === 249, `(${R.cx}, ${R.cy})`);
+  // The painted eyes are tall ovals, so the horizontal reach must be the
+  // tighter of the two - a shared circular clamp would push the pupil out
+  // through the flat side of the eye.
+  check("oval eyes clamp per axis, not on a circle",
+    L.reachY > L.reachX && R.reachY > R.reachX,
+    `L(${L.reachX.toFixed(1)}, ${L.reachY.toFixed(1)}) R(${R.reachX.toFixed(1)}, ${R.reachY.toFixed(1)})`);
+
+  // The clamp really does contain the pupil: at any angle the offset must stay
+  // inside the eye, i.e. ((x/reachX)^2 + (y/reachY)^2) <= 1.
+  let worst = 0;
+  for (let a = 0; a < 360; a += 5) {
+    const p = m.aim(L, L.cx + 100000 * Math.cos(a * Math.PI / 180), L.cy + 100000 * Math.sin(a * Math.PI / 180));
+    worst = Math.max(worst, (p.x / L.reachX) ** 2 + (p.y / L.reachY) ** 2);
+  }
+  check("pupil never escapes the painted eye at any angle", worst <= 1 + 1e-9, `worst=${worst.toFixed(6)}`);
+
+  // Aiming works the same as on the button: dead centre is no movement, and a
+  // far pointer clamps to the edge in the right direction.
+  check("pointer on the eye centre yields no offset", (() => {
+    const c = m.aim(L, L.cx, L.cy);
+    return near(c.x, 0) && near(c.y, 0);
+  })());
+  check("far pointer clamps to the oval edge and points at the cursor", (() => {
+    const p = m.aim(L, 1e6, -1e6);
+    return p.x > 0 && p.y < 0 && near((p.x / L.reachX) ** 2 + (p.y / L.reachY) ** 2, 1, 1e-9);
+  })());
+  check("the two hero eyes keep their parallax", (() => {
+    const px = L.cx - L.reachX * 0.5, py = L.cy - L.reachY * 0.5;
+    const a = m.aim(L, px, py), b = m.aim(R, px, py);
+    return a.x < 0 && b.x < 0 && !near(a.x, b.x, 1e-9);
+  })());
+}
+
+console.log("\n── both mounts on one page ──");
+{
+  // The real page has the button AND the hero overlay. They must share a single
+  // pointer listener and a single rAF loop, and a move must drive both.
+  const { mounts, win, tick, framesRun, move, timers } = boot({ modes: ["face", "overlay"] });
+  const [btn, hero] = mounts;
+  check("both mounts built their own face", !!btn.querySelector(".mascot-face") && !!hero.querySelector(".mascot-eyes-layer"));
+  check("both mounts are live", btn.getAttribute("data-mascot-state") === "live" && hero.getAttribute("data-mascot-state") === "live");
+  check("only one mousemove listener is registered", (win._l.mousemove || []).length === 1, `${(win._l.mousemove || []).length} listeners`);
+  // One shared blink timer, and it must skip the overlay so the painted eye
+  // underneath is never uncovered mid-blink.
+  check("one shared blink timer covers both mounts", timers.intervals.length === 1, `${timers.intervals.length} timers`);
+  timers.intervals[0].fn();
+  check("the button's eyes blink", btn.mascotEyes.eyes.every((e) => e.g.style.transform === "scaleY(0.3)"),
+    btn.mascotEyes.eyes[0].g.style.transform);
+  check("the hero's overlay eyes are NOT squashed",
+    hero.mascotEyes.eyes.every((e) => !e.g.style.transform),
+    JSON.stringify(hero.mascotEyes.eyes[0].g.style));
+
+  move(400, 300);
+  check("one pointer move queues a single shared frame", framesRun() === 1, `${framesRun()} queued`);
+  tick(1);
+  const be = btn.mascotEyes.eyes[0], he = hero.mascotEyes.eyes[0];
+  check("the move drove the button's pupils too", /translate\(/.test(be.pupil.getAttribute("transform")));
+  check("the move drove the hero's pupils too", /translate\(/.test(he.pupil.getAttribute("transform")));
+
+  let guard = 0;
+  while (guard++ < 4000 && ![...btn.mascotEyes.eyes, ...hero.mascotEyes.eyes].every((e) => btn.mascotEyes.settled(e))) tick(1);
+  tick(1);
+  check("the shared loop parks once BOTH mascots settle", framesRun() === 0, `${framesRun()} still queued`);
+}
+
 console.log("\n── graceful degradation ──");
 {
   const reduced = boot({ reduceMotion: true });
@@ -327,8 +472,13 @@ console.log("\n── graceful degradation ──");
   // matchMedia missing entirely (very old browser) must not throw.
   let threw = false;
   try {
-    const r = new El("a");
-    const d = { querySelector: (s) => (s === "[data-mascot-eyes]" ? r : null), createElementNS: (_n, t) => new El(t) };
+    const r = new El("div");
+    r.setAttribute("data-mascot-eyes", "face");
+    const d = {
+      querySelector: (s) => (s === "[data-mascot-eyes]" ? r : null),
+      querySelectorAll: (s) => (s === "[data-mascot-eyes]" ? [r] : []),
+      createElementNS: (_n, t) => new El(t),
+    };
     const w = { document: d, addEventListener() {}, setInterval() { return 0; }, setTimeout() { return 0; }, requestAnimationFrame() { return 0; } };
     vm.runInContext(SRC, vm.createContext({
       window: w, document: d, setInterval: w.setInterval,

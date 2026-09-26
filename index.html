@@ -122,7 +122,13 @@
             <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
             <span class="mascot-card-title">agent_ratiod.png</span>
           </div>
-          <img src="assets/mascot.jpg" alt="" class="mascot-img" width="360" height="360">
+          <!-- The artwork is a flat JPEG, so the live eyes are a sibling SVG laid
+               over it: js/mascot-eyes.js measures each painted sclera and covers
+               it with a tracking pupil. The wrapper is what keeps the layer and
+               the image locked together under the card's bob animation. -->
+          <div class="mascot-figure" data-mascot-eyes="overlay">
+            <img src="assets/mascot.jpg" alt="" class="mascot-img" width="360" height="360">
+          </div>
           <span class="starburst starburst-yellow">100%<br>LOCAL</span>
           <span class="sticker sticker-red sticker-float-1">PHISH SPOTTED</span>
           <span class="sticker sticker-blue sticker-float-2">OTP · MASKED</span>

@@ -60,6 +60,31 @@ blink on a timer. It is the site's only floating control and its persistent
 entry point to the install section — it replaced the plain red "Get Extension"
 button that used to sit in the same corner, so there is now exactly one.
 
+**The same engine also drives the hero mascot.** The hero card's artwork is a
+flat JPEG, so `js/mascot-eyes.js` mounts a second instance there
+(`data-mascot-eyes="overlay"`) that draws *only* the two eyes over the picture
+and leaves the shield, magnifier, gloves and boots exactly as painted. Both
+mounts share one `mousemove` listener and one `requestAnimationFrame` loop, so
+the second mascot costs no extra listeners.
+
+Because that overlay has to sit on real pixels, its geometry is **measured from
+the artwork rather than eyeballed**: the sclera of each eye is flood-filled in
+`assets/mascot.jpg` and its edge ray-cast from the eye centre, giving the
+ellipse in the image's own 760×760 pixel space. The pupil covers the right of
+each eye, so the visible white bounding box on its own under-reports the
+horizontal radius — measuring the boundary is what gets it right.
+
+Two details make the overlay invisible rather than merely close:
+
+- An SVG stroke is **centred** on its path, so the ellipse is drawn at
+  `sclera + ring/2`, which puts the ink exactly over the band the artwork
+  already painted. The white then shows only up to the true sclera edge, so the
+  eye neither shrinks nor grows.
+- The ring is hand-drawn and varies by several px around each eye, so a small
+  slop widens the path **and** the stroke together. That moves only the outer
+  edge, burying the wobble; without it a sliver of the original outline shows
+  through and the eye reads as faintly ringed twice.
+
 **Why a port, not the component.** The original ships as a compiled Framer
 module that imports `framer`, `framer-motion` and `react/jsx-runtime` from
 `framerusercontent.com`. This site is static files with no build step and no
@@ -72,13 +97,19 @@ everything local"*. `js/shape-waves.js` is a port for exactly the same reason.
 - Per-eye tracking from each eye's **own** origin, not a shared centre — this
   is what gives the pair its slight parallax.
 - The clamp `maxDistance = (eyeSize - pupilSize) / 2 * (range / 100)`. The pupil
-  can never slide out of the sclera, however far away the cursor goes.
+  can never slide out of the sclera, however far away the cursor goes. The hero
+  eyes are tall ovals rather than circles, so the clamp is generalised to an
+  ellipse (`reachX`/`reachY`); with a round sclera the two are equal and it
+  collapses back to the original's constant.
 - The spring at `stiffness = speed, damping = 20`, integrated by hand rather
   than faked with a CSS transition, so the slight overshoot on a fast flick
   matches framer-motion.
-- The blink: `scaleY` on the eyeball down to `0.3` for 200 ms on a timer.
+- The blink: `scaleY` on the eyeball down to `0.3` for 200 ms on a timer. The
+  hero's eyes deliberately do **not** blink — squashing them would expose the
+  painted eye underneath.
 
-**Degradation.** With JS off the button is still a working, labelled link. With
+**Degradation.** With JS off the button is still a working, labelled link, and
+the hero simply shows its original artwork. With
 `prefers-reduced-motion: reduce`, or on a touch device with no cursor to follow,
 the mascot is still drawn but marked `data-mascot-state="static"` and no
 animation loop is ever started. The `requestAnimationFrame` loop also parks

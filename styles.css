@@ -427,8 +427,26 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
   padding: 18px;
   /* Multiply knocks out the PNG's white backdrop against the cream card */
   mix-blend-mode: multiply;
-  animation: bob 4s ease-in-out infinite;
   }
+/* The hero artwork is a flat JPEG, so js/mascot-eyes.js lays a live SVG eye
+   layer over it. The wrapper is the positioning context, and it carries the
+   bob so the layer and the artwork can never desync - the image above opts
+   out of the animation, since moving both independently would shear them. */
+.mascot-figure {
+  position: relative;
+  animation: bob 4s ease-in-out infinite;
+}
+.mascot-eyes-layer {
+  position: absolute;
+  /* The image's CONTENT box, i.e. inside its 18px padding. Pinning to 0
+     instead would slide both eyes off the painted ones by that same 18px. */
+  inset: 18px;
+  width: auto;
+  height: auto;
+  pointer-events: none;
+  /* Above the artwork, below the floating stickers. */
+  z-index: 1;
+}
 @keyframes bob {
   0%, 100% { transform: translateY(0) rotate(0); }
   50% { transform: translateY(-8px) rotate(-1.5deg); }
@@ -1223,6 +1241,9 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
 .mascot-shield { fill: var(--color-primary); stroke: var(--color-ink); stroke-width: 5; stroke-linejoin: round; }
 .mascot-shield-shade { fill: #C22C1C; }
 .mascot-brow { stroke: var(--color-ink); stroke-width: 7; stroke-linecap: round; fill: none; }
+/* The 4 here is in the FAB's 120-unit viewBox. The hero overlay is drawn in the
+   artwork's 760-unit space and sets its own stroke-width per eye (the measured
+   width of the painted ring), so a shared value would be off by 6x. */
 .mascot-sclera { fill: #FFFFFF; stroke: var(--color-ink); stroke-width: 4; }
 .mascot-pupil { fill: var(--color-ink); }
 .mascot-glint { fill: #FFFFFF; }
