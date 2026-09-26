@@ -12,9 +12,10 @@
     "test:fp": "node server/test-false-positives.js",
     "test:model": "node server/test-model-signals.js",
     "test:promo": "node server/test-promo-verdict.js",
+    "test:mascot": "node server/test-mascot-eyes.js",
     "test:ext": "node server/test-extension-package.js",
     "test:fx": "node server/test-shape-waves.js && node server/test-hero-legibility.js",
     "test:arch": "node server/test-architecture.js",
-    "test:all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-model-signals.js && node server/test-promo-verdict.js && node server/test-ui-static.js && node server/test-extension-package.js && node server/test-shape-waves.js && node server/test-architecture.js && node test-ui-contract.js"
+    "test:all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-model-signals.js && node server/test-promo-verdict.js && node server/test-ui-static.js && node server/test-mascot-eyes.js && node server/test-extension-package.js && node server/test-shape-waves.js && node server/test-architecture.js && node test-ui-contract.js"
   }
 }
