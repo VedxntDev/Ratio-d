@@ -42,6 +42,14 @@ function generateDeterministicExplanation(verdict, flags, channel = "email") {
   if (verdict === "suspicious") {
     return `SUSPICIOUS CONTENT: caution is advised. This ${channel.toUpperCase()} message triggered ${reasons.join("; ")}, specifically ${spans.join(", ")}. Verify the source independently before interacting.`;
   }
+  // Bulk marketing gets its own wording. It previously fell through to the
+  // LOW RISK branch, which claims the pattern is "consistent with legitimate
+  // mail" - a banner telling the user that unsolicited mail is legitimate
+  // while simultaneously offering them an unsubscribe button. Same class of
+  // self-contradiction the score/badge mismatch used to produce.
+  if (verdict === "promo_clutter") {
+    return `BULK MARKETING: this ${channel.toUpperCase()} message is unsolicited promotional mail, not a scam attempt. It matched ${reasons.join("; ")}, specifically ${spans.join(", ")}. No credentials or payment are required; unsubscribe if you did not ask for it.`;
+  }
   return `LOW RISK: minor signals were observed (${reasons.join("; ")}), but the overall pattern is consistent with legitimate mail. Proceed with normal caution.`;
 }
 

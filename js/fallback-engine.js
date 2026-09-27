@@ -53,7 +53,11 @@
     { name: "health_claim", points: 15, patterns: [
       /self-?healing\s+protocol|vision\s+restoration\s+protocol/i,
       /nearly\s+blind\s+to\s+perfect\s+20\/20/i,
-      /before\s+the\s+video\s+is\s+taken\s+down/i ] },
+      /before\s+the\s+video\s+is\s+taken\s+down/i,
+      // Direct-response health-device advertorials: a specific therapeutic
+      // outcome for a consumer product, sold on discount + money-back trial.
+      /reduce\s+spinal\s+pressure|support\s+disc\s+rehydration|create\s+space\s+between\s+vertebrae/i,
+      /for\s+people\s+dealing\s+with\s+(?:recurring\s+)?(?:back\s+(?:pain|discomfort)|sciatica|joint\s+pain)/i ] },
     { name: "personal_data", points: 15, patterns: [
       /copy\s+of\s+your\s+identification|have\s+your\s+id\s+ready/i,
       /your\s+full\s+names?\s*[:\n]|your\s+country\s*[:\n]/i,
@@ -78,6 +82,25 @@
   var URGENCY = /expires?\s+today|action\s+required|within\s+\d+\s*(hours?|mins?|days?)|account\s+(suspended|locked|terminated|restricted)|unusual\s+(activity|login|transaction)|will\s+be\s+(suspended|locked|disabled)|final\s+notice|last\s+warning|expire\s+in\s+\d+\s*h/i;
   var SHORTENER = /https?:\/\/(?:www\.)?(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|buff\.ly|rebrand\.ly|cutt\.ly|shorturl\.at|rb\.gy|tiny\.cc|t\.ly|lnkd\.in)\b/i;
   var NON_LATIN = /[Α-Ωα-ωЀ-ӿ]/;
+
+  /**
+   * Bulk-marketing / cold-blast markers.
+   *
+   * Mirrors the server's PROMOTIONAL_CLUTTER_PATTERNS additions. Without these
+   * the extension reported genuine conference and training blasts as "safe"
+   * whenever the server was unreachable, telling the user that a message it
+   * had no model for was fine. These describe the opt-out MECHANISM - a keyword
+   * reply rather than a real unsubscribe link - not the topic, because the
+   * topic is not what separates cold marketing from opted-in mail.
+   */
+  var PROMO = [
+    /unsubscribe/i,
+    /% off|discount|exclusive\s+invite|limited\s+seats|explore\s+how/i,
+    /put\s+(?:the\s+word\s+)?["“']?[\s-]*(?:remove|remove-me|unsubscribe|stop|opt[\s-]?out)["”']?\s+(?:on|in|to)\s+the\s+subject/i,
+    /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i,
+    /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i,
+    /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i
+  ];
 
   function domainsOf(text, header) {
     var re = new RegExp("^\\s*" + header + "\\s*:\\s*.*?@([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})", "gim");
@@ -220,10 +243,24 @@
     var fromIsFree = from.some(function (d) { return FREE_MAIL.test(d); });
     if (!fromIsFree && from.length && !flags.length) score = Math.min(score, 12);
 
+    // Bulk marketing, mirroring the server's rule: only demote to
+    // "promo_clutter" when the message carries NO threat evidence at all. The
+    // server gates this on the presence of non-promo flags rather than on a
+    // score threshold, so a phishing lure that happens to mention a discount
+    // cannot be relabelled as marketing. A phishing lure is never demoted.
+    var promoCount = 0;
+    for (var p = 0; p < PROMO.length; p++) {
+      if (t.match(PROMO[p])) promoCount++;
+    }
+    var hasThreatEvidence = flags.length > 0;
+    var isPromo = promoCount >= 2 && !hasThreatEvidence;
+    if (isPromo) score = Math.max(45, score + promoCount * 12);
+
     score = Math.max(0, Math.min(100, score));
 
     var verdict = "safe";
     if (score >= 66) verdict = "high_risk";
+    else if (isPromo && score < 66) verdict = "promo_clutter";
     else if (score >= 35) verdict = "suspicious";
 
     var steps;
@@ -232,6 +269,12 @@
         "Do NOT click any links, open attachments, or enter passwords on this email.",
         "Report the sender as phishing and block the domain.",
         "Verify the account directly at the official brand URL, typed by hand."
+      ];
+    } else if (verdict === "promo_clutter") {
+      steps = [
+        "Post-task promotional marketing clutter detected.",
+        "Unsubscribe or mute the sender if you did not ask for this.",
+        "No credentials or payment are needed - do not reply with personal details."
       ];
     } else if (verdict === "suspicious") {
       steps = [
@@ -248,6 +291,8 @@
       flags: flags,
       explanation: verdict === "safe"
         ? "Offline analysis found no strong scam indicators. This is a reduced check, not a full analysis."
+        : verdict === "promo_clutter"
+        ? "BULK MARKETING: offline analysis matched bulk-marketing patterns with no scam indicators. This is a reduced check, not a full analysis."
         : "Offline analysis flagged " + flags.length + " indicator(s) while the main engine was unreachable.",
       next_steps: steps,
       privacy: {

@@ -350,7 +350,7 @@ real cheap TLDs that those hosts use.
 
 ### 3A.6 Residual misses
 
-Five of 20 remain undetected. They are named in the suite so that the recall
+Three of 20 remain undetected. They are named in the suite so that the recall
 floor cannot be raised by quietly deleting difficult cases.
 
 | Record | Reason |
@@ -358,8 +358,19 @@ floor cannot be raised by quietly deleting difficult cases.
 | `SCAM-003` | 32 bytes of body, 5-character subject; no signal exists to match |
 | `SCAM-004` | Refund bait fires, but no legal-entity footer accompanies the authority name |
 | `SCAM-008` | Investment bait fires; needs a second corroborating signal |
-| `SCAM-013` | "SingPosT" absent from the brand list; `usps` too short to match safely |
-| `SCAM-018` | Health-claim bait fires; needs a second corroborating signal |
+
+Fixed after the first run, and listed so the history stays visible:
+
+- `SCAM-013` — "SingPosT" was absent from the brand list and `usps` is too short
+  to match safely. Caught once a Reply-To/sender gap and the abused-hosting
+  check were added.
+- `SCAM-017` — a quack back-pain device advertorial. It matched no family at
+  all and was being demoted to `promo_clutter` because it tripped two generic
+  marketing patterns; the "no threat evidence" guard now prevents any scam
+  from being relabelled as marketing, and three advertorial patterns were added
+  to `health_claim`.
+- `SCAM-018` — health-claim bait now counts as corroborating evidence for its
+  own family.
 
 ### 3A.7 What this corpus cannot tell us
 
@@ -371,12 +382,58 @@ or any false-negative-versus-false-positive tradeoff. It supports exactly one
 claim: **recall on one narrow slice of phishing**. Any accuracy percentage
 quoted from that dataset alone would be unsound.
 
-A later 11-message batch did include 2 legitimate newsletters, so specificity
+A later 11-message batch did include 2 legitimate messages, so specificity
 becomes measurable for the first time — but on **two** messages. Two samples
 cannot support a rate: 2/2 and 1/2 are both "no false positive observed", and
 the difference is a single email. The specificity and precision figures in this
 report should be read as smoke tests that guard against a specific regression,
 not as accuracy estimates. A defensible figure needs hundreds of ham messages.
+
+Those two legitimate messages are not newsletters — they are cold promotional
+blasts (a conference, a training course). They were initially scored `safe` at
+1/100 and 8/100, i.e. reported as legitimate mail, because the engine had no
+notion of unsolicited marketing at all. They now classify as `promo_clutter`.
+
+### 3A.8 Bulk-marketing detection, and a metric bug it uncovered
+
+Adding spam support exposed a defect in how the corpus suite measured
+detection, which is worth recording because the suite had been reporting
+100% specificity for the wrong reason.
+
+**The metric bug.** A "detection" was defined as `score >= 35`. But
+`promo_clutter` is only ever assigned after the engine has raised the rule
+score to a floor of 45, so *any* correctly identified marketing message scores
+above the detection threshold. The metric and the feature were therefore
+mutually exclusive: the suite could only report 100% specificity because the
+marketing was being missed. The moment the engine learned to recognise those
+two messages, the same correct behaviour registered as two false positives.
+
+Specificity is now measured on threat **verdicts** (`suspicious` /
+`high_risk`) rather than a raw score, which is what the metric always meant. A
+message is a detection when the product tells the user it is dangerous;
+`promo_clutter` is an explicit "bulk marketing, unsubscribe" verdict. The suite
+additionally asserts that the spam is labelled `promo_clutter` rather than
+silently reverting to `safe`, so the capability cannot rot back.
+
+**The real bug it uncovered.** With the metric corrected, `SCAM-017` — a quack
+back-pain "decompression" device advertorial — turned out never to have been
+genuinely detected. It was being demoted to `promo_clutter` because it tripped
+two generic marketing patterns ("Unsubscribe", "60% discount") while matching no
+family at all, and the old `rawScore < 40` threshold was standing in for the
+semantic question "does this message contain any threat evidence?". The demotion
+now requires the absence of every non-promotional flag, so no phishing lure can
+be bought back under the promo floor, and three advertorial patterns were added
+to `health_claim`. It is now detected at 56/`suspicious` on its own merits.
+
+**Detection basis.** Spam is identified by the *opt-out mechanism* rather than
+the topic — a keyword reply to the subject line in place of a real unsubscribe
+link, a registration triggered by replying with a code, a sender stating its own
+opt-out terms, a cold brochure request. The topic is not the tell, because a
+conference, a webinar and a phishing lure are all "interesting offers". Opted-in
+newsletters carry a real unsubscribe link and match none of these; this is
+asserted against the adversarial legitimate set and the false-positive sweep.
+The same signals were mirrored into both offline fallback engines, which
+remains byte-identical and parity-tested.
 
 The `scam_type` taxonomy in the accompanying training prompt
 (`financial_fraud`, `fake_delivery`, `health_scam`, `crypto_scam`, and the
@@ -457,7 +514,7 @@ Every flag cites a verbatim span from the message. No flag is invented.
 
 ### 4.4 Test suite status
 
-`npm run test:all` — **410 assertions passing, 0 failures**, comprising thirteen
+`npm run test:all` — **428 assertions passing, 0 failures**, comprising thirteen
 unit/static suites plus one live contract suite.
 
 > ⚠️ **Harness prerequisite.** `test-ui-contract.js` performs real HTTP calls
@@ -599,7 +656,7 @@ accurate and verified below.
 This is recorded here rather than quietly corrected because §6A is the part
 of the report a reader is most likely to quote.
 
-### 6A.2 Built to date — verified 26 September 2026
+### 6A.2 Built to date — verified 27 September 2026
 
 **Phase 01 — hackathon prototype: complete and demo-ready.**
 
@@ -614,11 +671,12 @@ of the report a reader is most likely to quote.
 | 7 | Web console UI | `index.html`, `js/` |
 | 8 | Grounded explanations — every flag cites a verbatim span | `server/llm/explain.js`; enforced by the corpus suite |
 | 9 | Two real-world corpora | `server/fixtures/scam-corpus.txt` (A: 20), `real-world-mixed.txt` (B: 9 scam + 2 ham) |
-| 10 | 15 automated suites, 424 passing assertions, 0 failures | `npm run test:all` |
+| 10 | 15 automated suites, 428 passing assertions, 0 failures | `npm run test:all` |
 | 11 | CI workflow that starts the server before testing | `.github/workflows/test.yml` |
 | 12 | Machine-readable project context, generated and staleness-checked | `docs/project-context.json`, `tools/build-context.js`, `test-context-manifest.js` |
 | 13 | Reproducible release archives | `tools/build-zips.js` → `ratiod-extension.zip` (10 files), `ratiod-full-project.zip` (72 files) |
 | 14 | Offline fallback for both clients, parity-tested | `extension/fallback-engine.js`, `js/fallback-engine.js`, `test-fallback-parity.js` |
+| 15 | Bulk-marketing (cold-blast) classification, mirrored in both offline engines | Detected by opt-out mechanism, not topic; asserted in `test-scam-corpus.js` |
 
 **Measured, not estimated:** corpus A recall 85.0% (17/20); corpus B recall
 100% (9/9) with 100% specificity on 2 ham; **0 false positives across 15

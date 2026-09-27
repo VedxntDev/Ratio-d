@@ -324,9 +324,9 @@ this repo that evaluates the engine against messages its author did not write.
 
 | | Before | After |
 | --- | --- | --- |
-| **Recall on real scam email** | **0 / 20 (0%)** | **15 / 20 (75%)** |
-| Detected as `high_risk` | 0 | 6 |
-| Detected as `suspicious` / `promo_clutter` | 2 (as clutter) | 9 |
+| **Recall on real scam email** | **0 / 20 (0%)** | **17 / 20 (85%)** |
+| Detected as `high_risk` | 0 | 11 |
+| Detected as `suspicious` | 0 | 6 |
 | False positives (adversarial legitimate mail) | 0 / 15 | 0 / 15 |
 
 > **This was the most important finding in the project.** Every one of those 20
@@ -383,6 +383,45 @@ brands involved rather than to the eleven samples:
 | **Inheritance / estate fraud** | A whole family the engine could not see: shared surname, no known heirs, recently passed away, "entrust the money in your care". Neither of the two inheritance samples contained a brand, a money figure, or an action request. |
 | **Currency-code amounts** | The advance-fee amount pattern required a literal `$` and missed "EUR 1.5m", "US $ 700,000.00", "€2.7 million" — most international lures. |
 | **Six-figure amount, as a combination only** | A plain "$250,000.00" has no million/k suffix. Used only paired with an advance-fee claim, never standalone, because invoices quote six figures daily. |
+
+### Bulk marketing spam — the gap this same batch exposed
+
+The two legitimate messages in that batch are not newsletters; they are **cold
+blasts** — a conference and a training-course promotion. Both were scored
+`safe` (1/100 and 8/100), so the banner told the user *"Message appears
+legitimate based on standard rules"* about mail nobody had asked for.
+
+They were missed because the engine had no notion of unsolicited marketing. It
+now does, on the strength of **how the sender asks you to opt out** rather than
+what the message is about — the topic is not the tell, because a conference,
+a webinar and a phishing lure are all "interesting offers":
+
+| Signal | Example |
+| --- | --- |
+| Opt-out by replying with a keyword | *"put 'remove-me' on the subject"* |
+| Registration by keyword reply | *"Reply with 'PDF-Discipline' on the email subject"* |
+| Sender states its own opt-out terms | *"if you wish to not receive further emails…"* |
+| Cold brochure request | *"Feel free to request brochures"* |
+
+Both now classify as `promo_clutter` (54 and 47), which is a distinct verdict
+with its own action — *unsubscribe this* — rather than being escalated to a
+threat or waved through as legitimate. Opted-in newsletters are unaffected:
+they carry a real unsubscribe link and none of these patterns.
+
+Two guards keep this honest, and both are asserted by the suite:
+
+- **A phishing lure is never demoted to marketing.** The `promo_clutter`
+  demotion requires that the message carries *no* non-promotional flag at all.
+  This replaced a `rawScore < 40` threshold, which was silently relabelling
+  `SCAM-017` — a real quack back-pain advertorial — as marketing because it
+  happened to say "Unsubscribe" and "60% discount". It is now detected at
+  56/`suspicious` on its own merits.
+- **Spam is not a false positive.** The corpus suite previously defined
+  "detected" as `score >= 35`, but `promo_clutter` floors the score at 45, so
+  correctly identifying marketing *registered as two false positives*. The
+  metric now measures threat **verdicts** (`suspicious` / `high_risk`), which
+  is what it always meant, and additionally asserts that spam is labelled
+  `promo_clutter` rather than falling back to `safe`.
 
 ### The most serious bug this batch found
 
@@ -950,7 +989,7 @@ npm run test:all
 > `node server.js` in another terminal first, or point the test elsewhere with
 > `BASE=http://host:port npm run test:all`.
 >
-> Verified result: **410 assertions passing, 0 failures** with the server up.
+> Verified result: **428 assertions passing, 0 failures** with the server up.
 
 ---
 

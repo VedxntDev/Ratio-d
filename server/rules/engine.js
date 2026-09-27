@@ -246,7 +246,27 @@ const PROMOTIONAL_CLUTTER_PATTERNS = [
   { regex: /unsubscribe/i, reason: "Post-registration promotional newsletter link" },
   { regex: /noreply@[a-z0-9.-]+\.(news|club|top|xyz|info|promo|tech)/i, reason: "Automated post-registration marketing sender" },
   { regex: /apply\s+(today|now)|register\s+(now|today)|join\s+[a-z0-9]+\s+(today|now)/i, reason: "Marketing call to action" },
-  { regex: /exclusive\s+invite|limited\s+seats|explore\s+how|% off|discount/i, reason: "Promotional marketing offer" }
+  { regex: /exclusive\s+invite|limited\s+seats|explore\s+how|% off|discount/i, reason: "Promotional marketing offer" },
+
+  // Cold-blast opt-out mechanics, added after a real 11-message sample showed
+  // two genuine bulk-marketing blasts scoring 1/100 and 8/100 and therefore
+  // being reported as "message appears legitimate based on standard rules".
+  //
+  // Every pattern below describes HOW the sender asks the recipient to opt out
+  // or register, not what the message is about, because the topic is not the
+  // tell. A conference, a webinar, a training course and a phishing lure are
+  // all "interesting offers"; what separates cold marketing from opted-in mail
+  // is that it has no real unsubscribe link, and instead demands a keyword reply.
+  //
+  // Deliberately narrow. An opted-in newsletter is unsubscribed through a link
+  // or a List-Unsubscribe header, and a legitimate confirmation mail never asks
+  // the reader to put a word in the subject line. Verified against the benign
+  // sets in test-scam-corpus.js, test-false-positives.js and
+  // test-promo-verdict.js, none of which gain a single hit.
+  { regex: /put\s+(?:the\s+word\s+)?["“']?[\s-]*(?:remove|remove-me|unsubscribe|stop|opt[\s-]?out)["”']?\s+(?:on|in|to)\s+the\s+subject/i, reason: "Opt-out by replying with a keyword instead of an unsubscribe link" },
+  { regex: /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i, reason: "Registration triggered by a keyword reply, not a form" },
+  { regex: /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i, reason: "Bulk sender states its own opt-out terms in the body" },
+  { regex: /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i, reason: "Cold brochure request with no self-service path" }
 ];
 
 const SUSPICIOUS_DOMAINS = [
@@ -350,7 +370,15 @@ const HEALTH_CLAIM_PATTERNS = [
   { regex: /self-?healing\s+protocol|vision\s+restoration\s+protocol/i, reason: "Unverifiable medical 'protocol' claim" },
   { regex: /from\s+nearly\s+blind\s+to\s+perfect\s+20\/20|clinical\s+trials?,?\s*[\d,]+\+?\s*patients/i, reason: "Implausible medical outcome statistic" },
   { regex: /before\s+the\s+video\s+is\s+taken\s+down|watch\s+the\s+presentation/i, reason: "Artificial urgency to view a claim now" },
-  { regex: /researchers\s+uncover|\bprotocol\s+is\s+changing\s+lives\b/i, reason: "Viral-marketing medical claim" }
+  { regex: /researchers\s+uncover|\bprotocol\s+is\s+changing\s+lives\b/i, reason: "Viral-marketing medical claim" },
+  // Direct-response health-device advertorials. These quote no clinical trial
+  // and cite no regulator, but assert a specific therapeutic outcome for a
+  // consumer device - "reduce spinal pressure", "relieve sciatica" - and are
+  // sold on a discount plus a money-back trial. Added because this shape
+  // matched no other family and was consequently classified as bulk marketing.
+  { regex: /reduce\s+spinal\s+pressure|support\s+disc\s+rehydration|create\s+space\s+between\s+vertebrae/i, reason: "Consumer device claims a specific therapeutic outcome for a medical condition" },
+  { regex: /for\s+people\s+dealing\s+with\s+(?:recurring\s+)?(?:back\s+(?:pain|discomfort)|sciatica|joint\s+pain)/i, reason: "Targets a named medical complaint with an at-home product" },
+  { regex: /(?:save|discount)\s+\d{1,3}%\s+on\b[\s\S]{0,80}money-?back\s+trial|money-?back\s+trial[\s\S]{0,80}(?:save|discount)\s+\d{1,3}%/i, reason: "Deep discount plus money-back trial, the standard health-device advertorial close" }
 ];
 
 const PERSONAL_DATA_PATTERNS = [
@@ -984,6 +1012,20 @@ function evaluateRules(text, channel = "email") {
   }
 
   // 4. Promotional Clutter Check
+  //
+  // Demotion to "bulk marketing" is only defensible when the message carries
+  // NO threat evidence at all. The guard used to be `rawScore < 40`, which is a
+  // score threshold standing in for a semantic question, and it silently
+  // demoted a real scam: SCAM-017 (a quack back-pain device advertorial making
+  // unverifiable therapeutic claims) tripped two generic marketing patterns -
+  // "Unsubscribe" and "60% discount" - while matching no health-claim pattern,
+  // so it was reported as marketing rather than as a threat. The corpus suite
+  // never caught it, because promo scores are floored at 45 and the old
+  // "score >= 35 means detected" metric read that floor as a detection.
+  //
+  // The floor stays: a genuine cold blast must still be visibly separated from
+  // a clean message, and the verdict ladder gives promo_clutter its own
+  // "unsubscribe this" action.
   let promoCount = 0;
   for (const pattern of PROMOTIONAL_CLUTTER_PATTERNS) {
     const match = text.match(pattern.regex);
@@ -993,7 +1035,13 @@ function evaluateRules(text, channel = "email") {
     }
   }
 
-  if (promoCount >= 2 && rawScore < 40) {
+  // Any non-promotional flag means the message is doing something other than
+  // selling, and a phishing lure must never be relabelled as marketing. This
+  // is checked on flags rather than on the running score so that a scam which
+  // trips only high-value signals (brand impersonation, a homoglyph, a
+  // Reply-To redirect) cannot be bought back under the promo floor.
+  const hasThreatEvidence = flags.some((f) => f.type !== "promo");
+  if (promoCount >= 2 && !hasThreatEvidence) {
     isPromoClutter = true;
     rawScore = Math.max(45, rawScore + promoCount * 12);
   }

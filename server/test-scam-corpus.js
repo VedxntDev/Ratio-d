@@ -36,6 +36,38 @@ const MIXED_PATH = path.join(__dirname, "fixtures", "real-world-mixed.txt");
 // "suspicious" threshold in combine/score.js.
 const DETECT_THRESHOLD = 35;
 
+/**
+ * Verdicts that mean "this message is treated as a threat".
+ *
+ * The corpus metric used to be `score >= DETECT_THRESHOLD`, which quietly
+ * assumed that anything scoring above the suspicious threshold is a threat
+ * detection. That assumption is false and it was hiding a real capability
+ * gap. `promo_clutter` is assigned only when the engine has already raised
+ * the rule score to at least 45 (see evaluateRules), so a correctly
+ * identified bulk-marketing blast ALWAYS scores above DETECT_THRESHOLD.
+ *
+ * The consequence was that the metric and the feature were mutually
+ * exclusive: the suite reported 100% specificity only because the two
+ * genuine bulk-marketing messages in corpus B were being mis-scored as
+ * "safe" at 1/100 and 8/100. The moment the engine learned to recognise
+ * them, the same correct behaviour registered as two false positives.
+ *
+ * Measuring threat VERDICT instead of raw score is what the metric always
+ * meant. A message is a detection when the product tells the user to treat
+ * it as dangerous (`suspicious` / `high_risk`); `promo_clutter` is an
+ * explicit "this is bulk marketing, not an attack" verdict that carries an
+ * unsubscribe action, and `safe` is a clean bill of health.
+ *
+ * Specificity is therefore the real safety property: no ham message may
+ * ever be escalated to a threat verdict.
+ */
+const THREAT_VERDICTS = new Set(["suspicious", "high_risk"]);
+
+/** True when the product would warn the user that this message is dangerous. */
+function isThreat(outcome) {
+  return THREAT_VERDICTS.has(outcome.verdict);
+}
+
 // Floors. Raising them is good; lowering one needs a real reason.
 // Corpus A is single-class so it can only constrain recall. Corpus B contains
 // genuine ham, so it constrains recall AND specificity.
@@ -184,7 +216,11 @@ async function main() {
     const missed = [];
     for (const r of records) {
       const out = await scoreOne(r);
-      const detected = out.score >= DETECT_THRESHOLD;
+      // A detection is a THREAT verdict, not merely a score above the
+      // suspicious threshold. See the THREAT_VERDICTS note above: bulk
+      // marketing is deliberately scored above that threshold and must not
+      // be counted as a false positive.
+      const detected = isThreat(out);
       const isScam = r.label === "scam";
       let mark;
       if (isScam && detected) { cm.tp++; mark = "DETECTED"; }
@@ -244,6 +280,41 @@ async function main() {
   const b = await runCorpus("corpus B (mixed, 9 scam + 2 ham)", MIXED_PATH, {
     records: 11, recall: REQUIRED_RECALL_B, spec: REQUIRED_SPECIFICITY_B
   });
+
+  // The ham records in corpus B are not merely "not a threat" - they are bulk
+  // marketing spam, and the product has a dedicated verdict for that. Assert
+  // the classification directly, because a suite that only checks
+  // "ham was not escalated" would still pass if the engine silently went back
+  // to calling these "safe", which is exactly the regression that made them
+  // score 1/100 and 8/100 while the banner told the user the message
+  // "appears legitimate".
+  const spamVerdicts = await (async () => {
+    const records = parseCorpus(MIXED_PATH).filter((r) => r.label !== "scam");
+    const out = [];
+    for (const r of records) {
+      const res = await scoreOne(r);
+      out.push({ id: r.id, verdict: res.verdict, score: res.score });
+    }
+    return out;
+  })();
+  console.log("\nspam classification:");
+  for (const s of spamVerdicts) {
+    console.log(`  ${s.id.padEnd(9)} ${String(s.score).padStart(3)} ${s.verdict}`);
+  }
+  const spamUnlabelled = spamVerdicts.filter((s) => s.verdict === "safe");
+  check(
+    "bulk-marketing spam is labelled promo_clutter, not 'safe'",
+    spamVerdicts.length > 0 && spamUnlabelled.length === 0,
+    spamVerdicts.length
+      ? spamVerdicts.map((s) => `${s.id}=${s.verdict}`).join(", ")
+      : "no ham records to classify"
+  );
+  const spamEscalated = spamVerdicts.filter((s) => THREAT_VERDICTS.has(s.verdict));
+  check(
+    "bulk-marketing spam is never escalated to a threat verdict",
+    spamEscalated.length === 0,
+    spamEscalated.map((s) => s.id).join(", ")
+  );
 
   // Combined matrix across both corpora.
   const cm = { tp: a.cm.tp + b.cm.tp, fn: a.cm.fn + b.cm.fn, tn: a.cm.tn + b.cm.tn, fp: a.cm.fp + b.cm.fp };

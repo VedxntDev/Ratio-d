@@ -442,12 +442,15 @@
           "name": "health_claim",
           "points": 15,
           "corroboration": true,
-          "patternCount": 4,
+          "patternCount": 7,
           "patterns": [
             "Unverifiable medical 'protocol' claim",
             "Implausible medical outcome statistic",
             "Artificial urgency to view a claim now",
-            "Viral-marketing medical claim"
+            "Viral-marketing medical claim",
+            "Consumer device claims a specific therapeutic outcome for a medical condition",
+            "Targets a named medical complaint with an at-home product",
+            "Deep discount plus money-back trial, the standard health-device advertorial close"
           ]
         },
         {
@@ -520,7 +523,7 @@
       "patternTables": {
         "urgency": 9,
         "credential": 5,
-        "promotionalClutter": 4,
+        "promotionalClutter": 8,
         "suspiciousDomains": 6,
         "advanceFee": 13,
         "refundBait": 5,
@@ -528,7 +531,7 @@
         "fakeSubscription": 7,
         "fakeSecurity": 4,
         "investment": 5,
-        "healthClaim": 4,
+        "healthClaim": 7,
         "personalData": 5,
         "contactStranger": 4,
         "inheritance": 7
