@@ -713,20 +713,24 @@ banner via `web_accessible_resources`.
 
 ---
 
-## 👁️ Mascot eye-follow button
+## 👁️ Mascot eye-follow
 
-The floating mascot in the bottom-right is a dependency-free port of Framer's
-`<Eye Follow Button />`, restyled as the Ratio'd shield. Its pupils track the
-cursor with a spring and blink on a timer. It replaced the plain red "Get
-Extension" button that used to sit in the same corner, so there is now exactly
-one floating control.
+The mascot's pupils track the cursor with a spring and blink on a timer — a
+dependency-free port of Framer's `<Eye Follow Button />`, restyled as the
+Ratio'd shield. The artwork is a flat JPEG, so `js/mascot-eyes.js` mounts an
+overlay (`data-mascot-eyes="overlay"`) that draws *only* the two eyes over the
+picture and leaves the shield, magnifier, gloves and boots exactly as painted.
 
-**The same engine also drives the hero mascot.** The hero card's artwork is a
-flat JPEG, so `js/mascot-eyes.js` mounts a second instance there
-(`data-mascot-eyes="overlay"`) that draws *only* the two eyes over the picture
-and leaves the shield, magnifier, gloves and boots exactly as painted. Both
-mounts share one `mousemove` listener and one `requestAnimationFrame` loop, so
-the second mascot costs no extra listeners.
+**The floating control is no longer the mascot.** The corner button is now the
+Chrome Web Store link, matching the nav, the footer and the install card. Four
+entry points for one destination was one too many, and the mascot button was the
+only one still pointing at the manual ZIP flow. The mascot itself is unchanged
+and still tracks the cursor in the hero card.
+
+The module retains an unused `"face"` mode that drew the whole character — that
+was the button's mode. It is kept because it is a tested rendering of the same
+tracking maths, and it is documented in the source as a removal candidate rather
+than left to rot unnoticed.
 
 Because that overlay has to sit on real pixels, its geometry is **measured from
 the artwork rather than eyeballed**: the sclera of each eye is flood-filled in
@@ -989,7 +993,7 @@ npm run test:all
 > `node server.js` in another terminal first, or point the test elsewhere with
 > `BASE=http://host:port npm run test:all`.
 >
-> Verified result: **437 assertions passing, 0 failures** with the server up.
+> Verified result: **442 assertions passing, 0 failures** with the server up.
 
 ---
 

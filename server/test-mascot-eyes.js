@@ -125,31 +125,36 @@ function boot({ reduceMotion = false, hover = true, modes = ["face"] } = {}) {
 
 console.log("── static wiring ──");
 check("mascot-eyes.js loaded", /js\/mascot-eyes\.js/.test(html));
-check("mascot button in markup", /class="mascot-fab"[^>]*data-mascot-eyes/.test(html));
-check("mascot button links to the install section", /<a href="#install" class="mascot-fab"/.test(html));
-check("mascot button has an accessible name", /mascot-fab-label">[\s\S]{0,80}?Get the extension/.test(html));
-check("face slot is decorative", /mascot-fab-face" aria-hidden="true"/.test(html));
-check("mascot-fab styled", /\.mascot-fab \{/.test(css));
+// The mascot is no longer a floating button. It renders in the hero card, where
+// the eyes are an overlay on the painted artwork, and that is now its only mount
+// on the page. These checks therefore pin the HERO mount: if the overlay
+// attribute or the module ever went missing, the eye-follow feature would die
+// silently, because the button that used to be its second mount is gone.
+check("mascot hero mount in markup", /class="mascot-figure"[^>]*data-mascot-eyes="overlay"/.test(html));
+check("mascot hero mount is the only one", (html.match(/data-mascot-eyes/g) || []).length === 1);
 check("mascot parts styled", [".mascot-shield", ".mascot-sclera", ".mascot-pupil", ".mascot-brow", ".mascot-smirk", ".mascot-glass"].every((s) => css.includes(s)));
-// The mascot is now the site's ONLY floating control, so it owns the
-// bottom-right corner outright. Asserting `right` (and not `left`) is what
-// stops a second "Get extension" button being re-added to the other corner.
-check("mascot pinned bottom-right as the single floating control",
-  /\.mascot-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
-  !/\.mascot-fab \{[^}]*left: 22px/.test(css));
-// Comments still name the old button to explain what replaced it, so the
+// The floating bottom-right control is the Chrome Web Store button, and it owns
+// the corner outright. Asserting `right` (and not `left`) is what stops a
+// second install control being re-added to the other corner.
+check("floating store button pinned bottom-right as the single control",
+  /\.store-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
+  !/\.store-fab \{[^}]*left: 22px/.test(css));
+// Comments still name the old controls to explain what replaced them, so the
 // removal is asserted against real code - markup, CSS rules and JS lookups -
 // rather than against the word appearing anywhere in the files.
 check("the old duplicate download fab is gone from markup, CSS and JS",
   !/id="dl-fab"/.test(html) && !/class="[^"]*\bdl-fab\b/.test(html) &&
-  !/^\s*\.dl-fab[\s,{]/m.test(css) &&
+  !/^\s*\.dl-fab[^\s,{]/m.test(css) &&
   !/getElementById\("dl-fab"\)/.test(installJs));
+check("the mascot fab is gone from markup and CSS",
+  !/id="mascot-fab"/.test(html) && !/class="[^"]*\bmascot-fab\b/.test(html) &&
+  !/^\s*\.mascot-fab[^\s,{]/m.test(css));
 // The narrow-screen override has to move to `right` as well. If it were left
 // as `left`, the base `right: 22px` plus a mobile `left: 16px` would stretch
 // the button across the whole viewport.
-check("mobile override keeps the mascot on the right",
-  /@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*right: 16px/.test(css) &&
-  !/@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*left: 16px/.test(css));
+check("mobile override keeps the floating control on the right",
+  /@media \(max-width: 600px\)[\s\S]*?\.store-fab \{[^}]*right: 16px/.test(css) &&
+  !/@media \(max-width: 600px\)[\s\S]*?\.store-fab \{[^}]*left: 16px/.test(css));
 check("reduced-motion honoured", /prefers-reduced-motion/.test(SRC));
 check("no innerHTML in the mascot module", !/innerHTML/.test(SRC));
 // Comments legitimately name the Framer packages; the code must not use them.

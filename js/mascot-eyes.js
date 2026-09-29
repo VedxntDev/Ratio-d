@@ -27,11 +27,20 @@
  * Degrades to a static, correctly-drawn mascot with JS off, with reduced
  * motion on, or on a touch device that has no cursor to follow.
  *
- * Two mounts share this one engine:
- *   - the floating button draws the whole character (mode "face");
- *   - the hero card keeps its painted artwork and covers only its two eyes with
- *     a live SVG layer (mode "overlay"), which is why that geometry is measured
- *     in the source image's own pixels rather than invented.
+ * The hero card is the only mount on the page today: it keeps its painted
+ * artwork and covers only its two eyes with a live SVG layer (mode "overlay"),
+ * which is why that geometry is measured in the source image's own pixels
+ * rather than invented.
+ *
+ * The "face" mode is retained but currently unused. It draws the whole mascot
+ * inside a container and was the mode the floating button used; that button is
+ * now the Chrome Web Store link, which has no mascot. The branch is kept rather
+ * than deleted because it is a self-contained, tested rendering of the same
+ * tracking maths, and a future mascot-bearing control would otherwise have to
+ * reimplement it. If it is still unused when the next UI change lands, delete
+ * it then - dead code that outlives two changes is a liability, not a safety
+ * net. Removing it means dropping buildFace() and the .mascot-face /
+ * character-part rules in styles.css, which nothing else references.
  */
 (function () {
   "use strict";

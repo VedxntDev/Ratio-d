@@ -597,15 +597,20 @@
     </div>
   </footer>
 
-  <!-- Mascot eye-follow button: a vanilla port of Framer's "Eye Follow Button" wearing the
-       Ratio'd shield. This is the single persistent entry point to the install section, pinned
-       bottom-right at every breakpoint, so it replaces the old plain download FAB. The pupils are
-       drawn by js/mascot-eyes.js; with JS off the button is still a working, labelled link. -->
-  <a href="#install" class="mascot-fab" id="mascot-fab" data-mascot-eyes>
-    <span class="mascot-fab-face" aria-hidden="true"></span>
-    <span class="mascot-fab-label">
-      Get the extension
-      <span class="mascot-fab-sub">I&rsquo;ll watch your inbox</span>
+  <!-- Persistent bottom-right install action: the Chrome Web Store listing.
+       This replaced the mascot FAB that used to sit here. The mascot itself is
+       not gone - it still lives in the hero card, where js/mascot-eyes.js
+       overlays its eyes - but as a floating control it duplicated the nav,
+       the footer and the install card, all of which already link to the store.
+       Four entry points for one destination is one too many, and the FAB was
+       the only one that still pointed at the manual ZIP flow. -->
+  <a href="https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb"
+     class="store-fab" id="store-fab"
+     target="_blank" rel="noopener noreferrer">
+    <img class="store-fab-mark" src="assets/chrome-webstore-badge.svg" alt="" width="20" height="20" aria-hidden="true">
+    <span class="store-fab-text">
+      <small>Available on the</small>
+      <strong>Chrome Web Store</strong>
     </span>
   </a>
 

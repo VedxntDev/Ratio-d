@@ -127,35 +127,74 @@ check("promo dismissal remembered", /ratiod\.promo\.dismissed/.test(installJs));
 // old plain .dl-fab, so these checks now pin the mascot rather than a button
 // that no longer exists - and assert the old one really is gone, which is what
 // stops a duplicate "Get extension" control creeping back in.
-check("mascot floating button present", /id="mascot-fab"/.test(html));
+// The floating bottom-right control is the Chrome Web Store button. It replaced
+// the mascot FAB, which was itself the replacement for an older plain download
+// button. These checks pin the CURRENT single floating control and assert both
+// predecessors are genuinely gone from markup, CSS and JS, which is what stops
+// a duplicate "Get extension" control creeping back into the corner.
+check("floating store button present", /id="store-fab"/.test(html));
+// The anchor is written class-then-id, and the store href precedes both, so the
+// probe looks backwards from the id. Matching the other direction would pass on
+// any store link anywhere in the document rather than on this button.
+check("floating control links to the store listing",
+  /chromewebstore\.google\.com\/detail\/bmabonmnpikocpaaigiedckcccpmiepa[\s\S]{0,300}?id="store-fab"/.test(html));
+// The mascot is NOT gone, it just moved: it still renders in the hero card, and
+// js/mascot-eyes.js must still find that mount or the eye-follow feature dies
+// silently along with the button that used to be its second mount.
+check("mascot still present in the hero card", /class="mascot-figure"[^>]*data-mascot-eyes="overlay"/.test(html));
+check("mascot eyes module still loaded", /js\/mascot-eyes\.js/.test(html));
+// The module still supports a "face" mode, but no element on the page uses it
+// any more - the floating button it belonged to is the store link now. Assert
+// the fact rather than letting it drift: a future mascot-bearing control would
+// legitimately re-introduce a second mount, and a silent second mount is how
+// two controls end up fighting over the same corner.
+check("mascot has exactly one mount (the hero overlay)", (html.match(/data-mascot-eyes/g) || []).length === 1);
+check("the unused face mode is documented as such",
+  /The "face" mode is retained but currently unused/.test(fs.readFileSync(path.join(ROOT, "js", "mascot-eyes.js"), "utf8")));
+check("mascot fab removed from markup and CSS",
+  !/id="mascot-fab"/.test(html) && !/class="[^"]*\bmascot-fab\b/.test(html) &&
+  !/^\s*\.mascot-fab[^\s,{]/m.test(css));
+// Exactly one floating control, and it must be the store button. Counted on the
+// `fab`-suffixed classes only: this button styles three of them (the pill, its
+// badge and its label), so the count is 3 for one control. A second corner
+// control would add another 3, and the threshold is deliberately below 3 so a
+// new one cannot slip in.
+const fabClasses = (html.match(/class="[^"]*\bfab\b[^"]*"/g) || []).length;
+check("exactly one floating control, and it is the store button",
+  fabClasses === 3 && /<a href="#install"[^>]*class="[^"]*\bfab/g.test(html) === false,
+  `${fabClasses} fab classes (expect 3: store-fab, mark, text)`);
 // Comments still name the old button to explain what replaced it, so the check
 // targets real code - markup, CSS rules and the JS lookup - not the word.
 check("old duplicate download fab removed",
   !/id="dl-fab"/.test(html) && !/class="[^"]*\bdl-fab\b/.test(html) &&
-  !/^\s*\.dl-fab[\s,{]/m.test(css) &&
+  !/^\s*\.dl-fab[^\s,{]/m.test(css) &&
   !/getElementById\("dl-fab"\)/.test(installJs));
-check("exactly one floating control links to #install",
-  (html.match(/<a href="#install"[^>]*class="[^"]*fab/g) || []).length === 1);
 // The fab is a permanent bottom-right control, so it must NOT be gated on
 // scroll position any more (that used to hide it past the hero / on #install).
 check("fab is always visible (no scroll gating)", !/pastHero|installVisible/.test(installJs));
 check("fab is pinned bottom-right in CSS",
-  /\.mascot-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
-  !/\.mascot-fab \{[^}]*left: 22px/.test(css));
+  /\.store-fab \{[^}]*position: fixed;[^}]*right: 22px;[^}]*bottom: 22px/.test(css) &&
+  !/\.store-fab \{[^}]*left: 22px/.test(css));
 // The narrow-screen override must move to `right` too, or the base `right`
 // plus a mobile `left` would stretch the button across the viewport.
 check("mobile fab override also uses right",
-  /@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*right: 16px/.test(css) &&
-  !/@media \(max-width: 600px\)[\s\S]*?\.mascot-fab \{[^}]*left: 16px/.test(css));
+  /@media \(max-width: 600px\)[\s\S]*?\.store-fab \{[^}]*right: 16px/.test(css) &&
+  !/@media \(max-width: 600px\)[\s\S]*?\.store-fab \{[^}]*left: 16px/.test(css));
 // The control is CSS-visible from first paint: its base rule must not hide it
-// behind opacity/visibility, or the only entry point to #install would vanish
-// whenever JS is blocked or slow.
-const mascotFabRule = (css.match(/\.mascot-fab \{[^}]*\}/) || [""])[0];
+// behind opacity/visibility, or the only persistent install entry point would
+// vanish whenever JS is blocked or slow.
+const storeFabRule = (css.match(/\.store-fab \{[^}]*\}/) || [""])[0];
 check("fab visible state is the CSS default (works without JS)",
-  /position:\s*fixed/.test(mascotFabRule) &&
-  !/opacity:\s*0/.test(mascotFabRule) &&
-  !/visibility:\s*hidden/.test(mascotFabRule),
-  mascotFabRule.slice(0, 56).replace(/\s+/g, " ") + "...");
+  /position:\s*fixed/.test(storeFabRule) &&
+  !/opacity:\s*0/.test(storeFabRule) &&
+  !/visibility:\s*hidden/.test(storeFabRule),
+  storeFabRule.slice(0, 56).replace(/\s+/g, " ") + "...");
+// On a phone the label is hidden to reclaim width, so it must be hidden in an
+// accessible way (visually clipped) rather than display:none, or the link is
+// left with no accessible name at all.
+check("mobile label is visually hidden, not removed",
+  /@media \(max-width: 600px\)[\s\S]*?\.store-fab-text \{[^}]*clip:/.test(css) &&
+  !/@media \(max-width: 600px\)[\s\S]*?\.store-fab-text \{[^}]*display:\s*none/.test(css));
 // The promo bar's primary action must reach installation. That target is now the
 // Chrome Web Store rather than the ZIP, so assert the INTENT - the bar links out
 // to a real install path - instead of pinning it to one specific file. Pinning
@@ -166,7 +205,7 @@ check("promo bar has an install link",
   /href="https:\/\/chromewebstore\.google\.com\//.test(promoBarBlock) ||
   /href="ratiod-extension\.zip"/.test(promoBarBlock),
   (promoBarBlock.match(/href="([^"]+)"/) || ["", "none"])[1].slice(0, 60));
-check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.mascot-fab \{/.test(css));
+check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.store-fab \{/.test(css));
 check("promo bar responsive", /@media \(max-width: 600px\)[\s\S]*?\.promo-inner/.test(css));
 
 /* ---- author credit ---- */

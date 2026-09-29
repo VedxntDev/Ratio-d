@@ -1243,52 +1243,48 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
 }
 .promo-close:hover { background: var(--color-primary); color: #fff; transform: rotate(90deg); }
 
-/* ---- Mascot eye-follow button (port of Framer's "Eye Follow Button") ----
+/* ---- Mascot eye-follow (port of Framer's "Eye Follow Button") ----
    A dependency-free port of the Framer component of the same name, wearing
    the Ratio'd shield mascot. js/mascot-eyes.js moves the two pupils toward
    the cursor with a spring; everything here is the static art around them.
 
-   This is the site's single persistent entry point to the install section,
-   pinned bottom-RIGHT and visible from first paint at every breakpoint. It
+   The mascot renders in the hero card, where the eyes are an overlay on the
+   painted artwork. It used to also be a floating button in this corner; see
+   the .store-fab block below for what holds the corner now.
    replaces the old plain .dl-fab, so there is exactly one floating control
    and no chance of two of them fighting over a corner on a small screen. */
 
-.mascot-fab {
+/* ---- Floating install action (bottom-right) ----
+   The site's single floating control, pinned bottom-RIGHT and visible from
+   first paint, so it cannot be lost behind JS being blocked or slow.
+
+   This replaced the mascot FAB that previously held this corner. The mascot is
+   NOT removed - it still lives in the hero card, where js/mascot-eyes.js
+   overlays its eyes on the painted artwork. What went away is the floating
+   duplicate of an install link that the nav, the footer and the install card
+   already provide, and which alone still pointed at the manual ZIP flow
+   instead of the store. */
+
+.store-fab {
   position: fixed; right: 22px; bottom: 22px; z-index: 80;
-  display: inline-flex; align-items: center; gap: 12px;
-  padding: 8px 8px 8px 20px;
-  background: var(--color-surface);
-  color: var(--color-ink);
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 9px 18px;
+  background: var(--color-ink);
+  color: #fff;
   text-decoration: none;
   border: var(--bw) solid var(--color-ink);
   border-radius: 999px;
-  box-shadow: 5px 5px 0 var(--color-ink);
+  box-shadow: 5px 5px 0 var(--color-primary);
   font-family: var(--font-display);
-  font-size: 0.92rem; font-weight: 800; line-height: 1.2;
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease;
 }
-.mascot-fab:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--color-ink); }
-.mascot-fab:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--color-ink); }
-
-/* The face is a fixed-size square; the button grows sideways from it. */
-.mascot-fab-face {
-  position: relative;
-  width: 56px; height: 56px;
-  flex: 0 0 56px;
-  border-radius: 50%;
-  background: var(--color-surface-muted);
-  border: 2px solid var(--color-ink);
-  overflow: hidden;
-}
-.mascot-face { display: block; width: 100%; height: 100%; }
-
-.mascot-fab-label { display: flex; flex-direction: column; gap: 2px; }
-.mascot-fab-sub {
-  font-family: var(--font-mono);
-  font-size: 0.62rem; font-weight: 700;
-  letter-spacing: 0.04em; text-transform: uppercase;
-  color: var(--color-text-muted);
-}
+.store-fab:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--color-primary); }
+.store-fab:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--color-primary); }
+.store-fab:focus-visible { outline: var(--bw) solid var(--color-yellow); outline-offset: 3px; }
+.store-fab-mark { width: 20px; height: 20px; flex-shrink: 0; border-radius: 4px; }
+.store-fab-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.store-fab-text small { font-size: 0.6rem; font-weight: 600; opacity: 0.75; letter-spacing: 0.03em; }
+.store-fab-text strong { font-size: 0.88rem; font-weight: 800; letter-spacing: -0.01em; }
 
 /* --- Mascot parts -------------------------------------------------------
    Plain SVG presentation attributes in the brand palette: no new tokens, and
@@ -1315,10 +1311,12 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
      column that overflows the viewport. */
   .promo-text { order: 3; flex: 1 0 100%; width: 100%; }
   .promo-actions { margin-left: auto; }
-  /* Face only, no label: the full pill would eat a third of a phone screen. */
-  .mascot-fab { padding: 6px; right: 16px; bottom: 16px; }
-  .mascot-fab-label { display: none; }
-  .mascot-fab-face { width: 46px; height: 46px; flex-basis: 46px; }
+  /* Mark only, no text: the full pill would eat a third of a phone screen.
+     The link keeps an accessible name from the visually-hidden label, so
+     hiding the words costs nothing for screen-reader and voice users. */
+  .store-fab { padding: 6px; right: 16px; bottom: 16px; }
+  .store-fab-text { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .store-fab-mark { width: 26px; height: 26px; }
 }
 
 .faq-item kbd {
