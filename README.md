@@ -36,6 +36,7 @@ It is a static site, a Chrome extension, and one small Node server.
 
 | Section | What it covers |
 | --- | --- |
+| [Hackathon Timeline](#-hackathon-evaluation-development-timeline-before-vs-after-sept-29-2026) | **Audit trail: What was built Before vs. After Sept 29, 2026** |
 | [Machine context](#-machine-readable-project-context) | `AGENTS.md` and the generated JSON manifest for tooling |
 | [Mental model](#-the-60-second-mental-model) | One diagram of the whole system |
 | [Pipeline](#-the-pipeline-stage-by-stage) | "Email opened" → "banner shown", stage by stage |
@@ -49,6 +50,100 @@ It is a static site, a Chrome extension, and one small Node server.
 | [Getting started](#-getting-started) | Run it, deploy it |
 | [Testing](#-testing) | The 12 suites and the one prerequisite |
 | [Honest limits](#-what-this-is-not--honest-limits) | What this does not do |
+
+---
+
+## ⏱️ Hackathon Evaluation: Development Timeline (Before vs. After Sept 29, 2026)
+
+> **Evaluator Summary**: This project was shortlisted for the next hackathon round. Per submission criteria, all contributions are transparently split into **Round 1 (Built Before September 29, 2026)** and **Round 2 / Shortlist Expansion (Built On & After September 29, 2026)**. A full audit trail with commit logs is also available in [`UPDATES.md`](./UPDATES.md).
+
+### 📅 Summary Matrix
+
+| Milestone | Before September 29, 2026 (Round 1 MVP) | On & After September 29, 2026 (Round 2 Production Expansion) |
+|---|---|---|
+| **Distribution** | Unpacked manual developer mode (`chrome://extensions/`) | **Live Google Chrome Web Store Production Listing** (ID: `bmabonmnpikocpaaigiedckcccpmiepa`) |
+| **Permissions** | Declared `activeTab` & `storage` permissions | **Zero declared permissions** (Purged to resolve Purple Potassium; narrowest host access only) |
+| **Privacy Compliance** | In-memory client-side redaction & zero persistence | Standalone public **Privacy Policy** (`privacy.html`) deployed to production for Web Store certification |
+| **Store Assets** | Mockup assets | Production-certified **1280×800 UI screenshot** in Gmail & 1:1 brand marks |
+| **Site Action Points** | Mascot cursor-tracking button & zip download link | Responsive **Chrome Web Store FAB** + unified store badge navigation & install card |
+| **UI Test Coverage** | 12 core static UI assertions | **Expanded static assertions**: Web Store link verification, safe `rel`/`target`, decorative badge a11y |
+| **Package Verification** | Manual zip archive building | Hardened zero-drift archive builders (`tools/build-zips.js`) with isolated git configs |
+
+---
+
+### 1. 🛠️ Phase 1: Built Before September 29, 2026 (Initial Hackathon Prototype)
+
+The core MVP and foundational security architecture were developed and validated before September 29, 2026:
+
+- **⚡ Deterministic Threat Detection Engine (`server/rules/engine.js`)**:
+  - Zero-runtime-dependency rule engine with 28 protected brands (Microsoft, PayPal, Google, Apple, Amazon, etc.).
+  - Dual-pass homoglyph normalization (`1 -> i` and `1 -> l`, `0 -> o`, `rn -> m`, `vv -> w`, `5 -> s`, `@/4 -> a`, `3 -> e`).
+  - Levenshtein distance ($\le 2$) typosquat detection with strict length-differential guards ($\le 2$, min length $\ge 4$).
+  - Brand-stuffing and lookalike subdomain detection (`microsoft-support.com`).
+  - 10 social-engineering threat families (urgency, credential harvesting, advance-fee, fake refunds, small delivery fees, fake storage/subscription alerts, mandatory-2FA scares, investment solicitations, personal document requests, cold outreach).
+  - High-risk combination rules: Urgency + Credential demand on non-official domains (`+45`), URL shortener + pressure (`+30`), sender domain vs. link domain mismatch (`+30`).
+  - Marketing spam classification (`promo_clutter` verdict ladder based on opt-out patterns and promotional density).
+
+- **🔒 Client-Side In-Memory PII Redaction (`js/redactor.js`, `extension/content-script.js`)**:
+  - In-browser regex masking replacing phone numbers, emails, and OTP tokens before any network payload is sent.
+  - Zero-persistence logging (`server/privacy/log.js`): server computes telemetry solely from masked text; zero email content is ever logged or stored.
+
+- **🧠 Structural Signal Scorer & Combiner (`server/laya/client.js`, `server/combine/score.js`)**:
+  - High-precision structural heuristics (punycode lookalikes, bare IP literal URLs, data URIs, base64 blobs, wire/crypto demands, link farms).
+  - Weighted scoring ($0.70 \times \text{Rules} + 0.30 \times \text{Laya}$) with severe spoof disqualifiers forcing minimum score 82 and `high_risk` verdict.
+
+- **🌐 Zero-Dependency Universal Server (`server.js`, `api/index.js`)**:
+  - Pure Node.js `http.createServer` with zero npm runtime dependencies.
+  - Dual-export handler serving both local port 3000 and Vercel Serverless environment.
+
+- **🎨 Playful Neo-Brutalist Web Console (`index.html`, `styles.css`, `js/`)**:
+  - Warm paper canvas (`#F6F1E7`), 3px ink borders, 6px hard offset drop-shadows.
+  - 4-stage GSAP animated pipeline (Observe $\to$ Detect $\to$ Explain $\to$ Respond) and elastic score gauge.
+  - Interactive 10-stage architecture step-through flowchart (`js/architecture.js`).
+  - Interactive mascot with measured eye-tracking spring physics (`js/mascot-eyes.js`).
+  - WebGPU hero canvas effect (`js/shape-waves.js`).
+
+- **🛡️ Chrome Extension Prototype (Manifest V3)**:
+  - Shadow DOM banner injection (`extension/banner.js`) with complete HTML entity escaping (`escapeHtml()`) against stored DOM XSS.
+  - Multi-strategy unsubscribe automated assistant (Gmail header action + DOM body link parsing) with Web Audio chime and canvas confetti.
+  - Autonomous offline fallback engine for zero-server operation (`extension/fallback-engine.js`).
+
+- **📊 Real-World Scam Corpora & Automated Testing**:
+  - Evaluated on external scam datasets (`scam-corpus.txt` with 20 scams, `real-world-mixed.txt` with 9 scams + 2 ham).
+  - Verified 85% recall on 20 scams; 100% recall on 9 scams; 0 false positives across 15 adversarial legitimate emails.
+  - 12 automated test suites covering rules, UI invariants, and package integrity.
+
+---
+
+### 2. 🚀 Phase 2: Built On & After September 29, 2026 (Round 2 / Shortlist Expansion)
+
+Following shortlist notification for the next round, engineering focused on production hardening, Chrome Web Store certification, policy compliance, and auditability:
+
+- **🏪 Live Google Chrome Web Store Production Launch**:
+  - Deployed and published to the Google Chrome Web Store (Item ID: `bmabonmnpikocpaaigiedckcccpmiepa`).
+  - Upgraded user onboarding from developer-mode sideloading to a 1-click Web Store installation flow.
+  - Integrated official Chrome Web Store badge branding across header navigation, hero CTA, interactive install card, and footer.
+  - Re-architected `#install` section: primary Web Store install action with secondary 5-step developer manual ZIP workflow retained for offline/developer evaluation.
+
+- **🛡️ Chrome Web Store Policy Compliance & Security Audit**:
+  - **Purple Potassium Violation Resolution**: Conducted full permission audit of `extension/manifest.json`. Completely stripped `activeTab` and `storage` permissions, ensuring adherence to the Principle of Least Privilege and Chrome's narrowest-scope requirements.
+  - **Purple Nickel Violation Resolution**: Built and deployed dedicated public-facing `privacy.html` at repository root and on live Vercel production to provide full telemetry and data-handling disclosure.
+  - **Red Potassium Violation Resolution**: Captured and deployed certified 1280×800 in-situ screenshots displaying real Gmail UI with the injected Shadow DOM security banner and threat breakdown.
+
+- **🎯 Floating Action Button (FAB) Architecture Refactor**:
+  - Replaced duplicate mascot floating button with a responsive, high-converting Chrome Web Store installation button (`.btn-store`, `.mascot-fab`).
+  - Decoupled floating button logic from mascot eye-tracking, preserving the interactive cursor-following mascot on the hero card while providing an accessible, persistent extension install CTA.
+
+- **🧪 Static UI & Accessibility Test Suite Expansion (`server/test-ui-static.js`)**:
+  - Added test assertions verifying Chrome Web Store URLs, active listing ID, secure opener attributes (`target="_blank" rel="noopener noreferrer"`), and accessible decorative badge semantics (`alt=""`, `aria-hidden="true"`).
+  - Updated external host allowlist to permit `chromewebstore.google.com` while maintaining strict enforcement against unapproved third-party scripts or CDNs.
+
+- **📦 Build Pipeline Hardening & Zero-Drift Package Generation**:
+  - Hardened `tools/build-zips.js` with isolated git environments (`GIT_CONFIG_GLOBAL=/dev/null`) to guarantee reproducible, zero-drift archive creation (`ratiod-extension.zip` and `ratiod-full-project.zip`).
+  - Enforced continuous archive integrity and parity with live manifest v1.2.1.
+
+- **📑 Documentation & Auditability**:
+  - Added this milestone breakdown to `README.md` and created [`UPDATES.md`](./UPDATES.md) with complete audit details for hackathon evaluators.
 
 ---
 

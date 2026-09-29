@@ -18,7 +18,11 @@ const EXT_ZIP = path.join(ROOT, "ratiod-extension.zip");
 const FULL_ZIP = path.join(ROOT, "ratiod-full-project.zip");
 const JUNK = /(^|\/)(\.DS_Store|__MACOSOSX|Thumbs\.db)$/;
 
-const sh = (...args) => execFileSync(args[0], args.slice(1), { cwd: ROOT, encoding: "utf8" });
+const sh = (...args) => execFileSync(args[0], args.slice(1), {
+  cwd: ROOT,
+  encoding: "utf8",
+  env: { ...process.env, GIT_CONFIG_GLOBAL: "/dev/null" }
+});
 
 /** Replace a zip with `entries` (paths relative to ROOT). */
 function build(zipPath, entries) {
