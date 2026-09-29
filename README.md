@@ -989,7 +989,7 @@ npm run test:all
 > `node server.js` in another terminal first, or point the test elsewhere with
 > `BASE=http://host:port npm run test:all`.
 >
-> Verified result: **428 assertions passing, 0 failures** with the server up.
+> Verified result: **437 assertions passing, 0 failures** with the server up.
 
 ---
 

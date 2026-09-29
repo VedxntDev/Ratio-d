@@ -154,10 +154,19 @@ check("reuses the existing tactile card treatment", /arch-node tactile/.test(arc
 check("reuses the existing section header components",
   /section-header-tag/.test(html) && /section-title/.test(html) && /marker-blue/.test(html));
 
-/* ---- no new external dependencies ---- */
+/* ---- no new external dependencies ----
+   This is an ALLOWLIST of hosts the page is allowed to reference, not a ban on
+   outbound links. A link the user clicks is not a dependency: nothing is fetched
+   from these hosts on page load, so adding one cannot break the page offline or
+   introduce a third-party script. The check exists to catch an unreviewed
+   script/font/image being pulled in, which is why the allowlist is enumerated
+   rather than a blanket "no external hosts" rule.
+
+   chromewebstore.google.com is the extension's own listing and is linked from
+   the install card, the promo bar, the nav and the footer. */
 const hosts = [...html.matchAll(/https?:\/\/([\w.-]+)\//g)].map((m) => m[1]);
 const allowed = ["cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com",
-  "github.com", "mail.google.com", "ratio-d.vercel.app"];
+  "github.com", "mail.google.com", "ratio-d.vercel.app", "chromewebstore.google.com"];
 const newHosts = [...new Set(hosts.filter((h) => !allowed.includes(h)))];
 check("no new external scripts or CDNs", newHosts.length === 0, newHosts.join(", ") || "none added");
 check("no import/require in the browser controller", !/\bimport\s|\brequire\(/.test(archJs));

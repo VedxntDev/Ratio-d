@@ -514,7 +514,7 @@ Every flag cites a verbatim span from the message. No flag is invented.
 
 ### 4.4 Test suite status
 
-`npm run test:all` — **428 assertions passing, 0 failures**, comprising thirteen
+`npm run test:all` — **437 assertions passing, 0 failures**, comprising thirteen
 unit/static suites plus one live contract suite.
 
 > ⚠️ **Harness prerequisite.** `test-ui-contract.js` performs real HTTP calls
@@ -671,7 +671,7 @@ of the report a reader is most likely to quote.
 | 7 | Web console UI | `index.html`, `js/` |
 | 8 | Grounded explanations — every flag cites a verbatim span | `server/llm/explain.js`; enforced by the corpus suite |
 | 9 | Two real-world corpora | `server/fixtures/scam-corpus.txt` (A: 20), `real-world-mixed.txt` (B: 9 scam + 2 ham) |
-| 10 | 15 automated suites, 428 passing assertions, 0 failures | `npm run test:all` |
+| 10 | 15 automated suites, 437 passing assertions, 0 failures | `npm run test:all` |
 | 11 | CI workflow that starts the server before testing | `.github/workflows/test.yml` |
 | 12 | Machine-readable project context, generated and staleness-checked | `docs/project-context.json`, `tools/build-context.js`, `test-context-manifest.js` |
 | 13 | Reproducible release archives | `tools/build-zips.js` → `ratiod-extension.zip` (10 files), `ratiod-full-project.zip` (72 files) |

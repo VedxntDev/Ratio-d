@@ -1068,6 +1068,62 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
 .install-meta li { display: flex; gap: 9px; font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; }
 .bullet { color: #4A7C2F; font-weight: 800; flex-shrink: 0; }
 
+/* Intro line above the manual-install step list. It exists because the list is
+   no longer the primary route - the store button above it is - so without this
+   the page would show five manual steps with no indication they were optional. */
+.steps-intro {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+.steps-intro strong { color: var(--color-ink); }
+
+/* Chrome Web Store button.
+   The store badge is an <img>, so the button has to lay out as a flex row with a
+   fixed-size mark; a plain .btn is inline-block and would let the mark scale with
+   the line height. The badge carries its own light tile, so it stays legible on
+   the ink background without an extra border. */
+.btn-store {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: var(--color-ink);
+  color: #fff;
+}
+.btn-store:hover { background-color: #2C2C2C; }
+.btn-store:focus-visible { outline: var(--bw) solid var(--color-yellow); outline-offset: 2px; }
+.btn-store-mark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+.btn-store-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.btn-store-text small { font-size: 0.68rem; font-weight: 600; opacity: 0.8; letter-spacing: 0.02em; }
+.btn-store-text strong { font-size: 0.95rem; font-weight: 800; letter-spacing: -0.01em; }
+.btn-store-sm .btn-store-mark { width: 18px; height: 18px; }
+.btn-store-sm .btn-store-text small { font-size: 0.6rem; }
+.btn-store-sm .btn-store-text strong { font-size: 0.82rem; }
+
+/* Secondary "install from ZIP" action, kept for the manual / developer path. */
+.install-alt {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.install-alt:hover { color: var(--color-ink); text-decoration: underline; }
+
 .alt-link {
   display: block; margin-top: 16px; text-align: center;
   font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700;

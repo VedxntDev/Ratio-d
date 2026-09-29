@@ -78,6 +78,31 @@ check("install.js loaded", /js\/install\.js/.test(html));
 check("zip download linked", /href="ratiod-extension\.zip"/.test(html));
 check("zip uses download attribute", /download="ratiod-extension\.zip"/.test(html));
 
+/* ---- Chrome Web Store install path ----
+   The store listing is the primary route: one click, no developer mode, and
+   Chrome handles updates. The ZIP is retained as a secondary path, so both are
+   asserted here. These guard the store link itself, because a listing id
+   typo'd into the markup would ship a dead button that no other test catches:
+   the existing install checks only ever look for the ZIP. */
+const STORE_URL = "https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa";
+const storeLinkCount = count(html, new RegExp(STORE_URL.replace(/[/.]/g, "\\$&"), "g"));
+check("chrome web store link present", storeLinkCount >= 3, `${storeLinkCount} links to the store`);
+check("store link uses the listing id, not a placeholder",
+  new RegExp(STORE_URL.replace(/[/.]/g, "\\$&")).test(html) && !/chromewebstore\.google\.com\/detail\/YOUR/.test(html));
+check("store links open safely in a new tab",
+  count(html, /href="https:\/\/chromewebstore\.google\.com\/[^"]*"\s*[^>]*target="_blank"/g) === storeLinkCount &&
+  count(html, /href="https:\/\/chromewebstore\.google\.com\/[^"]*"[\s\S]{0,200}?rel="noopener noreferrer"/g) >= storeLinkCount,
+  `${storeLinkCount} links carry target+rel`);
+check("store badge asset referenced", /assets\/chrome-webstore-badge\.svg/.test(html));
+check("store badge asset exists", fs.existsSync(path.join(ROOT, "assets", "chrome-webstore-badge.svg")));
+check("store badge is decorative only (button carries the name)",
+  /btn-store-mark[^>]*alt=""/.test(html) && /aria-hidden="true"/.test(html));
+check("store button styled", /\.btn-store \{/.test(css) && /\.btn-store-mark \{/.test(css));
+check("store button present in the install card", /id="store-btn"/.test(html));
+check("nav and footer both point at the store",
+  /<li><a href="https:\/\/chromewebstore\.google\.com\/[^"]*" class="nav-link"[^>]*>Get Extension<\/a><\/li>/.test(html) &&
+  /<a href="https:\/\/chromewebstore\.google\.com\/[^"]*" class="nav-link"[^>]*>Get Extension<\/a>/.test(html));
+
 const stepCount = count(html, /data-step="\d"/g);
 check("5 install steps rendered", stepCount === 5, `${stepCount} checkboxes found`);
 check("steps are real checkboxes", count(html, /<input type="checkbox"/g) === 5);
@@ -131,7 +156,16 @@ check("fab visible state is the CSS default (works without JS)",
   !/opacity:\s*0/.test(mascotFabRule) &&
   !/visibility:\s*hidden/.test(mascotFabRule),
   mascotFabRule.slice(0, 56).replace(/\s+/g, " ") + "...");
-check("promo bar has a download link", /id="promo-bar"[\s\S]{0,600}?ratiod-extension\.zip/.test(html));
+// The promo bar's primary action must reach installation. That target is now the
+// Chrome Web Store rather than the ZIP, so assert the INTENT - the bar links out
+// to a real install path - instead of pinning it to one specific file. Pinning
+// it to the ZIP is what made this check fail the moment the store listing
+// shipped, and it would have failed for the right reason too.
+const promoBarBlock = (html.match(/id="promo-bar"[\s\S]{0,900}?<\/div>/) || [""])[0];
+check("promo bar has an install link",
+  /href="https:\/\/chromewebstore\.google\.com\//.test(promoBarBlock) ||
+  /href="ratiod-extension\.zip"/.test(promoBarBlock),
+  (promoBarBlock.match(/href="([^"]+)"/) || ["", "none"])[1].slice(0, 60));
 check("promo bar styles defined", /\.promo-bar \{/.test(css) && /\.mascot-fab \{/.test(css));
 check("promo bar responsive", /@media \(max-width: 600px\)[\s\S]*?\.promo-inner/.test(css));
 

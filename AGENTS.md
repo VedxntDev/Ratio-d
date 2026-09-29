@@ -50,7 +50,7 @@ node tools/build-zips.js       # regenerate both published archives
 > suites still pass but that one fails with `CONTRACT TEST FAILED: fetch failed`
 > and the run exits `1`. Override the target with `BASE=http://host:port`.
 
-Current state: **428 assertions passing, 0 failures.**
+Current state: **437 assertions passing, 0 failures.**
 
 ---
 

@@ -46,7 +46,7 @@
       <nav aria-label="Primary">
         <ul class="nav-links">
           <li><a href="#console" class="nav-link">Analyze</a></li>
-          <li><a href="#install" class="nav-link">Get Extension</a></li>
+          <li><a href="https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb" class="nav-link" target="_blank" rel="noopener noreferrer">Get Extension</a></li>
           <li><a href="#architecture" class="nav-link">Architecture</a></li>
           <li><a href="#pipeline" class="nav-link">How it works</a></li>
           <li><a href="#features" class="nav-link">Features</a></li>
@@ -66,7 +66,14 @@
         email you open. No account, nothing stored.
       </p>
       <div class="promo-actions">
-        <a href="ratiod-extension.zip" download="ratiod-extension.zip" class="btn btn-primary btn-sm">&#11015; Download</a>
+        <a href="https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb"
+           class="btn btn-store btn-store-sm" target="_blank" rel="noopener noreferrer">
+          <img class="btn-store-mark" src="assets/chrome-webstore-badge.svg" alt="" width="18" height="18" aria-hidden="true">
+          <span class="btn-store-text">
+            <small>Available on the</small>
+            <strong>Chrome Web Store</strong>
+          </span>
+        </a>
         <a href="#install" class="btn btn-secondary btn-sm">How to install</a>
       </div>
       <button class="promo-close" id="promo-close" type="button" aria-label="Dismiss this message">&#215;</button>
@@ -258,7 +265,7 @@
         <div class="section-head">
           <span class="section-header-tag">Get the extension</span>
           <h2 class="section-title">Read every email <span class="marker marker-blue">before</span> you trust it</h2>
-          <p class="section-sub">One download and four clicks puts a live risk verdict inside Gmail. The banner renders inside its own Shadow DOM, so Gmail styling can never break it.</p>
+          <p class="section-sub">One click from the Chrome Web Store puts a live risk verdict inside Gmail. The banner renders inside its own Shadow DOM, so Gmail styling can never break it.</p>
         </div>
 
         <div class="install-grid">
@@ -268,15 +275,27 @@
               <span class="sticker sticker-red sticker-float-1">FREE</span>
               <div class="install-icon" aria-hidden="true">🧩</div>
               <h3 class="install-title">Ratio&rsquo;d for Gmail</h3>
-              <p class="install-sub">Manifest V3 &middot; v1.0.0 &middot; 33 KB</p>
+              <p class="install-sub">Manifest V3 &middot; v1.2.1 &middot; on the Chrome Web Store</p>
 
-              <a href="ratiod-extension.zip" download="ratiod-extension.zip"
-                 class="btn btn-primary btn-block" id="dl-btn">
-                <span aria-hidden="true">⬇</span> Download the ZIP
+              <!-- Primary path is now the store: one click, no developer mode, and Chrome
+                   handles future updates. The ZIP install below is kept as a secondary
+                   route for anyone who needs the unpacked build. -->
+              <a href="https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb"
+                 class="btn btn-store btn-block" id="store-btn"
+                 target="_blank" rel="noopener noreferrer">
+                <img class="btn-store-mark" src="assets/chrome-webstore-badge.svg" alt="" width="22" height="22" aria-hidden="true">
+                <span class="btn-store-text">
+                  <small>Available on the</small>
+                  <strong>Chrome Web Store</strong>
+                </span>
+              </a>
+
+              <a href="ratiod-extension.zip" download="ratiod-extension.zip" class="install-alt" id="dl-btn">
+                Or install the ZIP manually &darr;
               </a>
 
               <ul class="install-meta">
-                <li><span class="bullet" aria-hidden="true">✓</span> Works with the live API, no local server needed</li>
+                <li><span class="bullet" aria-hidden="true">✓</span> Installs in one click, updates itself from the store</li>
                 <li><span class="bullet" aria-hidden="true">✓</span> No account, no sign-in, nothing stored</li>
                 <li><span class="bullet" aria-hidden="true">✓</span> Uninstall with one click</li>
               </ul>
@@ -296,6 +315,13 @@
               <button class="btn-link" id="reset-steps" type="button">Reset</button>
             </div>
 
+            <p class="steps-intro">
+              <strong>Installing from the Chrome Web Store is one click</strong> &mdash; use
+              the button on the left and you are done. The steps below are only for the
+              manual ZIP route, which is useful if you want the unpacked build to
+              inspect or modify.
+            </p>
+
             <ol class="isteps" id="isteps">
               <li class="istep">
                 <label class="istep-check">
@@ -305,7 +331,7 @@
                 </label>
                 <div class="istep-body">
                   <h3>Download the ZIP</h3>
-                  <p>Use the button on the left. It saves to your normal Downloads folder.</p>
+                  <p>Use the &ldquo;Or install the ZIP manually&rdquo; link on the left. It saves to your normal Downloads folder.</p>
                   <div class="istep-actions">
                     <a href="ratiod-extension.zip" download class="btn btn-secondary btn-sm">⬇ Download again</a>
                   </div>
@@ -562,7 +588,7 @@
       </div>
       <div class="footer-links">
         <a href="privacy.html" class="nav-link">Privacy</a>
-        <a href="#install" class="nav-link">Get Extension</a>
+        <a href="https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb" class="nav-link" target="_blank" rel="noopener noreferrer">Get Extension</a>
         <a href="#pipeline" class="nav-link">How it works</a>
         <a href="#architecture" class="nav-link">Architecture</a>
         <a href="#console" class="nav-link">Analyze</a>

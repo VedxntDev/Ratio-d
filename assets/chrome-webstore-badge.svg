@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Chrome Web Store">
+  <title>Available on the Chrome Web Store</title>
+  <!--
+    Chrome Web Store badge mark.
+
+    Reproduces the familiar Chrome logo geometry (three colour wedges around a
+    blue core) inside the store's rounded-square tile. Used as a decorative
+    companion to the "Add to Chrome" button, so it is marked aria-hidden at the
+    call site and the button carries the accessible name.
+
+    NOTE: This is a hand-drawn stand-in, not Google's official asset. Google
+    publishes brand guidelines and an official "Available on the Chrome Web
+    Store" badge; if the store listing or any partner programme requires the
+    official artwork, swap this file for it rather than redistributing a
+    re-encoding of the trademark. The path geometry is intentionally simple so
+    it is trivially replaceable.
+  -->
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="#FFFFFF" stroke="#DADCE0" stroke-width="3"/>
+
+  <!-- Red wedge: top -->
+  <path d="M64 64 L100.5 40 A36 36 0 0 0 27.5 40 L64 64 Z" fill="#EA4335"/>
+  <!-- Green wedge: bottom-left -->
+  <path d="M64 64 L27.5 40 A36 36 0 0 0 64 100 L82 73 Z" fill="#34A853"/>
+  <!-- Yellow wedge: right -->
+  <path d="M64 64 L64 100 A36 36 0 0 0 100.5 40 L64 64 Z" fill="#FBBC05"/>
+  <!-- Blue core -->
+  <circle cx="64" cy="64" r="16" fill="#4285F4" stroke="#FFFFFF" stroke-width="3"/>
+</svg>
