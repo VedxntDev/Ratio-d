@@ -136,7 +136,7 @@ function scanInboxRows() {
   if (!window.RatiodFallback) return;
 
   const rows = document.querySelectorAll(
-    "tr.zA:not([data-ratiod-badged]), div[role='row']:not([data-ratiod-badged])"
+    "tr.zA:not([data-ratiod-badged])"
   );
   if (!rows || rows.length === 0) return;
 
@@ -158,9 +158,9 @@ function scanInboxRows() {
     const redacted = redactPiiLocally(combinedText);
     const result = window.RatiodFallback.analyze(redacted);
 
-    // Only inject badge if container exists
-    const targetMount = subjectElem || row.querySelector("td.xY, div.xY") || row;
-    if (!targetMount) return;
+    // Target container: inside .y6 (subject wrapper) or prepend to subject line
+    const subjectWrapper = row.querySelector(".y6, span.bog, td.a4W") || row.querySelector("td.xY:not(.yX)") || subjectElem;
+    if (!subjectWrapper) return;
 
     const badge = document.createElement("span");
     badge.className = "ratiod-inbox-pill";
@@ -192,14 +192,14 @@ function scanInboxRows() {
     badge.title = `Ratio'd Pre-Open Analysis: ${result.score}/100 (${result.verdict})\n${flagSummary || 'Clean preview'}`;
 
     badge.style.cssText = `
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       font-weight: 800;
       line-height: 1.2;
-      padding: 1px 5px;
+      padding: 1px 6px;
       margin-right: 6px;
-      margin-left: 2px;
       border-radius: 4px;
       border: 1.5px solid #121212;
       background-color: ${bgColor};
@@ -208,12 +208,14 @@ function scanInboxRows() {
       vertical-align: middle;
       box-shadow: 1px 1px 0px #121212;
       user-select: none;
+      flex-shrink: 0;
+      z-index: 5;
     `;
 
-    if (subjectElem && subjectElem.parentNode) {
-      subjectElem.parentNode.insertBefore(badge, subjectElem);
-    } else {
-      targetMount.prepend(badge);
+    if (subjectWrapper.prepend) {
+      subjectWrapper.prepend(badge);
+    } else if (subjectWrapper.parentNode) {
+      subjectWrapper.parentNode.insertBefore(badge, subjectWrapper);
     }
   });
 }
