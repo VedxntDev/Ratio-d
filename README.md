@@ -235,71 +235,73 @@ Attackers hide malicious destinations behind link shorteners (`bit.ly`, `t.co`, 
 
 ## 🔄 System Architecture & Dataflow Diagrams
 
-### Diagram 1: End-to-End System Pipeline
+### Diagram 1: 5-Stage End-to-End System Pipeline
 ```mermaid
 flowchart TD
-    subgraph BROWSER ["Client Browser Memory (Air-Gapped)"]
-        A["Gmail DOM / Text Input"] -->|MutationObserver| B["Redactor (js/redactor.js)"]
-        B -->|Masks Phones, Emails, OTPs| C["Sanitized Payload"]
+    INCOMING["Incoming Message<br/>(Gmail DOM / Web Console Input)"]
+    
+    INCOMING --> STAGE1["Stage 1: Client-Side Air-Gapped PII Redactor<br/>• Masks Phones, Emails, & OTPs in local browser memory<br/>• Zero PII ever crosses network boundary"]
+    
+    STAGE1 -->|Clean, Sanitized Token Stream| DUAL_PATH["Dual-Path Threat Pipeline"]
+
+    subgraph CORE ["Ratio'd Security Core"]
+        direction TB
+        
+        subgraph PARALLEL ["Parallel Threat Analysis"]
+            STAGE2["Stage 2: Deterministic Rule Engine<br/>• Homoglyphs & Levenshtein Brand Spoofing<br/>• 10 Social Engineering Signal Families<br/>• Abused Free Hosting & Risky TLD Checks<br/>• URL Shortener & Redirect Tracer"]
+            
+            STAGE3["Stage 3: Laya Model & Threat Classifier<br/>• Keyword Density & Vector Weights<br/>• Structural Signal Pattern Density<br/>• Statistical Phish Probability (0.00 - 1.00)"]
+        end
+
+        STAGE2 --> STAGE4["Stage 4: Score Combiner & Calibrator<br/>• Hard Overrides (Combo Triggers & Spoof Floor = 82)<br/>• Mathematical Score Fusion (0.70*Rules + 0.30*Laya)<br/>• Discrete Verdict Boundary Mapping (high_risk, suspicious, promo, safe)"]
+        STAGE3 --> STAGE4
+
+        STAGE4 --> STAGE5["Stage 5: Grounded Explainability Engine<br/>• Flag-Grounded Synthesis (Verbatim Substrings)<br/>• Actionable Incident Recovery Checklist<br/>• Zero Hallucination Guarantee"]
     end
 
-    subgraph PRIVACY_BOUNDARY ["========== Privacy Boundary (No PII Crosses Here) =========="]
-        C
-    end
+    DUAL_PATH --> CORE
 
-    subgraph ENGINE ["Detection & Rule Processing"]
-        C -->|POST /analyze| D{"API Router (server.js / Vercel)"}
-        D -->|Parallel Execution| E["Rule Engine (server/rules/engine.js)<br/>Homoglyphs, Levenshtein <= 2, Combos"]
-        D -->|Parallel Execution| F["Laya Scorer (server/laya/client.js)<br/>Weighted Structural Signals"]
-        E --> G["Score Combiner<br/>0.70 * Rules + 0.30 * Laya"]
-        F --> G
-    end
+    STAGE5 --> RENDERING["Client Rendering & In-Situ Protection<br/>• In-Email Expandable Shadow DOM Security Banner<br/>• Pre-Open Inbox Risk Status Pills<br/>• Safe Peek Zero-Execution Redirect Tracer"]
 
-    subgraph EXPLANATION ["Explanation & Grounding"]
-        G --> H{"LLM Key Configured?"}
-        H -->|Yes| I["Grounded LLM (server/llm/)<br/>Verbatim Flag Verification"]
-        H -->|No| J["Deterministic Template Engine"]
-        I --> K["Final JSON Verdict"]
-        J --> K
-    end
+    classDef stageBox fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
+    classDef coreBox fill:#FFECEB,stroke:#EA3E2B,stroke-width:2px,color:#121212
+    classDef renderBox fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
 
-    subgraph RENDER ["Shadow DOM Banner Injected in Gmail"]
-        K --> L["banner.js (Shadow DOM Injection)"]
-        L --> M["Mail Score Badge: [ MAIL: XX/100 ]"]
-        L --> N["QR Score Badge: [ QR CODE: YY/100 ]"]
-        L --> O["Safe Peek Link Tracer (server/unmask/tracer.js)"]
-    end
+    class INCOMING,STAGE1,DUAL_PATH stageBox
+    class STAGE2,STAGE3,STAGE4,STAGE5 coreBox
+    class RENDERING renderBox
 ```
 
 ---
 
 ### Diagram 2: Zero-Trust QR Phishing (Quishing) Engine
 ```mermaid
-flowchart LR
-    subgraph GMAIL_DOM ["Gmail DOM Images"]
-        A["Image in Email Body"] -->|Fetch Blob| B["Bitmap Decoder"]
-        B -->|jsQR Decoder| C["Decoded Raw QR String"]
+flowchart TD
+    GMAIL_IMAGE["Image Detected in Email Body / Uploaded QR"]
+    
+    GMAIL_IMAGE --> STAGE1_QR["Stage 1: Pure-JS Browser Bitmap Decoder<br/>• Extracts image stream in local browser memory<br/>• Decodes raw payload string using vendored jsQR engine"]
+    
+    STAGE1_QR -->|Decoded String / Defanged Payload| QR_CORE["Zero-Trust QR Analysis Engine"]
+
+    subgraph QR_CORE ["Zero-Trust QR Security Core (server/rules/qr.js)"]
+        direction TB
+        
+        CLASSIFY["Payload Type Classification<br/>• Detects URL vs. UPI Payment vs. Crypto Address"]
+        
+        CLASSIFY --> HEURISTICS["Heuristic Risk & Spoof Analysis<br/>• Homoglyph / Typosquatting Check (Levenshtein <= 2)<br/>• High-Risk TLD (.xyz, .top, .icu, .buzz)<br/>• Credential Harvesting Path (/login, /verify, /account)<br/>• Raw IP Address Host & Punycode Tricks"]
+        
+        HEURISTICS --> CALIBRATE["Scoring Floor Calibration<br/>• Brand Impersonation Floor: Min 90 / 100 (MALICIOUS)<br/>• Raw IP Host Floor: Min 75 / 100 (HIGH RISK)<br/>• Credential Path on Impersonating Host: 100 / 100"]
     end
 
-    subgraph QR_HEURISTICS ["Zero-Trust QR Engine (server/rules/qr.js)"]
-        C -->|POST /analyze-qr| D["Payload Classifier"]
-        D --> E{"Is Payload URL?"}
-        E -->|Yes| F["Domain Extractor & Registrable Label Check"]
-        E -->|No| G["UPI / Crypto / Text Classifier"]
-        F --> H["Brand Impersonation & Typosquat Check (Levenshtein <= 2)"]
-        F --> I["Abused TLD Check (.xyz, .top, .icu, .buzz)"]
-        F --> J["Credential Path Check (/login, /verify, /account)"]
-        H --> K["Scoring Floor Calibration<br/>(Impersonation: Min 90, IP Literal: Min 75)"]
-        I --> K
-        J --> K
-    end
+    CALIBRATE --> BANNER_SYNC["Real-Time Gmail UI Banner Event Sync<br/>• Injects Header Badge: [ QR CODE: 90/100 ]<br/>• Renders Defanged URL & Warning Pill in Banner Drawer<br/>• Places In-Situ Visual Badge directly over QR image"]
 
-    subgraph UI_SYNC ["Real-Time Banner Event Sync"]
-        K --> L["window.updateRatiodBannerQr(qrResult)"]
-        L --> M["Updates Main Banner Header Badge [ QR CODE: 82/100 ]"]
-        L --> N["Populates QR Section in Banner Drawer with Defanged URL"]
-        L --> O["Injects In-Situ Image Badge on QR Code"]
-    end
+    classDef stageBox fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
+    classDef coreBox fill:#FFECEB,stroke:#EA3E2B,stroke-width:2px,color:#121212
+    classDef renderBox fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
+
+    class GMAIL_IMAGE,STAGE1_QR stageBox
+    class CLASSIFY,HEURISTICS,CALIBRATE coreBox
+    class BANNER_SYNC renderBox
 ```
 
 ---
@@ -308,22 +310,22 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as User in Gmail
+    actor User as User in Gmail / Web Console
     participant CS as Extension Content Script
-    participant Redactor as Client Redactor (js/redactor.js)
-    participant Server as Node.js Backend Engine
-    participant ShadowDOM as Shadow DOM Banner
+    participant Redactor as Client PII Redactor (js/redactor.js)
+    participant Server as Ratio'd Backend Engine
+    participant ShadowDOM as In-Situ Shadow DOM Banner
 
-    User->>CS: Opens Email / Pastes Message
-    CS->>Redactor: Pass Raw Text (Body, Subject, Headers)
-    Note over Redactor: Regex Pattern Matching:<br/>Phones: (\+?\d{1,3})?\(?\d{3}\)?...<br/>Emails: [\w._%+-]+@[\w.-]+\.[a-zA-Z]{2,}<br/>OTPs: (OTP|code|PIN)\s*:\s*\d{4,8}
-    Redactor-->>CS: Return Sanitized Text + Redaction Counts
-    Note over CS: PII is killed HERE in browser memory.<br/>Raw names, phones & codes NEVER touch network.
-    CS->>Server: POST /analyze { text: sanitizedText, auth: headers }
-    Server->>Server: Run Rule Engine & Laya Scorer
-    Server-->>CS: Return JSON { score: 85, verdict: "high_risk", flags, explanation }
-    CS->>ShadowDOM: injectRatiodBanner(targetElement, result)
-    ShadowDOM-->>User: Render High-Contrast Banner with Redaction Footnote
+    User->>CS: Opens Email Thread or Pastes Message
+    CS->>Redactor: Pass Raw Message Text (Body, Subject, Headers)
+    Note over Redactor: Local Pattern Matching:<br/>• Phone Numbers: (\+?\d{1,3})?...<br/>• Email Addresses: [\w._%+-]+@...<br/>• 4-8 Digit OTP/PINs: (OTP|code|PIN)...
+    Redactor-->>CS: Return Masked Text ([PHONE_1], [EMAIL_1]) + Counts
+    Note over CS: PRIVACY GUARANTEE:<br/>PII dies in browser memory.<br/>Raw names, phones & OTPs NEVER touch network!
+    CS->>Server: Send POST /analyze { sanitizedText, auth }
+    Server->>Server: Execute Rule Engine & Laya Scorer
+    Server-->>CS: Return JSON Verdict { score: 85, verdict: "high_risk", flags }
+    CS->>ShadowDOM: Mount Neo-Brutalist Shadow DOM Banner
+    ShadowDOM-->>User: Display Risk Badges & Verbatim Flag Highlighting
 ```
 
 ---
@@ -331,7 +333,7 @@ sequenceDiagram
 ### Diagram 4: Component Architecture & Entity Relationship Map
 ```mermaid
 flowchart TD
-    subgraph CLIENT_LAYER ["🌐 CLIENT APPLICATION LAYER (Browser / Gmail DOM)"]
+    subgraph CLIENT_LAYER ["🌐 CLIENT APPLICATION LAYER (Browser Memory)"]
         direction TB
         EXT["🧩 Chrome Extension MV3<br/>(extension/manifest.json)"]
         CS["📜 Content Script<br/>(extension/content-script.js)"]
@@ -341,7 +343,7 @@ flowchart TD
         
         EXT -->|Injects| CS
         CS -->|Redacts PII| RED
-        CS -->|Triggers| QR_SCAN
+        CS -->|Scans Images| QR_SCAN
     end
 
     subgraph PRIVACY_WALL ["🛡️ AIR-GAPPED PRIVACY BOUNDARY (Memory-Only PII Redaction)"]
