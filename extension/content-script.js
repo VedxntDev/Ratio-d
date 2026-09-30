@@ -84,16 +84,35 @@ function scanAndAnalyzeGmail() {
   
   if (!emailBodyElem) return;
 
-  const messageText = emailBodyElem.innerText || "";
-  if (messageText.length < 5) return;
+  const rawBodyText = emailBodyElem.innerText || "";
+  if (rawBodyText.length < 5) return;
 
-  const currentHash = messageText.substring(0, 100) + messageText.length;
+  // Extract Subject and Sender from open email header
+  const subjectElem = document.querySelector("h2.hP, .ha h2");
+  const subject = subjectElem ? subjectElem.innerText.trim() : "";
+
+  const senderElem = document.querySelector(".gE.iv.gt span[email], .gD[email], .go");
+  const senderEmail = senderElem ? (senderElem.getAttribute("email") || senderElem.innerText.trim()) : "";
+
+  // Check if Gmail placed this in Spam or shows a quarantine warning
+  const spamBanner = document.querySelector(".mE, .b8, div[role='alert'], .a2k");
+  const isSpamLocation = (window.location.hash && window.location.hash.toLowerCase().includes("spam")) ||
+                         (document.title && document.title.toLowerCase().includes("spam"));
+  const spamWarning = spamBanner ? spamBanner.innerText.trim() : (isSpamLocation ? "Quarantined in Gmail Spam Folder" : "");
+
+  let fullTextToAnalyze = "";
+  if (spamWarning) fullTextToAnalyze += `Security Warning: ${spamWarning}\n`;
+  if (senderEmail) fullTextToAnalyze += `From: ${senderEmail}\n`;
+  if (subject) fullTextToAnalyze += `Subject: ${subject}\n\n`;
+  fullTextToAnalyze += rawBodyText;
+
+  const currentHash = fullTextToAnalyze.substring(0, 100) + fullTextToAnalyze.length;
   if (lastAnalyzedHash === currentHash) return;
 
   lastAnalyzedHash = currentHash;
 
   // 1. Client-Side Local PII Redaction
-  const redactedText = redactPiiLocally(messageText);
+  const redactedText = redactPiiLocally(fullTextToAnalyze);
 
   // 2. Direct fetch to local security backend (http://127.0.0.1:3000/analyze)
   fetch("http://127.0.0.1:3000/analyze", {
@@ -140,6 +159,13 @@ function scanInboxRows() {
   );
   if (!rows || rows.length === 0) return;
 
+  const isSpamView = (window.location.hash && window.location.hash.toLowerCase().includes("spam")) ||
+                     (document.title && document.title.toLowerCase().includes("spam")) ||
+                     !!document.querySelector('div[data-tooltip="Spam"][aria-selected="true"], a[href*="#spam"][aria-current="page"]');
+
+  const isPromotionsView = !!document.querySelector('[role="tab"][aria-selected="true"][aria-label*="Promotion"], [role="tab"][aria-selected="true"][data-tooltip*="Promotion"]') ||
+                           (window.location.hash && window.location.hash.includes("category/promotions"));
+
   rows.forEach((row) => {
     row.setAttribute("data-ratiod-badged", "true");
 
@@ -147,7 +173,7 @@ function scanInboxRows() {
     const subjectElem = row.querySelector(".y6, .bog, span.bqe");
     const snippetElem = row.querySelector(".y2");
 
-    const sender = senderElem ? (senderElem.getAttribute("email") || senderElem.innerText || "") : "";
+    const sender = senderElem ? (senderElem.getAttribute("email") || senderElem.getAttribute("title") || senderElem.innerText || "") : "";
     const subject = subjectElem ? subjectElem.innerText : "";
     const snippet = snippetElem ? snippetElem.innerText : "";
 
@@ -158,16 +184,27 @@ function scanInboxRows() {
     const redacted = redactPiiLocally(combinedText);
     const result = window.RatiodFallback.analyze(redacted);
 
-    // Category & marketing awareness: detect Promotions view or marketing language
-    const isPromotionsView = !!document.querySelector('[role="tab"][aria-selected="true"][aria-label*="Promotion"], [role="tab"][aria-selected="true"][data-tooltip*="Promotion"]') ||
-                             (window.location.hash && window.location.hash.includes("category/promotions"));
-    const promoKeywords = /\b(unsubscribe|%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|promo|limited\s+time|webinar|announcing|newsletter|special\s+offer|rewards?\s*(points|expire)|free\s+gift|clearance)\b/i;
-
     let verdict = result.verdict;
     let score = result.score;
-    if (verdict === "safe" && (isPromotionsView || promoKeywords.test(combinedText))) {
-      verdict = "promo_clutter";
-      score = Math.max(score, 25);
+    const flags = (result.flags || []).slice();
+
+    // Spam folder priority: if user is in Spam, Google already quarantined this message
+    if (isSpamView) {
+      if (score < 66) {
+        score = Math.max(score, 78);
+        verdict = "high_risk";
+      }
+      flags.unshift({
+        span: "Quarantined in Spam",
+        reason: "Google security and reputation filters flagged this message as spam/phishing"
+      });
+    } else {
+      // Category & marketing awareness: detect Promotions view or marketing language
+      const promoKeywords = /\b(unsubscribe|%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|promo|limited\s+time|webinar|announcing|newsletter|special\s+offer|rewards?\s*(points|expire)|free\s+gift|clearance)\b/i;
+      if (verdict === "safe" && (isPromotionsView || promoKeywords.test(combinedText))) {
+        verdict = "promo_clutter";
+        score = Math.max(score, 25);
+      }
     }
 
     // Target container: prefer span.bog (inline subject text) so badge sits on the same line
@@ -205,7 +242,7 @@ function scanInboxRows() {
     }
 
     badge.innerText = labelText;
-    const flagSummary = (result.flags || []).map(f => '• ' + f.span + ': ' + f.reason).join('\n');
+    const flagSummary = (flags || []).map(f => '• ' + f.span + ': ' + f.reason).join('\n');
     badge.title = `Ratio'd Pre-Open Analysis: ${score}/100 (${verdict})\n${flagSummary || 'Clean preview'}`;
 
     badge.style.cssText = `
