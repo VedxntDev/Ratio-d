@@ -353,7 +353,7 @@
           "name": "advance_fee",
           "points": 20,
           "corroboration": true,
-          "patternCount": 13,
+          "patternCount": 14,
           "patterns": [
             "Unsolicited 'you have been selected' prize claim",
             "Advance-fee lottery: 'lucky winner' framing",
@@ -367,7 +367,8 @@
             "Unsolicited grant, lottery or compensation payout claim",
             "Claim released only by emailing back a stranger",
             "Named 'finance house' acting as a payout intermediary",
-            "Multi-million advance-fee amount"
+            "Multi-million advance-fee amount",
+            "Unsolicited grant or disbursement payout claim"
           ]
         },
         {
@@ -387,7 +388,7 @@
           "name": "delivery_fee",
           "points": 20,
           "corroboration": true,
-          "patternCount": 7,
+          "patternCount": 8,
           "patterns": [
             "Parcel-release fee demanded for a held shipment",
             "Shipping-fee pretext to release a parcel",
@@ -395,14 +396,15 @@
             "Small-fee delivery scam (classic smishing)",
             "Shipment held pending payment",
             "Failed-delivery notice used to drive a click",
-            "Delivery reschedule routed through an email link"
+            "Delivery reschedule routed through an email link",
+            "Payment confirmation demanded to release parcel"
           ]
         },
         {
           "name": "fake_subscription",
           "points": 18,
           "corroboration": true,
-          "patternCount": 7,
+          "patternCount": 9,
           "patterns": [
             "Fake cloud-storage exhaustion scare",
             "Storage upgrade upsell via unsolicited mail",
@@ -410,19 +412,22 @@
             "Subscription-expiry renewal lure",
             "Cancellation handled by phone/email rather than an account page",
             "Unsolicited 'your rewards expire' bait",
-            "Reward claim pushed from unsolicited mail"
+            "Reward claim pushed from unsolicited mail",
+            "Fake membership renewal record",
+            "Unsolicited cashback expiry lure"
           ]
         },
         {
           "name": "fake_security",
           "points": 20,
           "corroboration": true,
-          "patternCount": 4,
+          "patternCount": 5,
           "patterns": [
             "Mandatory 2FA enforcement notice",
             "2FA enrolment pushed from an email link",
             "Wallet-protection pretext",
-            "Declined-payment bait"
+            "Declined-payment bait",
+            "Fake dashboard unread message lure"
           ]
         },
         {
@@ -442,7 +447,7 @@
           "name": "health_claim",
           "points": 15,
           "corroboration": true,
-          "patternCount": 7,
+          "patternCount": 8,
           "patterns": [
             "Unverifiable medical 'protocol' claim",
             "Implausible medical outcome statistic",
@@ -450,7 +455,8 @@
             "Viral-marketing medical claim",
             "Consumer device claims a specific therapeutic outcome for a medical condition",
             "Targets a named medical complaint with an at-home product",
-            "Deep discount plus money-back trial, the standard health-device advertorial close"
+            "Deep discount plus money-back trial, the standard health-device advertorial close",
+            "Fabricated parasite or miracle cure claim for a chronic condition"
           ]
         },
         {
@@ -525,13 +531,13 @@
         "credential": 5,
         "promotionalClutter": 8,
         "suspiciousDomains": 6,
-        "advanceFee": 13,
+        "advanceFee": 14,
         "refundBait": 5,
-        "deliveryFee": 7,
-        "fakeSubscription": 7,
-        "fakeSecurity": 4,
+        "deliveryFee": 8,
+        "fakeSubscription": 9,
+        "fakeSecurity": 5,
         "investment": 5,
-        "healthClaim": 7,
+        "healthClaim": 8,
         "personalData": 5,
         "contactStranger": 4,
         "inheritance": 7
@@ -590,12 +596,12 @@
         {
           "name": "credential_or_wire",
           "weight": 0.2,
-          "test": "(t) =>\n      /(verify|confirm|update|validate|secure)\\s+(your\\s+)?(account|password|credentials|details|information)/i.test(t)\n      || /(gift\\s?card|bitcoin|crypto|wire\\s+transfer|western\\s+union|money\\s+gram)/i.test(t)"
+          "test": "(t) =>\r\n      /(verify|confirm|update|validate|secure)\\s+(your\\s+)?(account|password|credentials|details|information)/i.test(t)\r\n      || /(gift\\s?card|bitcoin|crypto|wire\\s+transfer|western\\s+union|money\\s+gram)/i.test(t)"
         },
         {
           "name": "link_farm",
           "weight": 0.18,
-          "test": "(t) => {\n      const hosts = new Set((t.match(/https?:\\/\\/([^\\s/?#]+)/gi) || [])\n        .map((u) => u.replace(/^https?:\\/\\//i, \"\").toLowerCase()));\n      return hosts.size >= 5;\n  }"
+          "test": "(t) => {\r\n      const hosts = new Set((t.match(/https?:\\/\\/([^\\s/?#]+)/gi) || [])\r\n        .map((u) => u.replace(/^https?:\\/\\//i, \"\").toLowerCase()));\r\n      return hosts.size >= 5;\r\n  }"
         }
       ]
     }

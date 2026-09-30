@@ -44,12 +44,25 @@ const HIGH_RISK_TOKENS = [
   "urgent", "verify", "suspended", "password", "ssn", "wire", "paypa1", "bit.ly", "login"
 ];
 
+const { predictTrainedModel, loadModel } = require("./inference");
+
 async function evaluateLayaModel(text, ruleFlags) {
   if (!text || typeof text !== "string") {
-    return { label: "safe", probability: 0.05, source: "laya_stub_heuristic" };
+    return { label: "safe", probability: 0.05, source: loadModel() ? "laya_trained_v1" : "laya_stub_heuristic" };
   }
 
-  // Feature weighting
+  // Use trained ML model if available
+  const trained = predictTrainedModel(text);
+  if (trained) {
+    if (ruleFlags && ruleFlags.length > 0 && trained.probability < 0.95) {
+      trained.probability = Math.min(0.99, parseFloat((trained.probability + Math.min(0.20, ruleFlags.length * 0.05)).toFixed(2)));
+      if (trained.probability >= 0.65) trained.label = "high_risk";
+      else if (trained.probability >= 0.35) trained.label = "suspicious";
+    }
+    return trained;
+  }
+
+  // Fallback to hand-weighted heuristic if trained model is unavailable
   let threatSignal = 0;
 
   if (ruleFlags && ruleFlags.length > 0) {

@@ -1,0 +1,330 @@
+# REAL-WORLD EMAIL DATASET - USER SOURCED (14 SAMPLES)
+============================================================
+# Ingested from live email data (phishing, scams, and legitimate marketing)
+
+ID: SCAM-021
+LABEL: scam
+SUBJECT: (None) Your grant support fund is now available
+FROM: Kenneth Manly Andolf <imed.toulgui@etud.u-picardie.fr>
+REPLY-TO: budget.ropng@palaunet.com
+DATE: Sun, 06 Sep 2026 20:59:06 +0200
+BODY:
+Hope this email reaches you in good health and well-being.
+
+This is to inform you that your grant support fund is now available.
+
+Please see the disbursement reference number below:
+
+(This will be provided in subsequent email):-
+• Disbursement Reference Number: GSI*******/*****/2***
+
+Kindly acknowledge receipt of this notification. If you have any questions or require further assistance, please contact us immediately.
+
+Notification Department
+GSI
+
+------------------------------------------------------------
+
+ID: SCAM-022
+LABEL: scam
+SUBJECT: Re: Notice
+FROM: Barr Cliford Jose <test@cargillsbank.com>
+REPLY-TO: fdvgovzin@gmail.com
+DATE: Sun, 23 Aug 2026 13:02:50 -0700
+BODY:
+54 Doughty Street London,
+WC1N 2LS DX: 223 Chancery Lane
+Phone: +447377423538
+Whatsapp: +447949820671
+
+Attn, 
+
+I am Cliford Jose the private counselor-at-law to Robert Fitzpatrick, an American who was a consultant with Shell UK LTD here in London, who shall be referred to as my client. Unfortunately, my client lost his life on Boeing Egypt Air Flight 990, which crashed into the Atlantic Ocean on October 31st, 1999, and left no clear beneficiary as Next of Kin except for some vital documents related to the deposit still with me.
+
+All efforts by me to trace his Next of Kin was unsuccessful because he did not make any will before his death. Since then I have made several inquiries to locate any of my late clients' extended relatives and this has proven unsuccessful. After my several unsuccessful attempts to locate any member of his family hence I contacted you.
+
+I am contacting you to assist in claiming the money left behind by my client before they get confiscated or declared unclaimed by the security company where this huge sum was deposited. Particularly, the finance company where the deceased had the said fund valued at 21 Million dollars has issued me a notice to provide the next of kin.
+
+Consequent upon this, my idea is that we can have a deal/agreement and I am going to do this legally with your name as the bonafide beneficiary of the amount in question as I have all legal documents to back our claim, I seek your consent to present you as the next of kin to the deceased so that the proceeds of this account valued at $21 Million US dollars can be paid to your account abroad. Note that 40% of this money will be for you, concerning the provision of a foreign account, and 50% for me, 10% will be used for the reimbursement of any expenditure we may incur in the cause of the transaction.
+
+I affirm that this will be done under a legitimate arrangement that will cover you from any breach of the law, all I need from you is your utmost alliance and sincerity for us to flourish in this deal. Please get back to me if you are ready to assist me.
+
+Sincerely,
+Barr Cliford Jose
+
+------------------------------------------------------------
+
+ID: SCAM-023
+LABEL: scam
+SUBJECT: New message waiting for you
+FROM: Info <noreply@remotelock.com>
+REPLY-TO: divaah@hotmail.com
+DATE: Mon, 10 Aug 2026 09:41:19 +0000
+BODY:
+Logo
+
+Hi,
+
+There’s a new message for you on your dashboard
+
+View Message ( hxxps://house-limon-9598[.]unicornplatform[.]page/ )
+
+Thanks,
+
+Facebook ( hxxps://facebook[.]com/ )
+LinkedIn ( hxxps://linkedin[.]com/ )
+Instagram ( hxxps://instagram[.]com/ )
+YouTube ( hxxps://youtube[.]com/ )
+Email ( email@example.com )
+
+Copyrights © All Rights Reserved
+
+------------------------------------------------------------
+
+ID: SCAM-024
+LABEL: scam
+SUBJECT: [Important]: PACKAGE N°#SG509658345798 11.01.2021 05:13.
+FROM: Singapore Post <sunsetgo.com@sunsetgo.com>
+REPLY-TO: sunsetgo.com@sunsetgo.com
+DATE: Mon, 11 Jan 2021 04:13:33 +0200
+BODY:
+Package - SG / 592451365814
+We’ve recently checked your delivery,
+And we noticed that its still on hold in our post due to non-payment of 2.99 SGD,
+In order to receive your delivery we ask you for the second time to pay your fees.
+>Pay fees of my delivery (hxxps://www[.]kazmatix[.]com/Utm_Source=Tls_Items...)
+Note: An additional fees will be added in cas you did not pay in the next 72H
+Director of Action and Delivery.
+©Sing-Post 2021 | FAQ | Contact Us | Return Policy | Unsubscribe | Privacy Policy
+
+------------------------------------------------------------
+
+ID: HAM-003
+LABEL: legitimate
+SUBJECT: Turn voice automation into a service you can deliver repeatedly
+FROM: Bernard @ Awaz <bernard@awaz.pro>
+REPLY-TO: Bernard @ Awaz <bernard@awaz.pro>
+DATE: Thu, 26 Mar 2026 03:16:08 +0000
+BODY:
+Hi,
+
+Delivering voice automation for a single client is an achievement. The real challenge, however, lies in delivering it repeatedly across multiple clients, maintaining quality and efficiency without creating chaos. This is where a systematic approach becomes essential.
+
+Scaling your voice automation services requires standardization. Think of it as a playbook: a clear template, an effective onboarding checklist, consistent outcomes, and robust reporting. This framework ensures predictable, high-quality results every time.
+
+Our Whitelabel solution is built precisely for this model. It empowers you to deliver Awaz.ai's powerful voice automation under your own brand, with dedicated client workspaces. This allows you to manage each client's needs separately while leveraging a unified, repeatable delivery system.
+
+Your Practical Packaging Approach:
+- Define one flagship workflow you can deliver consistently to most clients.
+- Create a baseline AI agent template, only customizing what is absolutely client-specific.
+- Use consistent call outcomes for streamlined performance measurement and reporting.
+- Sync these outcomes into CRM or Google Sheets with API for clean follow-ups and comprehensive client reporting.
+
+To help you master this, our CEO is hosting a free 60-minute Whitelabel webinar. This session will cover key features of the Awaz.ai Whitelabel platform and provide valuable insights into implementing a scalable service delivery model.
+
+Register for the Whitelabel Webinar: hxxps://sendy[.]digitalinfluencers[.]co/l/lQl3wjaAZqaZD763eA8Rzc6Q
+
+We look forward to helping you expand your service offerings with confidence.
+
+2261 Market Street STE 10067, San Francisco, CA 94114
+Don't want to receive these emails? Unsubscribe here
+© 2026 Awaz.ai. All rights reserved.
+
+------------------------------------------------------------
+
+ID: SCAM-025
+LABEL: scam
+SUBJECT: Invitation: ORD4930 authorization entry logged for Bill @ Mon Mar 9, 2026 11:52pm (GMT-4)
+FROM: Muriel Hare <mimakter80809@mailmsg.org>
+SENDER: Google Calendar <calendar-notification@google.com>
+DATE: Mon, 09 Mar 2026 14:52:18 +0000
+BODY:
+Monday, 09 March 2026
+Billing Manager- Cheri Lacey
+
+Membership Renewal Record Notice
+
+Dear Valued Customer,
+
+We’re pleased to confirm that your membership registration has been completed successfully. Thank you for selecting our services.
+
+Your membership will renew automatically every Five Years. You may update your renewal settings up to 24 hours before the end of the current term.
+
+For assistance, please contact (863)  409-8542.
+
+Item Information Center
+Bill receipt- ORD4930
+Account Category- BitDefender
+Product Ordered- Advanced Secure Coverage
+Membership Duration- Five Years
+Total Payment- USD 500.00
+
+For cancellation requests or additional help, please contact (863)  409-8542.
+
+2026 BitDefender, LLC. All rights reserved.
+Organizer: Muriel Hare mimakter80809@mailmsg.org
+
+------------------------------------------------------------
+
+ID: SCAM-026
+LABEL: scam
+SUBJECT: Subscription issue.
+FROM: Noreply <mov-ise-v7N5Cy8@wptidbits.com>
+DATE: 12 Feb 2021 01:58:21 +0000
+BODY:
+Payment details update required.
+Hello,
+We're having some trouble with your current billing information. We'll try again, but in the meantime you need to update your payment details.
+UPDATE ACCOUNT NOW (hxxps://diplomaticdeparture[.]com/ds/)
+Time: Friday, February 12, 2021 (GMT+1)
+If you re-subscribed, relax and enjoy watching!
+We are here to help you if you need it. To visit Help Center for more information or contact us.
+-Your friends on Netflix
+WATCH ALL TV SHOWS AND MOVIES
+Questions? To visit Help Center
+Netflix International B.V.
+Communication Settings | Terms of Use | Privacy | Help Center
+
+------------------------------------------------------------
+
+ID: SCAM-027
+LABEL: scam
+SUBJECT: DHXPR-ESS : Delivery Status Notification
+FROM: MyDHL EXPRESS <mhartzenberg@www.belhar.org.za>
+DATE: 31 Oct 2020 02:56:11 +0000
+BODY:
+DHL EXPRESS
+Hello,
+Welcome to MyDHL, Your parcel is waiting for delivery. Confirm the payment (1,99EUROS) in the following link, If you don't pay it's either returned to sender or seized by customs and auctioned.
+Please follow your parcel in the link below:
+hxxp://www[.]bgsexpress[.]com/sp1
+Thanks,
+Dhl
+Accessibility 2020 @ DHL International GmbH. All rights reserved.
+
+------------------------------------------------------------
+
+ID: SCAM-028
+LABEL: scam
+SUBJECT: Exclusive offer: 50 percent off a 200 GB plan. Your storage is almost full.
+FROM: Cloud Solutions <support@kelvindorsey.com>
+DATE: Thu, 18 Jun 2026 18:08:21 +0000
+BODY:
+Action Required
+Your Cloud Account has completely run out of space. Device backups and file syncing have been suspended.
+Critical Alert: Without available storage, your device is no longer safely backed up to the cloud.
+Account Storage: 50 GB of 50 GB Used
+Current Plan: Basic 50 GB
+Sync Status: Paused
+Recommended Plan: Premium 200 GB
+Upgrade Storage Now: hxxps://s3[.]eu-north-1[.]amazonaws[.]com/cld[.]jm/hada[.]html
+Review Account Space: hxxps://s3[.]eu-north-1[.]amazonaws[.]com/cld[.]jm/hada[.]html
+System ID: #882-194-002
+If you no longer wish to receive these alerts, you can unsubscribe here.
+
+------------------------------------------------------------
+
+ID: SCAM-029
+LABEL: scam
+SUBJECT: Transaction Reference: SH-2026-4567-8899.
+FROM: StarHub Ltd <noreply@active-f3680.firebaseapp.com>
+DATE: Sun, 15 Feb 2026 03:46:43 +0000
+BODY:
+Your StarHub refund of SGD 66.61 is ready. Please update your payment details to receive your money. StarHub refund payment processing Singapore IMDA PDPA transaction
+
+SINGAPORE TELECOMMUNICATIONS • IMDA COMPLIANT
+Refund Processing: SGD 66.61
+Transaction Reference: SH-2026-4567-8899
+
+Action Required: Please verify your payment details for refund processing
+Dear Valued Customer,
+We are processing a refund of SGD 66.61 to your account. This refund results from a recent billing adjustment on your StarHub account.
+To complete this transaction securely, we need to verify your payment information as per the Personal Data Protection Act (PDPA) requirements.
+
+YOUR REFUND AMOUNT: SGD 66.61
+Reference: SH-2026-4567-8899
+Secure Portal • SSL Encrypted • PDPA Compliant
+
+Update Payment Details:
+hxxps://email[.]notify[.]thinkific[.]com/c/starhub-refund-verification
+
+Processing time: 3-5 working days upon verification
+Complete within 7 days for prompt processing.
+StarHub Customer Service
+StarHub Limited • 67 Ubi Avenue 1 • StarHub Green • Singapore 408942
+
+------------------------------------------------------------
+
+ID: SCAM-030
+LABEL: scam
+SUBJECT: 60 Minutes Investigates the Hidden Parasite Causing Uncontrollable Glucose Spikes
+FROM: Glycoharmony Research Center <support@marketinginternetdirectory.com>
+DATE: Mon, 14 Sep 2026 13:48:40 +0000
+BODY:
+HEALTH INVESTIGATIVE REPORT
+High A1C? 60 Minutes Exposes the 2-Inch "Insulin Vampire" Parasite Causing Type 2 Diabetes — And the Honey Ritual That Eradicates It
+
+If your A1C numbers keep climbing despite strict diets, medications, or insulin, you need to read this urgent alert immediately.
+In a groundbreaking investigative segment on 60 Minutes, medical whistleblowers exposed the true hidden cause of Type 2 diabetes: a 1 to 2-inch parasitic infection living inside the pancreas. This parasite latches onto your beta cells like a vampire, devouring your natural insulin before your body can ever use it triggering uncontrollable hunger, nerve pain in your feet, and dangerous glucose spikes.
+
+In just 15 days, my blood sugar dropped from 200 down to 110. In 3 months I was completely free from Metformin and insulin shots.
+Japanese researchers discovered this parasite's fatal vulnerability: an ancient Sidr honey and cinnamon ritual that starves the infection and flushes it out of the pancreas in as little as 10 days.
+
+Best of all? It requires zero dangerous prescription drugs, zero Ozempic injections, and zero side effects. You simply pair this daily pantry ritual with Glycoharmony to restore optimal pancreatic health and permanently stabilize your A1C.
+
+Watch the unedited investigative report below before Big Pharma succeeds in forcing it offline.
+CLAIM Glycoharmony & WATCH THE VIDEO (hxxps://storage[.]googleapis[.]com/abdyght/m)
+
+------------------------------------------------------------
+
+ID: SCAM-031
+LABEL: scam
+SUBJECT: Your SGD80 Fave cashback will expire in the next 3 days !
+FROM: Fave Rewards <info@sakamoto-fla.co.jp>
+DATE: Wed, 24 Nov 2021 01:53:28 +0000
+BODY:
+SGD80
+Your Fave Cashback will expire on the 25th of November 2021
+Hey, thanks for being an amazing Faver!
+This is a friendly reminder that your cashback will expire on the 29th of November 2021.
+You can claim SGD80 cashback with FavePay directly to your credit card . Happy Faving!
+View your cashback & claim your cash! (hxxp://inoue[.]s201[.]xrea[.]com/fave)
+Copyright © 2021 Fave
+Got a question? Read our FAQ or talk to us at hello@myfave.com
+
+------------------------------------------------------------
+
+ID: SCAM-032
+LABEL: scam
+SUBJECT: New message waiting for you
+FROM: Info <noreply@remotelock.com>
+REPLY-TO: divaah@hotmail.com
+DATE: Fri, 7 Aug 2026 11:26:36 +0000
+BODY:
+Logo
+Hi,
+There’s a new message for you on your dashboard
+View Message ( hxxps://house-limon-9598[.]unicornplatform[.]page/ )
+Thanks,
+Facebook ( hxxps://facebook[.]com/ )
+LinkedIn ( hxxps://linkedin[.]com/ )
+Instagram ( hxxps://instagram[.]com/ )
+YouTube ( hxxps://youtube[.]com/ )
+Email ( email@example.com )
+Copyrights © All Rights Reserved
+
+------------------------------------------------------------
+
+ID: SCAM-033
+LABEL: scam
+SUBJECT: IRAS | Internal Revenue Service/Refund #659010349
+FROM: General Tax Authority <accounts@iinet.net.au>
+DATE: Sun, 17 Dec 2023 04:42:11 +0000
+BODY:
+Your Refund Bill for your Account number **** is ready.(Total: 249SGD)
+We apologize for the accidental overcharge on your bill.
+Please take a moment to review all your refund details. If you have any questions or need assistance, please don't hesitate to reach out.
+Review and complete the process (hxxps://fanlink[.]to/tFR28R)
+best regards,
+IRAS | myTax Portal
+airport road, singapore, 89004 SG

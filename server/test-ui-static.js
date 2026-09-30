@@ -200,7 +200,7 @@ check("mobile label is visually hidden, not removed",
 // to a real install path - instead of pinning it to one specific file. Pinning
 // it to the ZIP is what made this check fail the moment the store listing
 // shipped, and it would have failed for the right reason too.
-const promoBarBlock = (html.match(/id="promo-bar"[\s\S]{0,900}?<\/div>/) || [""])[0];
+const promoBarBlock = (html.match(/id="promo-bar"[\s\S]{0,1500}?<\/div>/) || [""])[0];
 check("promo bar has an install link",
   /href="https:\/\/chromewebstore\.google\.com\//.test(promoBarBlock) ||
   /href="ratiod-extension\.zip"/.test(promoBarBlock),

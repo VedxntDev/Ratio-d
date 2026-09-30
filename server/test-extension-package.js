@@ -10,6 +10,39 @@ const { execFileSync } = require("child_process");
 const ROOT = path.join(__dirname, "..");
 const ZIP = path.join(ROOT, "ratiod-extension.zip");
 
+if (process.platform === "win32") {
+  const gitUsrBin = "C:\\Program Files\\Git\\usr\\bin";
+  if (fs.existsSync(gitUsrBin) && !process.env.PATH.includes(gitUsrBin)) {
+    process.env.PATH = gitUsrBin + path.delimiter + process.env.PATH;
+  }
+}
+
+const norm = (s) => (typeof s === "string" ? s.replace(/\r\n/g, "\n") : s);
+
+function unzipList(z) {
+  try {
+    return execFileSync("unzip", ["-Z1", z], { encoding: "utf8" })
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  } catch {
+    const script = "import sys, zipfile\nwith zipfile.ZipFile(sys.argv[1]) as z:\n  for n in z.namelist(): print(n)";
+    return execFileSync("python", ["-c", script, z], { encoding: "utf8" })
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+}
+
+function unzipRead(z, entry, encoding) {
+  try {
+    return execFileSync("unzip", ["-p", z, entry], encoding ? { encoding } : {});
+  } catch {
+    const script = "import sys, zipfile\nwith zipfile.ZipFile(sys.argv[1]) as z:\n  sys.stdout.buffer.write(z.read(sys.argv[2]))";
+    return execFileSync("python", ["-c", script, z, entry], encoding ? { encoding } : {});
+  }
+}
+
 let failures = 0;
 function check(label, ok, detail) {
   console.log(`${ok ? "PASS" : "FAIL"}  ${label}${detail ? "  -> " + detail : ""}`);
@@ -20,10 +53,7 @@ check("zip exists", fs.existsSync(ZIP));
 if (!fs.existsSync(ZIP)) process.exit(1);
 check("zip is not empty", fs.statSync(ZIP).size > 5000, `${fs.statSync(ZIP).size} bytes`);
 
-const listing = execFileSync("unzip", ["-Z1", ZIP], { encoding: "utf8" })
-  .split("\n")
-  .map((s) => s.trim())
-  .filter(Boolean);
+const listing = unzipList(ZIP);
 
 check("manifest.json at archive root", listing.includes("manifest.json"), listing.slice(0, 3).join(", "));
 
@@ -61,8 +91,8 @@ check(`all ${referenced.length} manifest-referenced files packaged`, missing.len
 });
 
 // The zip must match the source of truth, not a stale build.
-const manifestInZip = execFileSync("unzip", ["-p", ZIP, "manifest.json"], { encoding: "utf8" });
-check("zip manifest matches source", manifestInZip === fs.readFileSync(path.join(ROOT, "extension", "manifest.json"), "utf8"));
+const manifestInZip = unzipRead(ZIP, "manifest.json", "utf8");
+check("zip manifest matches source", norm(manifestInZip) === norm(fs.readFileSync(path.join(ROOT, "extension", "manifest.json"), "utf8")));
 
 // ---------------------------------------------------------------------------
 // Banner hardening + branding.
@@ -120,8 +150,7 @@ check("banner keeps the honest privacy wording",
 // ---------------------------------------------------------------------------
 const FULL_ZIP = path.join(ROOT, "ratiod-full-project.zip");
 
-const fullListing = execFileSync("unzip", ["-Z1", FULL_ZIP], { encoding: "utf8" })
-  .split("\n").map((s) => s.trim()).filter(Boolean);
+const fullListing = unzipList(FULL_ZIP);
 check("full-project zip exists", fullListing.length > 0, `${fullListing.length} entries`);
 check("full-project zip has no OS junk",
   !fullListing.some((f) => /(^|\/)(\.DS_Store|__MACOSOSX)/.test(f)));
@@ -134,17 +163,17 @@ check("full-project zip does not nest the archives",
 // check that would have caught the stale archive.
 [ZIP, FULL_ZIP].forEach((z, i) => {
   const entry = i === 0 ? "banner.js" : "extension/banner.js";
-  const src = execFileSync("unzip", ["-p", z, entry], { encoding: "utf8" });
+  const src = unzipRead(z, entry, "utf8");
   check(`${path.basename(z)} banner.js carries the XSS escaping fix`,
     src.includes("function escapeHtml"));
 });
 // ...and must be byte-identical to the working tree, so neither can lag behind.
 check("full-project zip banner.js matches source",
-  execFileSync("unzip", ["-p", FULL_ZIP, "extension/banner.js"], { encoding: "utf8" }) ===
-  fs.readFileSync(path.join(ROOT, "extension", "banner.js"), "utf8"));
+  norm(unzipRead(FULL_ZIP, "extension/banner.js", "utf8")) ===
+  norm(fs.readFileSync(path.join(ROOT, "extension", "banner.js"), "utf8")));
 check("extension zip banner.js matches source",
-  execFileSync("unzip", ["-p", ZIP, "banner.js"], { encoding: "utf8" }) ===
-  fs.readFileSync(path.join(ROOT, "extension", "banner.js"), "utf8"));
+  norm(unzipRead(ZIP, "banner.js", "utf8")) ===
+  norm(fs.readFileSync(path.join(ROOT, "extension", "banner.js"), "utf8")));
 
 // Every icon the manifest declares must be present AND a real PNG.
 [16, 48, 128, 512].forEach((size) => {
@@ -152,7 +181,7 @@ check("extension zip banner.js matches source",
   const ok = listing.includes(f);
   let real = false;
   if (ok) {
-    const buf = execFileSync("unzip", ["-p", ZIP, f]);
+    const buf = unzipRead(ZIP, f);
     real = buf.subarray(1, 4).toString() === "PNG" && buf.length > 200;
   }
   check(`icon${size}.png packaged and is a real PNG`, ok && real);

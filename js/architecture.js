@@ -91,7 +91,7 @@ window.ARCHITECTURE_STAGES = [
     runs: "A local typed-decision classifier. The response always states its own source, so a heuristic fallback is never presented as a real model score.",
     receives: "The redacted text and the rule flags from stage 5.",
     produces: "A probability between 0.02 and 0.99, a label derived from it, and a source string.",
-    example: 'probability: 0.72 -> label: "high_risk"   (>= 0.65)\nsource: "laya_stub_heuristic"\nnote: "Local typed-decision fallback model active (laya container offline)."',
+    example: 'probability: 0.72 -> label: "high_risk"   (>= 0.65)\nsource: "laya_trained_v1" (fallback: "laya_stub_heuristic")\nnote: "Trained local model active (laya container offline)."',
     dataShape: "object",
     dataSample: '{ "label": "high_risk", "probability": 0.72, "source": "laya_stub_heuristic" }',
     dataNote: "Nothing leaves the machine, and the honest source string travels all the way to the UI."

@@ -31,6 +31,7 @@ const { combineScore } = require("./combine/score");
 
 const CORPUS_PATH = path.join(__dirname, "fixtures", "scam-corpus.txt");
 const MIXED_PATH = path.join(__dirname, "fixtures", "real-world-mixed.txt");
+const USER_CORPUS_PATH = path.join(__dirname, "fixtures", "new-emails-corpus.txt");
 
 // Score at or above which a message counts as detected. Mirrors the
 // "suspicious" threshold in combine/score.js.
@@ -280,6 +281,11 @@ async function main() {
   const b = await runCorpus("corpus B (mixed, 9 scam + 2 ham)", MIXED_PATH, {
     records: 11, recall: REQUIRED_RECALL_B, spec: REQUIRED_SPECIFICITY_B
   });
+  const c = fs.existsSync(USER_CORPUS_PATH)
+    ? await runCorpus("corpus C (user dataset, 13 scam + 1 ham)", USER_CORPUS_PATH, {
+        records: 14, recall: 0.85, spec: 1.0
+      })
+    : null;
 
   // The ham records in corpus B are not merely "not a threat" - they are bulk
   // marketing spam, and the product has a dedicated verdict for that. Assert
@@ -316,12 +322,17 @@ async function main() {
     spamEscalated.map((s) => s.id).join(", ")
   );
 
-  // Combined matrix across both corpora.
-  const cm = { tp: a.cm.tp + b.cm.tp, fn: a.cm.fn + b.cm.fn, tn: a.cm.tn + b.cm.tn, fp: a.cm.fp + b.cm.fp };
+  // Combined matrix across all corpora.
+  const cm = {
+    tp: a.cm.tp + b.cm.tp + (c ? c.cm.tp : 0),
+    fn: a.cm.fn + b.cm.fn + (c ? c.cm.fn : 0),
+    tn: a.cm.tn + b.cm.tn + (c ? c.cm.tn : 0),
+    fp: a.cm.fp + b.cm.fp + (c ? c.cm.fp : 0),
+  };
   const scamN = cm.tp + cm.fn;
   const hamN = cm.tn + cm.fp;
   const precision = cm.tp + cm.fp ? cm.tp / (cm.tp + cm.fp) : 1;
-  console.log(`\n=== combined over both corpora ===`);
+  console.log(`\n=== combined over all corpora ===`);
   console.log(`  TP ${cm.tp}   FN ${cm.fn}   TN ${cm.tn}   FP ${cm.fp}`);
   console.log(
     `  recall ${(100 * cm.tp / scamN).toFixed(1)}%   ` +

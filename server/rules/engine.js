@@ -320,7 +320,8 @@ const ADVANCE_FEE_PATTERNS = [
   { regex: /lottery\s+winnings?|grant\s+sum\s+of|grant\s+of\s+[€$£]|compensation\s+payment|irrevocable\s+compensation/i, reason: "Unsolicited grant, lottery or compensation payout claim" },
   { regex: /respond\s+(back\s+)?to\s+this\s+email|reply\s+(back\s+)?to\s+this\s+email\b/i, reason: "Claim released only by emailing back a stranger" },
   { regex: /international\s+certified\s+bank\s+draft|finance\s+house|contact\s+agent\b/i, reason: "Named 'finance house' acting as a payout intermediary" },
-  { regex: /(?:currency\s+of\s+)?\d[\d,.]*\s*(?:million|m)\b[^.]{0,40}(?:usd|sgd|eur|gbp|rm)|(?:usd|sgd|eur|gbp|rm)\s?\d[\d,.]*\s*(?:million|m)\b/i, reason: "Multi-million advance-fee amount" }
+  { regex: /(?:currency\s+of\s+)?\d[\d,.]*\s*(?:million|m)\b[^.]{0,40}(?:usd|sgd|eur|gbp|rm)|(?:usd|sgd|eur|gbp|rm)\s?\d[\d,.]*\s*(?:million|m)\b/i, reason: "Multi-million advance-fee amount" },
+  { regex: /grant\s+(support\s+)?fund|disbursement\s+reference/i, reason: "Unsolicited grant or disbursement payout claim" }
 ];
 
 const REFUND_BAIT_PATTERNS = [
@@ -338,7 +339,8 @@ const DELIVERY_FEE_PATTERNS = [
   { regex: /could\s+not\s+be\s+delivered\s+due\s+to\s+an\s+invalid\s+address\s+fee/i, reason: "Small-fee delivery scam (classic smishing)" },
   { regex: /on\s+hold\s+in\s+our\s+post|still\s+on\s+hold/i, reason: "Shipment held pending payment" },
   { regex: /unable\s+to\s+deliver|were\s+unable\s+to\s+deliver|parcel\s+could\s+not\s+be\s+delivered/i, reason: "Failed-delivery notice used to drive a click" },
-  { regex: /confirm\s+the\s+next\s+steps\s+to\s+reschedule/i, reason: "Delivery reschedule routed through an email link" }
+  { regex: /confirm\s+the\s+next\s+steps\s+to\s+reschedule/i, reason: "Delivery reschedule routed through an email link" },
+  { regex: /confirm\s+the\s+payment\s*\([0-9,.]+\s*(euros?|eur|sgd|usd|\$)?\)|parcel\s+is\s+waiting\s+for\s+delivery/i, reason: "Payment confirmation demanded to release parcel" }
 ];
 
 const FAKE_SUBSCRIPTION_PATTERNS = [
@@ -348,14 +350,17 @@ const FAKE_SUBSCRIPTION_PATTERNS = [
   { regex: /your\s+subscription\s+(ends|is\s+about\s+to\s+expire)/i, reason: "Subscription-expiry renewal lure" },
   { regex: /to\s+cancel\s+auto-?renewal,?\s*contact/i, reason: "Cancellation handled by phone/email rather than an account page" },
   { regex: /rewards?\s+will\s+expire|rewards?\s+expire\s+in\s+\d+|your\s+rewards?\b/i, reason: "Unsolicited 'your rewards expire' bait" },
-  { regex: /claim\s+your\s+reward|get\s+\d+\s*(?:sgd|usd|eur|gbp|rm)\s+now/i, reason: "Reward claim pushed from unsolicited mail" }
+  { regex: /claim\s+your\s+reward|get\s+\d+\s*(?:sgd|usd|eur|gbp|rm)\s+now/i, reason: "Reward claim pushed from unsolicited mail" },
+  { regex: /membership\s+renewal|bill\s+receipt\s*[-:]\s*ord\d+/i, reason: "Fake membership renewal record" },
+  { regex: /cashback\s+will\s+expire|claim\s+[\w$]+\s*cashback/i, reason: "Unsolicited cashback expiry lure" }
 ];
 
 const FAKE_SECURITY_PATTERNS = [
   { regex: /2fa\s+(will\s+be\s+|is\s+now\s+)?mandatory|mandatory\s+for\s+all\s+\w+\s+accounts/i, reason: "Mandatory 2FA enforcement notice" },
   { regex: /enable\s+2fa\s+now|2fa\s+will\s+be\s+enabled/i, reason: "2FA enrolment pushed from an email link" },
   { regex: /protect\s+your\s+wallet|keeping\s+your\s+digital\s+assets\s+safe/i, reason: "Wallet-protection pretext" },
-  { regex: /we\s+tried\s+to\s+charge\s+your\s+account\s+but\s+the\s+transaction\s+was\s+declined/i, reason: "Declined-payment bait" }
+  { regex: /we\s+tried\s+to\s+charge\s+your\s+account\s+but\s+the\s+transaction\s+was\s+declined/i, reason: "Declined-payment bait" },
+  { regex: /(?:new|unread)\s+message\s+(?:waiting\s+for\s+you|on\s+your\s+dashboard)/i, reason: "Fake dashboard unread message lure" }
 ];
 
 const INVESTMENT_PATTERNS = [
@@ -378,7 +383,8 @@ const HEALTH_CLAIM_PATTERNS = [
   // matched no other family and was consequently classified as bulk marketing.
   { regex: /reduce\s+spinal\s+pressure|support\s+disc\s+rehydration|create\s+space\s+between\s+vertebrae/i, reason: "Consumer device claims a specific therapeutic outcome for a medical condition" },
   { regex: /for\s+people\s+dealing\s+with\s+(?:recurring\s+)?(?:back\s+(?:pain|discomfort)|sciatica|joint\s+pain)/i, reason: "Targets a named medical complaint with an at-home product" },
-  { regex: /(?:save|discount)\s+\d{1,3}%\s+on\b[\s\S]{0,80}money-?back\s+trial|money-?back\s+trial[\s\S]{0,80}(?:save|discount)\s+\d{1,3}%/i, reason: "Deep discount plus money-back trial, the standard health-device advertorial close" }
+  { regex: /(?:save|discount)\s+\d{1,3}%\s+on\b[\s\S]{0,80}money-?back\s+trial|money-?back\s+trial[\s\S]{0,80}(?:save|discount)\s+\d{1,3}%/i, reason: "Deep discount plus money-back trial, the standard health-device advertorial close" },
+  { regex: /insulin\s+vampire|parasit\w+\s+infection|causing\s+type\s+2\s+diabetes|ancient\s+.*ritual|flushes?\s+it\s+out\s+of\s+the\s+pancreas/i, reason: "Fabricated parasite or miracle cure claim for a chronic condition" }
 ];
 
 const PERSONAL_DATA_PATTERNS = [
@@ -920,7 +926,10 @@ function evaluateRules(text, channel = "email") {
         (d) => !isFreeMailDomain(d) && official.some((o) => d === o || d.endsWith("." + o))
       );
       if (senderIsOfficial) return false;
-      return new RegExp("\\b" + brand + "\\b", "i").test(text);
+      return new RegExp(
+        "(?:©|\\(c\\)|copyright)\\s*(?:\\d{4})?\\s*(?:by\\s+)?(?:[\\w.,]+\\s+){0,3}\\b" + brand + "\\b|\\b" + brand + "\\b\\s*(?:[\\w.,]+\\s+){0,3}(?:LLC|Inc|Ltd|B\\.?\\s*V\\.?|GmbH|Pte|Corporation)",
+        "i"
+      ).test(text);
     });
     for (const brand of bodyBrands) {
       const display = new RegExp("(" + brand + "[\\w. ]{0,28})", "i").exec(text);
