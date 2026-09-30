@@ -180,13 +180,32 @@
             <span class="textarea-corner" aria-hidden="true">TXT</span>
           </div>
 
+          <!-- Real-Time PII Protection & Clear Utility Bar -->
+          <div class="pii-status-bar">
+            <div class="pii-status-info">
+              <span class="pii-indicator-dot" id="pii-dot" aria-hidden="true"></span>
+              <span id="privacy-counts" class="privacy-counts">✓ Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
+            </div>
+            <button class="btn-clear-tactile" id="btn-clear" type="button" title="Clear message text and reset analysis">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Clear
+            </button>
+          </div>
+
           <!-- Collapsible Headers & Authentication Drawer -->
           <details class="auth-drawer" id="auth-drawer">
             <summary class="auth-drawer-summary">
-              <span class="sticker sticker-blue">OPTIONAL</span>
-              <strong>Headers &amp; Authentication (SPF / DKIM / DMARC)</strong>
+              <div class="auth-summary-left">
+                <span class="sticker sticker-blue">OPTIONAL</span>
+                <strong class="auth-summary-title">Headers &amp; Authentication</strong>
+                <span class="auth-summary-sub">(SPF / DKIM / DMARC)</span>
+              </div>
+              <span class="auth-summary-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </span>
             </summary>
             <div class="auth-drawer-content">
+              <p class="auth-drawer-desc">Specify email authentication headers to test SPF/DKIM spoofing detection:</p>
               <div class="auth-field-row">
                 <label for="auth-from-domain" class="auth-label">From Domain:</label>
                 <input type="text" id="auth-from-domain" class="auth-input" placeholder="e.g. paypal.com" />
@@ -201,17 +220,12 @@
                   <input type="text" id="auth-signed-by" class="auth-input" placeholder="e.g. malicious-relay.ru" />
                 </div>
               </div>
-              <div class="auth-field-row">
+              <div class="auth-field-row" style="margin-bottom: 0;">
                 <label for="auth-raw-headers" class="auth-label">Or Paste Raw Headers (Auto-parse):</label>
                 <textarea id="auth-raw-headers" class="auth-raw-textarea" rows="2" placeholder="Authentication-Results: spf=pass... header.d=..."></textarea>
               </div>
             </div>
           </details>
-
-          <div class="privacy-toggle-row">
-            <span id="privacy-counts" class="privacy-counts">[OK] Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
-            <button class="btn-preset btn-preset-ghost" id="btn-clear" type="button">Clear</button>
-          </div>
 
           <button class="btn btn-primary btn-block btn-lg tactile" id="btn-analyze" type="button">
             Run risk analysis
