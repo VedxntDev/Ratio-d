@@ -596,12 +596,12 @@
         {
           "name": "credential_or_wire",
           "weight": 0.2,
-          "test": "(t) =>\r\n      /(verify|confirm|update|validate|secure)\\s+(your\\s+)?(account|password|credentials|details|information)/i.test(t)\r\n      || /(gift\\s?card|bitcoin|crypto|wire\\s+transfer|western\\s+union|money\\s+gram)/i.test(t)"
+          "test": "(t) =>\n      /(verify|confirm|update|validate|secure)\\s+(your\\s+)?(account|password|credentials|details|information)/i.test(t)\n      || /(gift\\s?card|bitcoin|crypto|wire\\s+transfer|western\\s+union|money\\s+gram)/i.test(t)"
         },
         {
           "name": "link_farm",
           "weight": 0.18,
-          "test": "(t) => {\r\n      const hosts = new Set((t.match(/https?:\\/\\/([^\\s/?#]+)/gi) || [])\r\n        .map((u) => u.replace(/^https?:\\/\\//i, \"\").toLowerCase()));\r\n      return hosts.size >= 5;\r\n  }"
+          "test": "(t) => {\n      const hosts = new Set((t.match(/https?:\\/\\/([^\\s/?#]+)/gi) || [])\n        .map((u) => u.replace(/^https?:\\/\\//i, \"\").toLowerCase()));\n      return hosts.size >= 5;\n  }"
         }
       ]
     }
