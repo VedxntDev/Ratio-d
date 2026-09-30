@@ -216,14 +216,13 @@ const servedZips = [...new Set([...serverSrc.matchAll(/"([\w.-]+\.zip)"/g)].map(
 check("local server and deployment agree on the archive list",
   servedZips.length > 0 && servedZips.every((z) => vercelShips(z)),
   servedZips.join(", "));
-// The re-inclusions must come AFTER the blanket rule, or they are dead lines.
-const viLines = vercelignore.split("\n");
-const zipRuleIndex = viLines.findIndex((l) => l.trim() === "*.zip");
-const zipReincludeIndexes = servedZips.map((f) => viLines.findIndex((l) => l.trim() === "!" + f));
-check("archive re-inclusions come after the blanket *.zip rule",
-  zipRuleIndex !== -1 && zipReincludeIndexes.every((i) => i > zipRuleIndex),
-  "blanket rule at line " + (zipRuleIndex + 1) + ", re-includes at lines " +
-    zipReincludeIndexes.map((i) => i + 1).join(", "));
+// The .vercelignore must NOT contain any rule that excludes the published zips.
+// An earlier version used *.zip with ! re-inclusions, but Vercel's negation
+// support is unreliable.  The simpler fix is to never exclude the zips at all.
+const viLines = vercelignore.split("\n").map((l) => l.trim()).filter(Boolean).filter((l) => !l.startsWith("#"));
+check("no .vercelignore rule blanket-excludes zip files",
+  !viLines.some((l) => l === "*.zip"),
+  "*.zip blanket rule would exclude the published archives");
 
 /* ---- safe DOM construction ---- */
 // Match real assignment, not the word "innerHTML" in an explanatory comment.

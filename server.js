@@ -21,6 +21,7 @@ const fs = require("fs");
 const path = require("path");
 
 const { handleAnalyze } = require("./server/routes/analyze");
+const { handleQr } = require("./server/routes/qr");
 const { traceRedirects } = require("./server/unmask/tracer");
 
 const PORT = process.env.PORT || 3000;
@@ -158,6 +159,26 @@ async function handler(req, res) {
         return sendJson(res, 200, await handleAnalyze(payload));
       } catch (err) {
         console.error("[RATIO'D] Analysis pipeline error:", err.message);
+        return sendJson(res, 400, { error: err.message });
+      }
+    });
+    return;
+  }
+
+  // 2b. QR phishing (quishing) analysis endpoint
+  if (req.method === "POST" && (pathname === "/analyze-qr" || pathname === "/api/analyze-qr")) {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+      if (body.length > 20000) { req.destroy(); return; }
+    });
+    req.on("end", () => {
+      try {
+        const payload = JSON.parse(body || "{}");
+        const r = handleQr(payload);
+        return sendJson(res, r.status, r.json);
+      } catch (err) {
+        console.error("[RATIO'D] QR analysis error:", err.message);
         return sendJson(res, 400, { error: err.message });
       }
     });

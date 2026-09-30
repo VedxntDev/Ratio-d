@@ -5,3 +5,6 @@ node_modules/
 .env*
 __pycache__/
 *.pyc
+
+# Upstream checkout the QR feature was ported from; not part of the site.
+external/

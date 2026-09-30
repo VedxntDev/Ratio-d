@@ -30,6 +30,9 @@
         "https://mail.google.com/*"
       ],
       "js": [
+        "jsQR.js",
+        "qr-core.js",
+        "qr-gmail.js",
         "fallback-engine.js",
         "banner.js",
         "content-script.js"

@@ -241,6 +241,22 @@
             </div>
             <div id="safe-peek-output" class="safe-peek-output" style="display:none;"></div>
           </div>
+
+          <!-- QR Phish Check Panel -->
+          <section id="qr-panel" aria-labelledby="qr-h">
+            <h2 id="qr-h">QR phish check</h2>
+            <ol id="qr-steps">
+              <li data-state="idle">1 CAPTURE</li><li data-state="idle">2 DECODE</li>
+              <li data-state="idle">3 ANALYZE</li><li data-state="idle">4 VERDICT</li>
+            </ol>
+            <div id="qr-drop">
+              <p>Drop / paste a QR image, or</p>
+              <input type="file" id="qr-file" accept="image/*">
+              <button type="button" id="qr-cam">Use camera</button>
+              <video id="qr-video" hidden playsinline muted></video>
+            </div>
+            <div id="qr-result" aria-live="polite"></div>
+          </section>
         </div>
       </div>
 
@@ -662,6 +678,9 @@
 
   <!-- App Scripts -->
   <script src="js/redactor.js"></script>
+  <script src="js/vendor/jsQR.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/qr-ui.js"></script>
   <script src="js/presets.js"></script>
   <script src="js/fallback-engine.js"></script>
   <script src="js/api.js"></script>
