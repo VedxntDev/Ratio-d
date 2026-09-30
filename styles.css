@@ -403,6 +403,27 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
 .system-status-banner:hover { box-shadow: 8px 8px 0 var(--color-primary); }
 .system-status-banner .sticker { box-shadow: none; }
 .status-left { display: flex; align-items: center; gap: 10px; }
+
+/* Hero roadmap note. Sits directly under the status banner and mirrors its
+   flex layout, but uses the muted surface rather than the dark banner fill so
+   two heavy blocks do not stack. Kept in the hero because the hero is the only
+   section every visitor reads. */
+.hero-platform-note {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 12px 18px;
+  background-color: var(--color-surface);
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  box-shadow: 4px 4px 0 var(--color-ink);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+.hero-platform-note .sticker { flex-shrink: 0; }
+.hero-platform-note strong { color: var(--color-ink); }
 .status-pulse {
   display: inline-block;
   width: 12px; height: 12px;
@@ -1839,6 +1860,7 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
   /* Stack the roadmap note so the sticker sits on its own line rather than
      squeezing the sentence into a narrow column beside it. */
   .platform-note { gap: 8px; padding: 10px 12px; font-size: 0.88rem; }
+  .hero-platform-note { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
 }
 .auth-label {
   display: block;
