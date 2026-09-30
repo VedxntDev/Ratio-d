@@ -712,6 +712,59 @@
     </span>
   </a>
 
+  <!-- Install-source notice. The Chrome Web Store listing lags behind the
+       published ZIP, so this steers people to the ZIP without blocking them:
+       it can be dismissed, and the store button stays on the page. Behaviour
+       lives in js/install.js alongside the promo bar, which uses the same
+       versioned-storage and footer-restore pattern. -->
+  <div class="store-notice-backdrop" id="store-notice" hidden>
+    <div class="store-notice-card tactile" role="dialog" aria-modal="true"
+         aria-labelledby="store-notice-title" aria-describedby="store-notice-body">
+      <button type="button" class="store-notice-close" id="store-notice-close" aria-label="Close this notice">
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="store-notice-head">
+        <span class="sticker sticker-red">Heads up</span>
+        <span class="store-notice-tag">v1.3.0 &middot; manual install</span>
+      </div>
+
+      <h2 class="store-notice-title" id="store-notice-title">
+        Prefer the ZIP &mdash; the Store copy is behind
+      </h2>
+
+      <div class="store-notice-body" id="store-notice-body">
+        <p>
+          The Chrome Web Store listing is still serving an older build, and
+          reviews take time to clear. If you want the current version &mdash;
+          QR phishing detection, live PII redaction and the latest rule engine
+          &mdash; install the ZIP instead.
+        </p>
+        <p class="store-notice-aside">
+          Already using the Store copy? Updating it later does not remove your
+          data: Ratio&rsquo;d stores nothing locally, so there is nothing to migrate.
+        </p>
+      </div>
+
+      <div class="store-notice-actions">
+        <a href="ratiod-extension.zip" download="ratiod-extension.zip"
+           class="btn btn-primary btn-block tactile" id="store-notice-dl">
+          <span aria-hidden="true">&#11015;</span> Download the ZIP
+        </a>
+        <a href="https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb"
+           class="btn btn-secondary btn-block" id="store-notice-store"
+           target="_blank" rel="noopener noreferrer">Use the Store version instead</a>
+        <button type="button" class="store-notice-dismiss" id="store-notice-dismiss">
+          Don&rsquo;t show this again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="nav-link nav-link-btn" id="store-notice-restore" hidden>
+    Show install notice
+  </button>
+
   <!-- App Scripts -->
   <script src="js/redactor.js"></script>
   <script src="js/vendor/jsQR.js"></script>

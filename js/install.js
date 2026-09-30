@@ -76,6 +76,143 @@
 })();
 
 /**
+ * Ratio'd — Store-version notice dialog
+ *
+ * The Chrome Web Store listing is published by hand and takes days to clear a
+ * review, so for a while after a release the Store serves a build that is
+ * behind the ZIP on this site. This dialog says so once and steers people to
+ * the ZIP.
+ *
+ * It is a notice, not a gate. The Store link stays in the dialog, the backdrop
+ * is dismissible by click, Escape and the close button, and the dismissal is
+ * versioned for the same reason the promo key is: an unversioned key is a
+ * one-way door, so a notice that needs to return becomes unreachable without
+ * asking people to open devtools. "Show install notice" in the footer is the
+ * way back.
+ *
+ * Modal behaviour is implemented here rather than using <dialog> because the
+ * rest of the page is styled by hand and showModal() brings a UA stylesheet
+ * that fights it. The focus trap, Escape handling and scroll lock are all
+ * explicit below.
+ */
+(function () {
+  "use strict";
+
+  var KEY = "ratiod.store.notice.dismissed.v1";
+  var modal = document.getElementById("store-notice");
+  if (!modal) return;
+
+  var closeBtn = document.getElementById("store-notice-close");
+  var dismissBtn = document.getElementById("store-notice-dismiss");
+  var downloadLink = document.getElementById("store-notice-dl");
+  var storeLink = document.getElementById("store-notice-store");
+  var restore = document.getElementById("store-notice-restore");
+  var lastFocused = null;
+
+  function read(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function write(key, value) {
+    /* Storage can be disabled entirely; the notice then shows every visit,
+       which is the safe failure direction for a message worth reading. */
+    try { window.localStorage.setItem(key, value); } catch (e) {}
+  }
+  function clear(key) {
+    try { window.localStorage.removeItem(key); } catch (e) {}
+  }
+
+  function focusables() {
+    return Array.prototype.slice
+      .call(modal.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter(function (el) { return el.offsetParent !== null; });
+  }
+
+  function open() {
+    lastFocused = document.activeElement;
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    var f = focusables();
+    (f[0] || closeBtn || modal).focus();
+  }
+
+  function close() {
+    modal.hidden = true;
+    document.body.style.overflow = "";
+    /* Return focus where it was, so a keyboard user is not dropped at the top
+       of the document. Falls back to the restore control if it is visible. */
+    if (lastFocused && typeof lastFocused.focus === "function") lastFocused.focus();
+    else if (restore && !restore.hidden) restore.focus();
+  }
+
+  /* The "×" is a plain close for this visit only: someone who taps it may just
+     not want to read it right now, and permanently suppressing it would be
+     presumptuous. Only the explicit "Don't show this again" records a
+     dismissal, and so does acting on either link - a choice is a choice. */
+  if (closeBtn) closeBtn.addEventListener("click", close);
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", function () {
+      write(KEY, "1");
+      close();
+      if (restore) restore.hidden = false;
+    });
+  }
+
+  [downloadLink, storeLink].forEach(function (el) {
+    if (el) el.addEventListener("click", function () { write(KEY, "1"); });
+  });
+
+  /* Click the backdrop, not the card. */
+  modal.addEventListener("mousedown", function (e) {
+    if (e.target === modal) close();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (modal.hidden) return;
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      close();
+      return;
+    }
+
+    /* Focus trap: Tab from the last control wraps to the first, and Shift+Tab
+       from the first wraps to the last. Without this a keyboard user tabs
+       straight out of the dialog into the page behind it. */
+    if (e.key !== "Tab") return;
+    var f = focusables();
+    if (!f.length) return;
+    var first = f[0];
+    var last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  var dismissed = read(KEY) === "1";
+  if (restore) restore.hidden = !dismissed;
+
+  if (restore) {
+    restore.addEventListener("click", function () {
+      clear(KEY);
+      if (restore) restore.hidden = true;
+      open();
+    });
+  }
+
+  /* Deferred so the notice does not fight the page's scroll-in animations on
+     first paint, and so the dialog never lands before the promo bar above it
+     has had its own dismissal checked. */
+  if (!dismissed) {
+    window.setTimeout(open, 900);
+  }
+})();
+
+/**
  * Ratio'd — Extension install flow
  *
  * Interactive, dependency-free, and resilient: progress is persisted so a

@@ -227,6 +227,122 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
 .platform-note .sticker { flex-shrink: 0; }
 .platform-note strong { color: var(--color-ink); }
 
+/* Store-version notice dialog
+
+   A notice, not a gate. It uses the same neo-brutalist language as the rest of
+   the page: hard ink borders, offset shadows, the sticker and tactile button
+   primitives. The backdrop is a flat translucent ink wash rather than a blur,
+   so the card stays the only thing that reads as raised.
+
+   Animations are gated on prefers-reduced-motion below, and the dialog is
+   marked hidden in the markup so it never flashes before its script runs. */
+.store-notice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(18, 18, 18, 0.62);
+  animation: store-notice-fade 0.18s ease;
+}
+.store-notice-backdrop[hidden] { display: none; }
+
+.store-notice-card {
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  padding: 26px 26px 22px;
+  background-color: var(--color-surface);
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 8px 8px 0 var(--color-ink);
+  animation: store-notice-pop 0.2s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.store-notice-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-ink);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.store-notice-close:hover { background-color: var(--color-yellow); transform: rotate(6deg); }
+.store-notice-close:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+
+.store-notice-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-right: 34px; /* clears the absolute close button */
+}
+.store-notice-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.store-notice-title {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.store-notice-body p { font-size: 0.94rem; line-height: 1.6; margin-bottom: 10px; }
+.store-notice-aside {
+  padding: 10px 12px;
+  background-color: var(--color-surface-muted);
+  border-left: 4px solid var(--color-blue);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.86rem !important;
+  color: var(--color-text-muted);
+}
+.store-notice-actions { margin-top: 16px; }
+.store-notice-dismiss {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.store-notice-dismiss:hover { color: var(--color-primary); }
+.store-notice-dismiss:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+
+@keyframes store-notice-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes store-notice-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-notice-backdrop, .store-notice-card { animation: none; }
+  .store-notice-close:hover { transform: none; }
+}
+@media (max-width: 600px) {
+  .store-notice-card { padding: 22px 18px 18px; }
+  .store-notice-title { font-size: 1.2rem; }
+  .store-notice-head { flex-wrap: wrap; gap: 8px; }
+}
+
 /* Header */
 .header {
   position: sticky;

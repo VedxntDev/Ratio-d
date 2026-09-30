@@ -139,6 +139,49 @@ check("promo bar is initialised before the install-steps early return",
 check("promo dismissal key is versioned",
   /PROMO_KEY\s*=\s*"ratiod\.promo\.dismissed\.v\d+"/.test(installJs),
   (installJs.match(/PROMO_KEY\s*=\s*"([^"]+)"/) || [, "none"])[1]);
+
+// --- Store-version notice dialog -----------------------------------------
+// An earlier "Version Notice" modal shipped as markup with no stylesheet and
+// no behaviour: eleven unstyled classes, a backdrop that covered the viewport
+// and two dead buttons. The "all markup classes styled" check caught the CSS
+// but nothing caught the missing behaviour, so it is pinned explicitly here.
+check("store notice markup present",
+  /id="store-notice"/.test(html) &&
+  /id="store-notice-close"/.test(html) &&
+  /id="store-notice-dismiss"/.test(html) &&
+  /id="store-notice-restore"/.test(html));
+check("store notice starts hidden (opened by JS only)",
+  /id="store-notice"[^>]*hidden/.test(html),
+  "otherwise it flashes over the page before the script runs");
+check("store notice is a labelled modal",
+  /role="dialog"/.test(html) && /aria-modal="true"/.test(html) &&
+  /aria-labelledby="store-notice-title"/.test(html) &&
+  /aria-describedby="store-notice-body"/.test(html));
+check("store notice prefers the ZIP",
+  /id="store-notice-dl"[^>]*href="ratiod-extension\.zip"/.test(html) ||
+  /href="ratiod-extension\.zip"[^>]*id="store-notice-dl"/.test(html) ||
+  (html.includes('id="store-notice-dl"') && /href="ratiod-extension\.zip"/.test(
+    html.slice(html.indexOf('id="store-notice-dl"') - 200, html.indexOf('id="store-notice-dl"') + 200))));
+check("store notice keeps a Store escape route (a notice, not a gate)",
+  /id="store-notice-store"/.test(html) && /chromewebstore\.google\.com/.test(
+    html.slice(html.indexOf('id="store-notice-store"') - 200, html.indexOf('id="store-notice-store"') + 400)));
+check("store notice dismissal is versioned",
+  /KEY\s*=\s*"ratiod\.store\.notice\.dismissed\.v\d+"/.test(installJs),
+  (installJs.match(/"ratiod\.store\.notice\.dismissed\.v\d+"/) || [, "none"])[0]);
+check("store notice can be reopened from the footer",
+  /store-notice-restore/.test(installJs) && /clear\(KEY\)/.test(installJs));
+check("store notice is dismissible by Escape",
+  /e\.key === "Escape"/.test(installJs));
+check("store notice traps focus while open",
+  /e\.key !== "Tab"/.test(installJs) && /last\.focus\(\)/.test(installJs));
+check("store notice locks background scroll and restores it",
+  /document\.body\.style\.overflow\s*=\s*"hidden"/.test(installJs) &&
+  /document\.body\.style\.overflow\s*=\s*""/.test(installJs));
+check("store notice respects reduced motion",
+  /@media \(prefers-reduced-motion: reduce\)[\s\S]*?store-notice/.test(css));
+check("store notice restore control carries an accessible name",
+  /id="store-notice-restore"[^>]*>\s*\S/.test(html) ||
+  /id="store-notice-restore"[\s\S]{0,200}?>\s*Show install notice/.test(html));
 check("superseded promo keys are retired",
   /LEGACY_PROMO_KEYS/.test(installJs) && /removeItem/.test(installJs));
 // There must be a visible way back for anyone who dismisses the bar, so the
