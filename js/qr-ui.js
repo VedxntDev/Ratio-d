@@ -4,7 +4,21 @@
   var $ = function (id) { return document.getElementById(id); };
   var root = $("qr-result"), fileIn = $("qr-file"), camBtn = $("qr-cam"), video = $("qr-video"), drop = $("qr-drop"), steps = $("qr-steps");
   if (!root || !window.QrScan) return;
-  var VERDICTS = ["safe", "suspicious", "high_risk"], stopCam = null;
+  // Strict vocabulary from the zero-trust calibration. The server sends
+  // MALICIOUS / HIGH_RISK / SUSPICIOUS / SAFE; `legacy_verdict` is accepted as
+  // a fallback so a cached or older response still renders. Anything
+  // unrecognised falls back to SUSPICIOUS rather than SAFE - under a zero-trust
+  // model an unknown verdict must never be rendered as an all-clear.
+  var VERDICTS = ["SAFE", "SUSPICIOUS", "HIGH_RISK", "MALICIOUS"];
+  var LEGACY = { safe: "SAFE", suspicious: "SUSPICIOUS", high_risk: "HIGH_RISK" };
+  var CSS = { SAFE: "safe", SUSPICIOUS: "suspicious", HIGH_RISK: "high_risk", MALICIOUS: "high_risk" };
+  var stopCam = null;
+
+  function verdictOf(res) {
+    var raw = String(res.verdict || "").toUpperCase();
+    if (VERDICTS.indexOf(raw) >= 0) return raw;
+    return LEGACY[String(res.legacy_verdict || res.verdict || "").toLowerCase()] || "SUSPICIOUS";
+  }
 
   function mk(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
   function step(n, state) { // n: 1 capture, 2 decode, 3 analyze, 4 verdict; state: idle|active|done|fail
@@ -14,9 +28,9 @@
   function resetSteps() { for (var i = 1; i <= 4; i++) step(i, "idle"); }
 
   function card(res) {
-    var v = VERDICTS.indexOf(res.verdict) >= 0 ? res.verdict : "suspicious";
-    var c = mk("article", "qr-card qr-" + v);
-    c.append(mk("div", "qr-verdict", "[ " + v.toUpperCase() + " ]  RISK SCORE: " + Number(res.score) + "/100"));
+    var v = verdictOf(res);
+    var c = mk("article", "qr-card qr-" + CSS[v]);
+    c.append(mk("div", "qr-verdict", "[ " + v + " ]  RISK SCORE: " + Number(res.score || res.risk_score) + "/100"));
     c.append(mk("div", "qr-label", "QR CONTAINS (" + String(res.payload_kind) + ", defanged, not clickable)"));
     c.append(mk("code", "qr-payload", String(res.defanged)));
     if (res.flags && res.flags.length) {
