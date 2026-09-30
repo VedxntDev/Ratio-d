@@ -712,6 +712,31 @@
     </span>
   </a>
 
+  <!-- Version Notice Pop-up Modal (Neo-brutalist Theme) -->
+  <div class="version-modal-backdrop" id="version-modal" role="dialog" aria-modal="true" aria-labelledby="version-modal-title">
+    <div class="version-modal-card tactile">
+      <button type="button" class="version-modal-close" id="version-modal-close-btn" aria-label="Close notice">&times;</button>
+      <div class="version-modal-header">
+        <span class="sticker sticker-red">[ ANNOUNCEMENT ]</span>
+        <span class="version-modal-badge">Chrome Web Store Notice</span>
+      </div>
+      <h3 class="version-modal-title" id="version-modal-title">Experience the Latest Version of Ratio&rsquo;d</h3>
+      <div class="version-modal-body">
+        <p>Hey everyone! Despite our efforts, the package currently published on the <strong>Chrome Web Store is an older version</strong>.</p>
+        <p>To experience the latest version of Ratio&rsquo;d &mdash; featuring real-time QR phishing (Quishing) detection, PII redaction, and enhanced rule engines &mdash; please download the ZIP file directly and install it manually in Chrome.</p>
+        <p class="version-modal-subtext">Sorry for the inconvenience!</p>
+      </div>
+      <div class="version-modal-actions">
+        <a href="ratiod-extension.zip" download="ratiod-extension.zip" class="btn btn-primary btn-block tactile" id="version-modal-dl-btn">
+          📦 Download Latest Extension ZIP (v1.3.0)
+        </a>
+        <button type="button" class="btn btn-secondary btn-block" id="version-modal-dismiss-btn">
+          Got it, dismiss notice
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- App Scripts -->
   <script src="js/redactor.js"></script>
   <script src="js/vendor/jsQR.js"></script>
