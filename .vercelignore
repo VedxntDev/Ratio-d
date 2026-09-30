@@ -1,0 +1,29 @@
+# Keep secrets and local-only artefacts out of the uploaded deployment.
+#
+# vercel.json already 404s these paths at the routing layer, but that only
+# hides them after they have been uploaded to Vercel's CDN. Excluding them
+# here means they never leave the machine in the first place - in particular
+# .env.local, which holds a VERCEL_OIDC_TOKEN.
+
+.env*
+.vercel
+.git
+.github
+
+# Not part of the deployed site. The console is served from index.html plus
+# js/, styles.css and assets/. The extension and its docs are downloadable
+# from the repo, not the site.
+#
+# NOTE: server/ must NOT be excluded here. api/index.js does
+# require("../server.js") to share one handler with localhost, and server.js
+# pulls in server/routes, server/rules and friends. Excluding server/ builds
+# fine and then 500s on every /analyze request.
+docs/
+extension/
+tools/
+*.zip
+
+# Tests are run locally and in CI, not by the serverless runtime.
+test-ui-contract.js
+server/test-*.js
+**/test-*.json
