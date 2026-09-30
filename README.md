@@ -42,9 +42,10 @@
 4. Url : Zero-Click Link & Redirect Tracer
    <img width="1272" height="568" alt="ratiod8" src="https://github.com/user-attachments/assets/c01cd32d-c64b-4105-af08-31e7fc3933be" />
 
-  
-5. QR phishing protection:
-   <img width="1272" height="568" alt="ratio&#39;d3" src="https://github.com/user-attachments/assets/07f1a029-6a58-4344-a0cc-6e356fb8fd1a" />
+
+## How to download the Extension Zip file
+<img width="1272" height="568" alt="ratiod5" src="https://github.com/user-attachments/assets/a1c6676f-4729-4318-96eb-5778c3e8dd3f" />
+
 
 
 
@@ -113,6 +114,9 @@ Ratio'd bridges this gap by providing an instant, explainable second opinion rig
 ---
 
 ## 🎨 Application Layer & UX Philosophy
+
+<img width="1272" height="568" alt="ratiod7" src="https://github.com/user-attachments/assets/5991b3da-b96d-4782-955a-6db0e373d4df" />
+
 
 ### The "No Copy-Paste" Principle
 > **Real users will not open a separate website to paste every suspicious email or SMS.** 
