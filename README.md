@@ -20,6 +20,18 @@
 ---
 <img width="1274" height="568" alt="ratio&#39;d" src="https://github.com/user-attachments/assets/2429effd-376b-44f3-8c2b-5bfb87583f04" />
 
+##How Ratio'd works:
+> After extension is downloaded either by chrome webstore or via Zip folder in website, Reload the gmail
+> <img width="1274" height="568" alt="ratio&#39;d2" src="https://github.com/user-attachments/assets/edfe9038-f7d5-473c-aeea-edbc75bf0c9b" />
+
+
+
+
+
+
+## Different Features of Ratio'd:
+1. Phishing Email/ SMS Detection :
+   <img width="1272" height="568" alt="ratio&#39;d3" src="https://github.com/user-attachments/assets/8b9cf787-6359-4842-b3e4-49db9007edd3" />
 
 ## 📑 Table of Contents
 1. [Executive Summary & Product Pitch](#-executive-summary--product-pitch)
