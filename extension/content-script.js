@@ -77,6 +77,104 @@ function renderFallbackAnalysis(emailBodyElem, redactedText) {
   }
 }
 
+// Shared verdict cache to eliminate any mismatch between open-email banner and inbox badge
+const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v2";
+const memVerdictCache = {};
+
+function getVerdictCache() {
+  try {
+    const raw = sessionStorage.getItem(VERDICT_CACHE_KEY);
+    return raw ? Object.assign({}, memVerdictCache, JSON.parse(raw)) : Object.assign({}, memVerdictCache);
+  } catch (e) {
+    return Object.assign({}, memVerdictCache);
+  }
+}
+
+function saveVerdictToCache(key, data) {
+  if (!key || !data) return;
+  try {
+    const cleanKey = String(key).toLowerCase().trim();
+    const entry = {
+      verdict: data.verdict,
+      score: data.score !== undefined ? data.score : 0,
+      flags: (data.flags || []).slice()
+    };
+    memVerdictCache[cleanKey] = entry;
+
+    const cache = getVerdictCache();
+    cache[cleanKey] = entry;
+    // Cap cache to 250 items
+    const keys = Object.keys(cache);
+    if (keys.length > 250) {
+      delete cache[keys[0]];
+    }
+    sessionStorage.setItem(VERDICT_CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {}
+}
+
+function getCachedVerdict(key) {
+  if (!key) return null;
+  const cleanKey = String(key).toLowerCase().trim();
+  if (memVerdictCache[cleanKey]) return memVerdictCache[cleanKey];
+  const cache = getVerdictCache();
+  return cache[cleanKey] || null;
+}
+
+function updateBadgeElement(badge, verdict, score, flags) {
+  badge.setAttribute("data-verdict", verdict);
+  badge.setAttribute("data-score", String(score));
+  badge.setAttribute("role", "status");
+  badge.setAttribute("aria-label", `Ratio'd Risk: ${score}/100 (${verdict})`);
+
+  let labelText = "";
+  let bgColor = "#9BE86D"; // Website Neo-Brutalist Green
+  let textColor = "#121212";
+
+  if (verdict === "high_risk") {
+    labelText = `[ 🔴 RISK ${score} ]`;
+    bgColor = "#EA3E2B";
+    textColor = "#FFFFFF";
+  } else if (verdict === "suspicious") {
+    labelText = `[ 🟠 SUSP ${score} ]`;
+    bgColor = "#E8720C";
+    textColor = "#FFFFFF";
+  } else if (verdict === "promo_clutter") {
+    labelText = `[ 🟡 PROMO ]`;
+    bgColor = "#FFD23F";
+    textColor = "#121212";
+  } else {
+    labelText = `[ 🟢 SAFE ]`;
+    bgColor = "#9BE86D";
+    textColor = "#121212";
+  }
+
+  badge.innerText = labelText;
+  const flagSummary = (flags || []).map(f => '• ' + f.span + ': ' + f.reason).join('\n');
+  badge.title = `Ratio'd Risk: ${score}/100 (${verdict})\n${flagSummary || 'Clean preview'}`;
+
+  badge.style.cssText = `
+    display: inline-block;
+    vertical-align: middle;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 14px;
+    letter-spacing: 0.02em;
+    padding: 1px 6px;
+    margin-right: 6px;
+    border-radius: 4px;
+    border: 1.5px solid #121212;
+    background-color: ${bgColor};
+    color: ${textColor};
+    cursor: help;
+    box-shadow: 1.5px 1.5px 0px #121212;
+    user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    z-index: 5;
+  `;
+}
+
 function scanAndAnalyzeGmail() {
   const emailBodyElem = document.querySelector(
     ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
@@ -111,6 +209,23 @@ function scanAndAnalyzeGmail() {
 
   lastAnalyzedHash = currentHash;
 
+  const onAnalysisComplete = (data) => {
+    // 1. Inject in-email banner
+    if (window.injectRatiodBanner) {
+      window.injectRatiodBanner(emailBodyElem, data);
+    }
+    // 2. Persist authoritative verdict to cache (keyed by Subject and URL Thread)
+    if (subject) {
+      saveVerdictToCache(subject, data);
+    }
+    const currentHashKey = window.location.hash.replace(/^#/, "");
+    if (currentHashKey) {
+      saveVerdictToCache(currentHashKey, data);
+    }
+    // 3. Immediately refresh visible inbox badges to eliminate any mismatch
+    scanInboxRows();
+  };
+
   // 1. Client-Side Local PII Redaction
   const redactedText = redactPiiLocally(fullTextToAnalyze);
 
@@ -121,11 +236,7 @@ function scanAndAnalyzeGmail() {
     body: JSON.stringify({ text: redactedText, channel: "email" })
   })
     .then(res => res.json())
-    .then(data => {
-      if (window.injectRatiodBanner) {
-        window.injectRatiodBanner(emailBodyElem, data);
-      }
-    })
+    .then(data => onAnalysisComplete(data))
     .catch(() => {
       // Fallback 1: Try Vercel deployed backend endpoint
       fetch("https://ratio-d.vercel.app/api/analyze", {
@@ -134,29 +245,26 @@ function scanAndAnalyzeGmail() {
         body: JSON.stringify({ text: redactedText, channel: "email" })
       })
         .then(res => res.json())
-        .then(data => {
-          if (window.injectRatiodBanner) {
-            window.injectRatiodBanner(emailBodyElem, data);
-          }
-        })
+        .then(data => onAnalysisComplete(data))
         .catch(() => {
           // Fallback 2: Client-side local fallback engine
-          renderFallbackAnalysis(emailBodyElem, redactedText);
+          const fb = window.RatiodFallback ? window.RatiodFallback.analyze(redactedText) : {
+            score: 12, verdict: "safe", flags: [], explanation: "Analyzed with offline heuristic.", next_steps: []
+          };
+          onAnalysisComplete(fb);
         });
     });
 }
 
 /**
  * Proactive Pre-Open Gmail Inbox Badging
- * Inspects inbox table rows before the user opens them, runs fast in-memory
- * heuristic inspection, and injects a non-intrusive status pill badge.
+ * Inspects all inbox rows, checks cache for authoritative deep analysis,
+ * executes intelligent heuristics, and updates or injects badges seamlessly.
  */
 function scanInboxRows() {
   if (!window.RatiodFallback) return;
 
-  const rows = document.querySelectorAll(
-    "tr.zA:not([data-ratiod-badged])"
-  );
+  const rows = document.querySelectorAll("tr.zA");
   if (!rows || rows.length === 0) return;
 
   const isSpamView = (window.location.hash && window.location.hash.toLowerCase().includes("spam")) ||
@@ -167,39 +275,59 @@ function scanInboxRows() {
                            (window.location.hash && window.location.hash.includes("category/promotions"));
 
   rows.forEach((row) => {
-    row.setAttribute("data-ratiod-badged", "true");
-
-    const senderElem = row.querySelector(".yX, .bqe, .zF, span[email]");
-    const subjectElem = row.querySelector(".y6, .bog, span.bqe");
+    const senderElem = row.querySelector(".yX, .bqe, .zF, span[email], td.yX");
+    const subjectElem = row.querySelector("span.bog, .bog, .y6, span.bqe");
     const snippetElem = row.querySelector(".y2");
 
     const sender = senderElem ? (senderElem.getAttribute("email") || senderElem.getAttribute("title") || senderElem.innerText || "") : "";
-    const subject = subjectElem ? subjectElem.innerText : "";
-    const snippet = snippetElem ? snippetElem.innerText : "";
+    const subject = subjectElem ? subjectElem.innerText.trim() : "";
+    const snippet = snippetElem ? snippetElem.innerText.trim() : "";
 
     const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
-    if (combinedText.length < 5) return;
 
-    // Fast in-memory heuristic analysis
-    const redacted = redactPiiLocally(combinedText);
-    const result = window.RatiodFallback.analyze(redacted);
+    // Check if authoritative deep-analysis result exists in cache for this subject!
+    const cacheKey = subject.toLowerCase().trim();
+    const cachedVerdict = cacheKey ? getCachedVerdict(cacheKey) : null;
 
-    let verdict = result.verdict;
-    let score = result.score;
-    const flags = (result.flags || []).slice();
+    let verdict = "safe";
+    let score = 0;
+    let flags = [];
 
-    // Spam folder priority: if user is in Spam, Google already quarantined this message
-    if (isSpamView) {
-      if (score < 66) {
-        score = Math.max(score, 78);
-        verdict = "high_risk";
-      }
-      flags.unshift({
+    if (cachedVerdict) {
+      // 100% PARITY WITH BANNER: Authoritative result from in-depth open-email analysis
+      verdict = cachedVerdict.verdict;
+      score = cachedVerdict.score;
+      flags = cachedVerdict.flags || [];
+    } else if (isSpamView) {
+      // Quarantined in Spam
+      score = 78;
+      verdict = "high_risk";
+      flags = [{
         span: "Quarantined in Spam",
         reason: "Google security and reputation filters flagged this message as spam/phishing"
-      });
+      }];
     } else {
-      // Category & marketing awareness: detect Promotions view or marketing language
+      // Run heuristic analysis on preview snippet
+      const redacted = redactPiiLocally(combinedText || "Email Message");
+      const result = window.RatiodFallback.analyze(redacted);
+      verdict = result.verdict;
+      score = result.score;
+      flags = (result.flags || []).slice();
+
+      // Detect urgent action / payment update bait in subject or snippet
+      const isBillingUrgency = /(action (needed|required)|immediate attention|update (your )?(payment|billing|card|account)|billing (problem|issue)|overdue|suspended)/i.test(combinedText);
+      if (isBillingUrgency) {
+        if (score < 45) {
+          score = 48;
+          verdict = "suspicious";
+        }
+        flags.unshift({
+          span: "Urgent Payment / Billing Demand",
+          reason: "Message prompts immediate action regarding account billing or payment method"
+        });
+      }
+
+      // Promotions / Marketing awareness
       const promoKeywords = /\b(unsubscribe|%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|promo|limited\s+time|webinar|announcing|newsletter|special\s+offer|rewards?\s*(points|expire)|free\s+gift|clearance)\b/i;
       if (verdict === "safe" && (isPromotionsView || promoKeywords.test(combinedText))) {
         verdict = "promo_clutter";
@@ -207,70 +335,36 @@ function scanInboxRows() {
       }
     }
 
-    // Target container: prefer span.bog (inline subject text) so badge sits on the same line
-    const subjectWrapper = row.querySelector("span.bog") || row.querySelector(".y6") || row.querySelector("span.bqe") || row.querySelector("td.xY:not(.yX)") || subjectElem;
-    if (!subjectWrapper) return;
+    // Check if row already has a badge mounted
+    const existingBadge = row.querySelector(".ratiod-inbox-pill");
+    if (existingBadge) {
+      // Synchronize in place if deep analysis or cache updated verdict/score!
+      const curVerdict = existingBadge.getAttribute("data-verdict");
+      const curScore = existingBadge.getAttribute("data-score");
+      if (curVerdict !== verdict || curScore !== String(score)) {
+        updateBadgeElement(existingBadge, verdict, score, flags);
+      }
+      return;
+    }
+
+    // Target container: find the best insertion anchor across all Gmail DOM variations
+    const target = row.querySelector("span.bog") ||
+                   row.querySelector(".bog") ||
+                   row.querySelector(".y6") ||
+                   row.querySelector("span.bqe") ||
+                   row.querySelector("td.xY") ||
+                   row.querySelector("td.a4W") ||
+                   row.querySelector("td");
+    if (!target) return;
 
     const badge = document.createElement("span");
     badge.className = "ratiod-inbox-pill";
-    badge.setAttribute("data-verdict", verdict);
-    badge.setAttribute("role", "status");
-    badge.setAttribute("aria-label", `Ratio'd Risk: ${score}/100 (${verdict})`);
+    updateBadgeElement(badge, verdict, score, flags);
 
-    let labelText = "";
-    // Website Neo-Brutalist Palette:
-    // Green: #9BE86D, Yellow: #FFD23F, Orange: #E8720C, Red: #EA3E2B, Ink: #121212
-    let bgColor = "#9BE86D";
-    let textColor = "#121212";
-
-    if (verdict === "high_risk") {
-      labelText = `[ 🔴 RISK ${score} ]`;
-      bgColor = "#EA3E2B";
-      textColor = "#FFFFFF";
-    } else if (verdict === "suspicious") {
-      labelText = `[ 🟠 SUSP ${score} ]`;
-      bgColor = "#E8720C";
-      textColor = "#FFFFFF";
-    } else if (verdict === "promo_clutter") {
-      labelText = `[ 🟡 PROMO ]`;
-      bgColor = "#FFD23F";
-      textColor = "#121212";
-    } else {
-      labelText = `[ 🟢 SAFE ]`;
-      bgColor = "#9BE86D";
-      textColor = "#121212";
-    }
-
-    badge.innerText = labelText;
-    const flagSummary = (flags || []).map(f => '• ' + f.span + ': ' + f.reason).join('\n');
-    badge.title = `Ratio'd Pre-Open Analysis: ${score}/100 (${verdict})\n${flagSummary || 'Clean preview'}`;
-
-    badge.style.cssText = `
-      display: inline-block;
-      vertical-align: middle;
-      font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
-      font-size: 10px;
-      font-weight: 800;
-      line-height: 14px;
-      letter-spacing: 0.02em;
-      padding: 1px 6px;
-      margin-right: 6px;
-      border-radius: 4px;
-      border: 1.5px solid #121212;
-      background-color: ${bgColor};
-      color: ${textColor};
-      cursor: help;
-      box-shadow: 1.5px 1.5px 0px #121212;
-      user-select: none;
-      white-space: nowrap;
-      flex-shrink: 0;
-      z-index: 5;
-    `;
-
-    if (subjectWrapper.prepend) {
-      subjectWrapper.prepend(badge);
-    } else if (subjectWrapper.parentNode) {
-      subjectWrapper.parentNode.insertBefore(badge, subjectWrapper);
+    if (target.prepend) {
+      target.prepend(badge);
+    } else if (target.parentNode) {
+      target.parentNode.insertBefore(badge, target);
     }
   });
 }
