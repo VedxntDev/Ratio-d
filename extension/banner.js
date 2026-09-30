@@ -764,6 +764,75 @@ function injectRatiodBanner(targetElement, data) {
   // Safe Peek Zero-Execution Link Redirect Tracer
   bindSafePeek(shadowRoot);
 
+  // Helper to decode Google redirect URLs
+  function resolveTargetUrl(rawUrl) {
+    if (!rawUrl) return "";
+    try {
+      if (rawUrl.includes("google.com/url?") || rawUrl.includes("google.com/url%3F")) {
+        const m = rawUrl.match(/[?&]q=([^&]+)/);
+        if (m && m[1]) return decodeURIComponent(m[1]);
+      }
+    } catch (e) {}
+    return rawUrl;
+  }
+
+  // Helper to dispatch native MouseEvent click that bypasses Chrome content script popup blocker
+  function openUrlInTab(targetUrl) {
+    const cleanUrl = resolveTargetUrl(targetUrl);
+    if (!cleanUrl) return false;
+
+    if (cleanUrl.startsWith("mailto:")) {
+      window.location.href = cleanUrl;
+      return true;
+    }
+
+    try {
+      const tempAnchor = document.createElement("a");
+      tempAnchor.href = cleanUrl;
+      tempAnchor.target = "_blank";
+      tempAnchor.rel = "noopener noreferrer";
+      tempAnchor.style.display = "none";
+      (document.body || document.documentElement).appendChild(tempAnchor);
+
+      const clickEvt = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      tempAnchor.dispatchEvent(clickEvt);
+
+      setTimeout(() => {
+        try { tempAnchor.remove(); } catch (e) {}
+      }, 1000);
+      return true;
+    } catch (e) {
+      try {
+        window.open(cleanUrl, "_blank");
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
+  }
+
+  // Helper to dispatch DOM click events to an element
+  function dispatchElementClick(el) {
+    if (!el) return false;
+    try {
+      el.click();
+    } catch (e) {}
+
+    try {
+      const opts = { bubbles: true, cancelable: true, view: window, buttons: 1 };
+      el.dispatchEvent(new MouseEvent("mousedown", opts));
+      el.dispatchEvent(new MouseEvent("mouseup", opts));
+      el.dispatchEvent(new MouseEvent("click", opts));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Robust One-Click Unsubscribe Click Handler + Glitter Burst + Sparkle Chime Sound
   if (unsubBtn) {
     unsubBtn.addEventListener("click", () => {
@@ -777,10 +846,9 @@ function injectRatiodBanner(targetElement, data) {
       let unsubSuccess = false;
 
       // Strategy A: Gmail Native Header Unsubscribe Action
-      // Find native header controls outside the email body (.a3s) and outside Ratio'd banner
       const headerArea = document.querySelector(".gE, .ha, .gD, .iv, .adn, [role='main']") || document;
       const nativeCandidates = Array.from(headerArea.querySelectorAll(
-        '.aG, span.aG, div.aG, [data-tooltip*="Unsubscribe" i], [aria-label*="Unsubscribe" i], [aria-label*="Opt out" i], [act="10"]'
+        '.aG, span.aG, div.aG, a.aG, [data-tooltip*="Unsubscribe" i], [aria-label*="Unsubscribe" i], [aria-label*="Opt out" i], [act="10"]'
       )).filter(el => {
         if (el.closest('.ratiod-shadow-host') || el === unsubBtn || unsubBtn.contains(el)) return false;
         if (el.closest('.a3s')) return false;
@@ -788,8 +856,13 @@ function injectRatiodBanner(targetElement, data) {
       });
 
       if (nativeCandidates.length > 0) {
+        const candidate = nativeCandidates[0];
+        const clickable = (candidate.matches && candidate.matches('a, button, [role="button"], [role="link"], [act]'))
+          ? candidate
+          : (candidate.querySelector ? (candidate.querySelector('a, button, [role="button"], [role="link"], [act]') || candidate) : candidate);
+
         try {
-          nativeCandidates[0].click();
+          dispatchElementClick(clickable);
           unsubSuccess = true;
           unsubBtn.textContent = "[ ✨ UNSUBSCRIBED & CLEANED! ]";
           unsubBtn.style.backgroundColor = "#8A8B5C";
@@ -800,7 +873,7 @@ function injectRatiodBanner(targetElement, data) {
               'div[role="dialog"] button[name="ok"], div[role="dialog"] button[aria-label*="Unsubscribe" i], div[role="dialog"] .T-I-ATL, div[role="dialog"] button:not([aria-label*="Cancel" i])'
             );
             if (dialogConfirmBtn) {
-              try { dialogConfirmBtn.click(); } catch(e){}
+              dispatchElementClick(dialogConfirmBtn);
             }
           }, 350);
         } catch (e) {
@@ -829,22 +902,10 @@ function injectRatiodBanner(targetElement, data) {
           const targetAnchor = anchors[0];
           const rawUrl = targetAnchor.href || targetAnchor.getAttribute('href') || targetAnchor.getAttribute('data-saferedirecturl');
 
-          try {
-            targetAnchor.click();
-          } catch (e) {}
+          dispatchElementClick(targetAnchor);
 
-          if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
-            try {
-              window.open(rawUrl, '_blank');
-            } catch (e) {
-              const a = document.createElement('a');
-              a.href = rawUrl;
-              a.target = '_blank';
-              a.rel = 'noopener noreferrer';
-              a.click();
-            }
-          } else if (rawUrl && rawUrl.startsWith('mailto:')) {
-            window.location.href = rawUrl;
+          if (rawUrl) {
+            openUrlInTab(rawUrl);
           }
 
           unsubSuccess = true;

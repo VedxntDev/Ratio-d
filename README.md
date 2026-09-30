@@ -237,32 +237,86 @@ sequenceDiagram
 
 ---
 
-### Diagram 4: Component & Entity Relationship Architecture
+### Diagram 4: Eraser.io-Style Component Architecture & Entity Relationship Map
 ```mermaid
-erDiagram
-    GMAIL_EXTENSION ||--o{ CONTENT_SCRIPT : injects
-    CONTENT_SCRIPT ||--|| REDACTOR : executes_in_memory
-    CONTENT_SCRIPT ||--|| SHADOW_BANNER : renders
-    CONTENT_SCRIPT ||--|| QR_SCANNER : scans_images
-    
-    WEB_CONSOLE ||--|| REDACTOR : executes_in_memory
-    WEB_CONSOLE ||--|| QR_PANEL : executes_drag_drop
-    WEB_CONSOLE ||--|| PIPELINE_CONTROLLER : animates_gauge
+flowchart TD
+    %% Eraser.io Architectural Layout for Ratio'd System
+    classDef clientFill fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
+    classDef serverFill fill:#F2FCEE,stroke:#559127,stroke-width:2px,color:#121212
+    classDef engineFill fill:#FFECEB,stroke:#EA3E2B,stroke-width:2px,color:#121212
+    classDef renderFill fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
 
-    CONTENT_SCRIPT }|..| border HTTP_API : requests
-    WEB_CONSOLE }|..| border HTTP_API : requests
-    QR_SCANNER }|..| border HTTP_API : requests
+    subgraph CLIENT_LAYER ["🌐 CLIENT APPLICATION LAYER (Browser / Gmail DOM)"]
+        direction TB
+        EXT["🧩 Chrome Extension MV3\n(extension/manifest.json)"] :::clientFill
+        CS["📜 Content Script\n(extension/content-script.js)"] :::clientFill
+        RED["🔒 Air-Gapped Redactor\n(js/redactor.js)"] :::clientFill
+        QR_SCAN["📱 Gmail QR Scanner\n(extension/qr-gmail.js)"] :::clientFill
+        WEB_APP["💻 Web Console UI\n(index.html / js/app.js)"] :::clientFill
+        
+        EXT -->|Injects| CS
+        CS -->|Redacts PII| RED
+        CS -->|Triggers| QR_SCAN
+    end
 
-    HTTP_API ||--|| RULE_ENGINE : evaluates
-    HTTP_API ||--|| LAYA_SCORER : evaluates
-    HTTP_API ||--|| QR_ENGINE : evaluates
-    HTTP_API ||--|| TRACER : executes_head_chain
-    HTTP_API ||--|| PRIVACY_LOGGER : logs_counts_only
+    subgraph PRIVACY_WALL ["🛡️ AIR-GAPPED PRIVACY BOUNDARY (Memory-Only PII Redaction)"]
+        RED -->|Sanitized Payload| API_GATEWAY
+        QR_SCAN -->|Decoded QR String| API_GATEWAY
+        WEB_APP -->|Sanitized Input| API_GATEWAY
+    end
 
-    RULE_ENGINE ||--|| SCORE_COMBINER : inputs_70_percent
-    LAYA_SCORER ||--|| SCORE_COMBINER : inputs_30_percent
-    SCORE_COMBINER ||--|| LLM_GROUNDER : verifies_spans
+    subgraph SERVER_LAYER ["⚙️ BACKEND & ROUTING LAYER (Node.js / Vercel API)"]
+        API_GATEWAY["⚡ API Router\n(server.js / vercel.json)"] :::serverFill
+        LOG["📊 Privacy Logger\n(server/privacy/log.js)"] :::serverFill
+        TRACER["🔍 Safe Peek Redirect Tracer\n(server/unmask/tracer.js)"] :::serverFill
+
+        API_GATEWAY -->|Logs Counts Only| LOG
+        API_GATEWAY -->|Zero-Execution HEAD| TRACER
+    end
+
+    subgraph DETECTION_CORE ["🧠 HYBRID THREAT ENGINE CORE"]
+        RULE["📏 Heuristic Rule Engine\n(server/rules/engine.js)\n• 10 Signal Families\n• Homoglyphs / Levenshtein <= 2"] :::engineFill
+        LAYA["⚖️ Laya Signal Scorer\n(server/laya/client.js)\n• Structural Features"] :::engineFill
+        QR_RULES["📱 Zero-Trust QR Engine\n(server/rules/qr.js)\n• Brand Spoofing Floor (90)\n• IP Literal Floor (75)"] :::engineFill
+        COMBINER["🎛️ Score Combiner\n(0.70 Rules + 0.30 Laya)"] :::engineFill
+        GROUNDER["🔒 Grounded LLM Verifier\n(server/llm/)\n• Verbatim Flag Check"] :::engineFill
+
+        API_GATEWAY -->|POST /analyze| RULE
+        API_GATEWAY -->|POST /analyze| LAYA
+        API_GATEWAY -->|POST /analyze-qr| QR_RULES
+
+        RULE --> COMBINER
+        LAYA --> COMBINER
+        COMBINER --> GROUNDER
+    end
+
+    subgraph PRESENTATION ["🎨 SHADOW DOM PRESENTATION & ACTION LAYER"]
+        BANNER["🛡️ Neo-Brutalist Banner\n(extension/banner.js)"] :::renderFill
+        MAIL_BADGE["✉️ Mail Risk Score Pill\n[ MAIL: XX/100 ]"] :::renderFill
+        QR_BADGE["📱 QR Code Score Pill\n[ QR CODE: YY/100 ]"] :::renderFill
+        DRAWER["📂 Expandable Drawer\n• Mail Threat Signals\n• QR Payload & Safe Peek"] :::renderFill
+
+        GROUNDER --> BANNER
+        QR_RULES --> BANNER
+        BANNER --> MAIL_BADGE
+        BANNER --> QR_BADGE
+        BANNER --> DRAWER
+    end
 ```
+
+#### Entity & Component Relationship Mapping
+| Source Component | Relationship | Target Component | Protocol / Contract |
+| :--- | :---: | :--- | :--- |
+| **Chrome Extension MV3** | `INJECTS` | **Content Script** | Injects `content-script.js` & `banner.js` into `mail.google.com` at `document_idle`. |
+| **Content Script** | `EXECUTES IN-MEMORY` | **Air-Gapped Redactor** | Redacts phone numbers, emails, and OTPs in local browser memory before any network hop. |
+| **Content Script** | `TRIGGERS` | **Gmail QR Scanner** | Scans open email body images asynchronously for embedded QR codes. |
+| **Content Script / Web App** | `REQUESTS` | **API Router** | Sends sanitized payload to `POST /analyze` (`server.js` / Vercel serverless). |
+| **API Router** | `EVALUATES (70%)` | **Heuristic Rule Engine** | Evaluates 10 signal families, Levenshtein brand distance $\le 2$, and combinations. |
+| **API Router** | `EVALUATES (30%)` | **Laya Signal Scorer** | Evaluates hand-weighted structural signals (`laya_stub_heuristic`). |
+| **API Router** | `EVALUATES QR` | **Zero-Trust QR Engine** | Evaluates decoded QR payload with strict severity floors (Min 90 for spoofing). |
+| **API Router** | `EXECUTES HEAD` | **Safe Peek Tracer** | Traces shortened URLs (`bit.ly`, `t.co`) up to 5 hops without execution. |
+| **Score Combiner** | `VERIFIES` | **Grounded LLM Verifier** | Verifies LLM explanations verbatim against source text ($temp = 0$). |
+| **Threat Engine** | `MOUNTS` | **Shadow DOM Banner** | Injects Neo-Brutalist banner with dual score pills `[MAIL]` & `[QR CODE]`. |
 
 ---
 
