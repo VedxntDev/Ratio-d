@@ -123,6 +123,34 @@ check("step ids match markup",
 check("dismissible promo bar present", /id="promo-bar"/.test(html) && /id="promo-close"/.test(html));
 check("promo bar starts hidden (shown by JS only)", /id="promo-bar"[^>]*hidden/.test(html));
 check("promo dismissal remembered", /ratiod\.promo\.dismissed/.test(installJs));
+// Regression guard for the exact bug this control was added to fix: the promo
+// bar used to live inside the install-steps IIFE, which returns early when the
+// #isteps markup is missing. Any edit to the install section could therefore
+// leave the promo bar permanently hidden with no error anywhere. Pin that the
+// promo block is initialised before that early return.
+const promoBlockIdx = installJs.indexOf('getElementById("promo-bar")');
+const stepsGuardIdx = installJs.indexOf("if (!steps.length) return;");
+check("promo bar is initialised before the install-steps early return",
+  promoBlockIdx !== -1 && stepsGuardIdx !== -1 && promoBlockIdx < stepsGuardIdx,
+  `promo at ${promoBlockIdx}, guard at ${stepsGuardIdx}`);
+// The dismissal key must be versioned. An unversioned key can never be
+// invalidated by a deploy, so a promo that needs to come back is unreachable
+// without devtools. Pin the suffix so a future bump is a deliberate act.
+check("promo dismissal key is versioned",
+  /PROMO_KEY\s*=\s*"ratiod\.promo\.dismissed\.v\d+"/.test(installJs),
+  (installJs.match(/PROMO_KEY\s*=\s*"([^"]+)"/) || [, "none"])[1]);
+check("superseded promo keys are retired",
+  /LEGACY_PROMO_KEYS/.test(installJs) && /removeItem/.test(installJs));
+// There must be a visible way back for anyone who dismisses the bar, so the
+// footer control is the thing that makes the dismissal recoverable.
+check("promo restore control present in footer",
+  /id="promo-restore"/.test(html));
+check("promo restore control is a real button",
+  /<button[^>]*id="promo-restore"/.test(html));
+check("promo restore control styled",
+  /\.nav-link-btn\s*\{/.test(css) && /\.nav-link-btn\[hidden\]\s*\{\s*display:\s*none/.test(css));
+check("promo restore clears the dismissal key",
+  /promoRestore[\s\S]{0,400}?clear\(\[PROMO_KEY\]\)/.test(installJs));
 // The floating entry point to #install is the mascot button. It replaced the
 // old plain .dl-fab, so these checks now pin the mascot rather than a button
 // that no longer exists - and assert the old one really is gone, which is what

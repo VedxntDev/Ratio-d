@@ -1,4 +1,81 @@
 /**
+ * Ratio'd — Extension promo bar
+ *
+ * Lives in its own IIFE, deliberately independent of the install-steps
+ * controller below. That controller bails out early when the #isteps markup is
+ * absent; when the promo bar shared that function, any change to the install
+ * section could silently take the promo bar down with it.
+ *
+ * The dismissal key is versioned. An unversioned key ("ratiod.promo.dismissed")
+ * is a one-way door: once written it can never be invalidated by a code change,
+ * so a promo that needs to come back is unreachable without asking every
+ * visitor to open devtools. Bumping the suffix re-opens the bar for everyone
+ * who dismissed an earlier revision, and the "Show extension promo" control in
+ * the footer gives anyone who dismisses this one a visible way back.
+ */
+(function () {
+  "use strict";
+
+  var PROMO_KEY = "ratiod.promo.dismissed.v2";
+  var LEGACY_PROMO_KEYS = ["ratiod.promo.dismissed", "ratiod.promo.dismissed.v1"];
+  var promoBar = document.getElementById("promo-bar");
+  var promoClose = document.getElementById("promo-close");
+  var promoRestore = document.getElementById("promo-restore");
+
+  if (!promoBar) return;
+
+  function read(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function write(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {
+      /* storage disabled - the bar simply reappears next visit */
+    }
+  }
+
+  function clear(keys) {
+    try {
+      for (var i = 0; i < keys.length; i++) window.localStorage.removeItem(keys[i]);
+    } catch (e) {
+      /* nothing to do */
+    }
+  }
+
+  /* Retire superseded keys so they cannot accumulate or resurrect later. */
+  clear(LEGACY_PROMO_KEYS);
+
+  var dismissed = read(PROMO_KEY) === "1";
+  promoBar.hidden = dismissed;
+
+  if (promoRestore) {
+    promoRestore.hidden = !dismissed;
+    promoRestore.addEventListener("click", function () {
+      clear([PROMO_KEY]);
+      promoBar.hidden = false;
+      promoRestore.hidden = true;
+      promoBar.scrollIntoView({ block: "nearest" });
+      var close = document.getElementById("promo-close");
+      if (close) close.focus();
+    });
+  }
+
+  if (promoClose) {
+    promoClose.addEventListener("click", function () {
+      promoBar.hidden = true;
+      write(PROMO_KEY, "1");
+      if (promoRestore) promoRestore.hidden = false;
+    });
+  }
+})();
+
+/**
  * Ratio'd — Extension install flow
  *
  * Interactive, dependency-free, and resilient: progress is persisted so a
@@ -75,32 +152,8 @@
     });
   }
 
-  /* ---------- promo bar (dismissible, remembered) ---------- */
-  var PROMO_KEY = "ratiod.promo.dismissed";
-  var promoBar = document.getElementById("promo-bar");
-  var promoClose = document.getElementById("promo-close");
-
-  if (promoBar) {
-    var dismissed = false;
-    try {
-      dismissed = window.localStorage.getItem(PROMO_KEY) === "1";
-    } catch (e) {
-      dismissed = false;
-    }
-
-    if (!dismissed) promoBar.hidden = false;
-
-    if (promoClose) {
-      promoClose.addEventListener("click", function () {
-        promoBar.hidden = true;
-        try {
-          window.localStorage.setItem(PROMO_KEY, "1");
-        } catch (e) {
-          /* nothing to do - it will simply reappear next visit */
-        }
-      });
-    }
-  }
+  /* The promo bar is handled by its own IIFE at the top of this file, so that
+     the early return above (no #isteps markup) can never suppress it. */
 
   /* The floating entry point to the install section is the mascot button
      (#mascot-fab). It is CSS-visible from first paint, so there is nothing to

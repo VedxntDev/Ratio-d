@@ -1035,6 +1035,22 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
   text-underline-offset: 3px;
 }
 .footer-credit:hover { color: var(--color-primary); }
+/* Footer "Show extension promo" control. It borrows .nav-link for typography
+   and hover, so it only has to neutralise the button defaults a <button>
+   brings with it (UA border/background/font/cursor). */
+.nav-link-btn {
+  background: none;
+  border-color: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink);
+}
+.nav-link-btn[hidden] { display: none; }
 
 /* ============================================================
    Extension install flow
