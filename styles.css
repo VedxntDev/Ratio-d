@@ -205,6 +205,28 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
 .section-title { font-size: clamp(1.9rem, 3.4vw, 2.8rem); margin: 12px 0 10px; }
 .section-sub { color: var(--color-text-muted); font-size: 1.05rem; }
 
+/* Roadmap note under the install section's subtitle. Uses the same sticker +
+   hard-shadow language as the rest of the page so it reads as part of the
+   design rather than a bolted-on announcement, and wraps to full width so a
+   long sentence never sits awkwardly beside the tag. */
+.platform-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 12px 16px;
+  background-color: var(--color-surface-muted);
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  box-shadow: 3px 3px 0 var(--color-ink);
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.platform-note .sticker { flex-shrink: 0; }
+.platform-note strong { color: var(--color-ink); }
+
 /* Header */
 .header {
   position: sticky;
@@ -1814,6 +1836,9 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
   .auth-field-grid { grid-template-columns: 1fr; }
   .pii-status-bar { flex-direction: column; align-items: flex-start; }
   .btn-clear-tactile { align-self: flex-end; }
+  /* Stack the roadmap note so the sticker sits on its own line rather than
+     squeezing the sentence into a narrow column beside it. */
+  .platform-note { gap: 8px; padding: 10px 12px; font-size: 0.88rem; }
 }
 .auth-label {
   display: block;
