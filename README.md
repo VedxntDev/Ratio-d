@@ -12,6 +12,11 @@
 >
 > It redacts PII **client-side in browser memory** before network hops, scores messages using a calibrated **0–100 Risk Engine**, detects **Zero-Trust QR Code Phishing (Quishing)**, traces shortened URLs safely via **Safe Peek**, and delivers plain-English explanations with actionable recovery checklists.
 
+
+>It works as currently chrome extension and as of now you can access the feature in gmail only , but we are soon lauching in outlook and apple mail also !
+>
+>Go to the [!Ratio'd](https://ratio-d.vercel.app/)
+
 ---
 <img width="1274" height="568" alt="ratio&#39;d" src="https://github.com/user-attachments/assets/2429effd-376b-44f3-8c2b-5bfb87583f04" />
 
