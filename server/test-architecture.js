@@ -295,6 +295,41 @@ check("chart promises zero persistence only where the code does it",
 
 // evaluateLayaModel is async (it awaits the container), so the model
 // assertions have to run inside a promise before the exit.
+// Every POST/GET endpoint implemented in server.js must also be routed in
+// vercel.json, under BOTH its bare and /api form.
+//
+// This gap was invisible locally and fatal in production: server.js handled
+// POST /analyze-qr, but vercel.json had no rewrite for it, so the QR panel
+// fetched a path that only the local server answered. The route landed in
+// server.js while its rewrite was never added, and nothing compared the two
+// lists, so the feature "worked on localhost" and 404'd on the deployed site -
+// the same class of divergence as the archive rules in .vercelignore.
+(function checkEndpointRouting() {
+  const vercel = JSON.parse(fs.readFileSync(path.join(ROOT, "vercel.json"), "utf8"));
+  const serverSrc = fs.readFileSync(path.join(ROOT, "server.js"), "utf8");
+  const routes = vercel.routes || [];
+
+  // Endpoints the single serverless function is expected to serve.
+  const ENDPOINTS = ["analyze", "analyze-qr", "unmask", "health"];
+  for (const ep of ENDPOINTS) {
+    check("server.js implements /" + ep, serverSrc.includes('"/' + ep + '"'));
+    check("vercel.json routes bare /" + ep,
+      routes.some(r => r.src === "^/" + ep + "$" && r.dest === "/api"));
+    check("vercel.json routes /api/" + ep,
+      routes.some(r => r.src === "^/api/" + ep + "$" && r.dest === "/api"));
+  }
+
+  // No rewrite may point somewhere the function does not serve.
+  const dests = [...new Set(routes.filter(r => r.dest).map(r => r.dest))];
+  check("every rewrite targets the single /api function",
+    dests.every(d => d === "/api"), dests.join(", "));
+
+  // The archives must stay reachable: a rewrite with `check` proves the file
+  // exists before the header route continues past the filesystem handler.
+  check("zip archives are checked before the filesystem handler",
+    routes.some(r => typeof r.src === "string" && /ratiod-.*zip/.test(r.src) && r.check === true));
+})();
+
 (async function main() {
   const laya = await evaluateLayaModel(SAMPLE, rule.flags);
   check("documented model probability is inside the engine's real range",
