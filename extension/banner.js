@@ -767,64 +767,111 @@ function injectRatiodBanner(targetElement, data) {
   // Robust One-Click Unsubscribe Click Handler + Glitter Burst + Sparkle Chime Sound
   if (unsubBtn) {
     unsubBtn.addEventListener("click", () => {
-      // 1. Play Web Audio API Sparkle Chime Sound Effect
-      // (skipped when the OS asks for reduced motion - the burst is the same
-      // kind of unsolicited animation, and a chime can be startling in a
-      // shared or screen-shared environment)
+      // 1. Play Web Audio API Sparkle Chime Sound Effect & Glitter Burst
       if (!prefersReducedMotion()) {
         playUnsubscribeSparkleSound();
-
-        // 2. Launch 45-Particle Glitter & Confetti Burst Effect
         launchGlitterBurst(shadowRoot, unsubBtn);
       }
 
-      // 3. Ultra-Robust Multi-Strategy Unsubscribe Handler
+      // 2. Multi-Strategy Unsubscribe Handler
       let unsubSuccess = false;
 
-      // Strategy A: Native Gmail Header Unsubscribe Action
-      const allElements = Array.from(document.querySelectorAll('span, div, a, button, [role="button"], [role="link"]'));
-      const nativeGmailUnsub = allElements.find(el => {
-        if (el === unsubBtn || unsubBtn.contains(el)) return false;
-        const txt = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('data-tooltip') || el.getAttribute('title') || '').toLowerCase();
-        return txt.includes('unsubscribe') || txt.includes('opt out') || txt.includes('opt-out');
+      // Strategy A: Gmail Native Header Unsubscribe Action
+      // Find native header controls outside the email body (.a3s) and outside Ratio'd banner
+      const headerArea = document.querySelector(".gE, .ha, .gD, .iv, .adn, [role='main']") || document;
+      const nativeCandidates = Array.from(headerArea.querySelectorAll(
+        '.aG, span.aG, div.aG, [data-tooltip*="Unsubscribe" i], [aria-label*="Unsubscribe" i], [aria-label*="Opt out" i], [act="10"]'
+      )).filter(el => {
+        if (el.closest('.ratiod-shadow-host') || el === unsubBtn || unsubBtn.contains(el)) return false;
+        if (el.closest('.a3s')) return false;
+        return true;
       });
 
-      if (nativeGmailUnsub) {
+      if (nativeCandidates.length > 0) {
         try {
-          nativeGmailUnsub.click();
+          nativeCandidates[0].click();
           unsubSuccess = true;
           unsubBtn.textContent = "[ ✨ UNSUBSCRIBED & CLEANED! ]";
           unsubBtn.style.backgroundColor = "#8A8B5C";
+
+          // Auto-confirm Gmail's native popup dialog if it opens
+          setTimeout(() => {
+            const dialogConfirmBtn = document.querySelector(
+              'div[role="dialog"] button[name="ok"], div[role="dialog"] button[aria-label*="Unsubscribe" i], div[role="dialog"] .T-I-ATL, div[role="dialog"] button:not([aria-label*="Cancel" i])'
+            );
+            if (dialogConfirmBtn) {
+              try { dialogConfirmBtn.click(); } catch(e){}
+            }
+          }, 350);
         } catch (e) {
-          console.log("[UNSUB CLICK ERROR]", e);
+          console.log("[NATIVE UNSUB ERROR]", e);
         }
       }
 
       // Strategy B: Body Anchor Links (Unsubscribe / Opt-out / Manage Preferences)
       if (!unsubSuccess) {
-        const unsubAnchors = Array.from(document.querySelectorAll('a')).filter(a => {
-          const href = (a.href || '').toLowerCase();
-          const txt = (a.innerText || a.getAttribute('aria-label') || '').toLowerCase();
-          return href.includes('unsubscribe') || href.includes('optout') || href.includes('opt-out') ||
-                 txt.includes('unsubscribe') || txt.includes('opt out') || txt.includes('opt-out') ||
-                 txt.includes('manage preferences') || txt.includes('email preferences');
+        const bodyElem = document.querySelector('.a3s.aiL, .a3s, .ii.gt, .adn.ads, [role="main"]') || document;
+        const anchors = Array.from(bodyElem.querySelectorAll('a')).filter(a => {
+          if (a.closest('.ratiod-shadow-host')) return false;
+          const href = (a.href || a.getAttribute('href') || a.getAttribute('data-saferedirecturl') || '').toLowerCase();
+          const txt = (a.innerText || a.textContent || a.getAttribute('aria-label') || '').toLowerCase();
+          
+          return (
+            href.includes('unsubscribe') || href.includes('optout') || href.includes('opt-out') ||
+            href.includes('email-preferences') || href.includes('manage-subscription') || href.includes('sub_unsub') ||
+            txt.includes('unsubscribe') || txt.includes('opt out') || txt.includes('opt-out') ||
+            txt.includes('manage preferences') || txt.includes('email preferences') || txt.includes('cancel subscription') ||
+            txt.includes('remove me')
+          );
         });
 
-        if (unsubAnchors.length > 0 && unsubAnchors[0].href) {
+        if (anchors.length > 0) {
+          const targetAnchor = anchors[0];
+          const rawUrl = targetAnchor.href || targetAnchor.getAttribute('href') || targetAnchor.getAttribute('data-saferedirecturl');
+
           try {
-            unsubAnchors[0].click();
-          } catch (err) {
-            window.open(unsubAnchors[0].href, '_blank');
+            targetAnchor.click();
+          } catch (e) {}
+
+          if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
+            try {
+              window.open(rawUrl, '_blank');
+            } catch (e) {
+              const a = document.createElement('a');
+              a.href = rawUrl;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              a.click();
+            }
+          } else if (rawUrl && rawUrl.startsWith('mailto:')) {
+            window.location.href = rawUrl;
           }
+
           unsubSuccess = true;
           unsubBtn.textContent = "[ ✨ UNSUB LINK OPENED! ]";
           unsubBtn.style.backgroundColor = "#8A8B5C";
         }
       }
 
+      // Strategy C: Mailto Fallback
       if (!unsubSuccess) {
-        unsubBtn.textContent = "[ ✨ UNSUB INTENT DISPATCHED ]";
-        unsubBtn.style.backgroundColor = "#8A8B5C";
+        const bodyText = (document.querySelector('.a3s') || document.body).innerText || '';
+        const mailtoMatch = bodyText.match(/mailto:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+        if (mailtoMatch) {
+          window.location.href = `mailto:${mailtoMatch[1]}?subject=Unsubscribe`;
+          unsubSuccess = true;
+          unsubBtn.textContent = "[ ✨ UNSUB MAILTO SENT ]";
+          unsubBtn.style.backgroundColor = "#8A8B5C";
+        }
+      }
+
+      if (!unsubSuccess) {
+        unsubBtn.textContent = "[ ⚠️ NO UNSUB LINK FOUND ]";
+        unsubBtn.style.backgroundColor = "#EA3E2B";
+        setTimeout(() => {
+          unsubBtn.textContent = "[ ✨ UNSUBSCRIBE ]";
+          unsubBtn.style.backgroundColor = "#E8720C";
+        }, 3000);
       }
     });
   }
