@@ -19,17 +19,18 @@
 2. [Why We Built It: The Generative AI Phishing Problem](#-why-we-built-it-the-generative-ai-phishing-problem)
 3. [Application Layer & UX Philosophy](#-application-layer--ux-philosophy)
 4. [Hackathon Transparency & Timeline Disclosure](#-hackathon-transparency--timeline-disclosure)
-5. [Why Ratio'd Over Google / Traditional Spam Filters](#-why-ratiod-over-google--traditional-spam-filters)
-6. [System Architecture & Dataflow Diagrams](#-system-architecture--dataflow-diagrams)
-7. [Under The Hood: 10-Stage Threat Pipeline](#-under-the-hood-10-stage-threat-pipeline)
-8. [Detection Engines & Scoring Mathematics](#-detection-engines--scoring-mathematics)
-9. [Zero-Trust QR Phishing (Quishing) & Safe Peek Engine](#-zero-trust-qr-phishing-quishing--safe-peek-engine)
-10. [Privacy & Security Invariants](#-privacy--security-invariants)
-11. [Third-Party Disclosures, Dependencies & Licenses](#-third-party-disclosures-dependencies--licenses)
-12. [Evaluation, Corpora & Verification Suite](#-evaluation-corpora--verification-suite)
-13. [Installation & Setup Guide](#-installation--setup-guide)
-14. [Repository Directory Structure](#-repository-directory-structure)
-15. [Production Roadmap & Future Expansion](#-production-roadmap--future-expansion)
+5. [Comparative Analysis: Ratio'd vs. Legacy Spam vs. Gmail Filters](#-comparative-analysis-ratiod-vs-legacy-spam-vs-gmail-filters)
+6. [🔥 Unique Selling Points (USPs): Why Ratio'd is Built Different](#-unique-selling-points-usps-why-ratiod-is-built-different)
+7. [System Architecture & Dataflow Diagrams](#-system-architecture--dataflow-diagrams)
+8. [Under The Hood: 10-Stage Threat Pipeline](#-under-the-hood-10-stage-threat-pipeline)
+9. [Detection Engines, Laya & Scoring Mathematics](#-detection-engines-laya--scoring-mathematics)
+10. [Zero-Trust QR Phishing (Quishing) & Safe Peek Engine](#-zero-trust-qr-phishing-quishing--safe-peek-engine)
+11. [Privacy & Security Invariants](#-privacy--security-invariants)
+12. [Third-Party Disclosures, Dependencies & Licenses](#-third-party-disclosures-dependencies--licenses)
+13. [Evaluation, Corpora & Verification Suite](#-evaluation-corpora--verification-suite)
+14. [Installation & Setup Guide](#-installation--setup-guide)
+15. [Repository Directory Structure](#-repository-directory-structure)
+16. [Production Roadmap & Future Expansion](#-production-roadmap--future-expansion)
 
 ---
 
@@ -130,15 +131,65 @@ In full compliance with open-source hackathon rules, the table below clearly dis
 
 ---
 
-## ⚔️ Why Ratio'd Over Google / Traditional Spam Filters
+## ⚔️ Comparative Analysis: Ratio'd vs. Legacy Spam vs. Gmail Filters
 
-| Feature / Metric | Standard Gmail Filter | Traditional External Web Scanners | Ratio'd (Gmail Extension + Console) |
+Security tools are often judged on accuracy alone, but in real-world defense, **where, when, and how security insights are presented** is what prevents human error. The comparative matrix and analytical breakdown below highlight why Ratio'd outperforms both traditional spam gateways and cloud-native email filters.
+
+### 📊 Comparative Capability Matrix
+
+| Feature / Metric | Legacy Spam Analyzers (SpamAssassin / RBLs / Bayes) | Gmail Default Scam Filter (Google Cloud ML) | Ratio'd (Gmail Extension + Standalone Console) |
 | :--- | :--- | :--- | :--- |
-| **Explainability** | ❌ Binary (In Box vs Spam) with zero reasoning. | ⚠️ Generic "High Risk" label with no exact span highlighting. | ✅ **Exact Verbatim Span Highlighting**: Shows exact triggering text/domain with plain-English rule breakdowns. |
-| **In-Inbox Inspection** | ⚠️ Runs before delivery; anything that bypasses looks safe. | ❌ Requires leaving Gmail and copy-pasting into a 3rd party site. | ✅ **In-Situ Shadow DOM Banner**: Injected directly into open Gmail threads without leaving the browser. |
-| **Privacy & PII Protection** | ❌ Proprietary server-side scanning of raw unredacted text. | ❌ Raw message text transmitted and stored on external cloud DBs. | ✅ **Air-Gapped Client Redaction**: Phones, emails, and OTPs masked in browser memory before network transit. |
-| **Actionable Recovery** | ❌ None. No advice if a user already interacted. | ❌ Minimal post-detection guidance. | ✅ **Step-by-Step Checklist**: Actionable recovery steps for compromised credentials or scam links. |
-| **Model Sourcing Transparency** | ❌ Black box model with undisclosed confidence metrics. | ⚠️ Opaque AI prompts prone to hallucinated evidence. | ✅ **100% Deterministic Sourcing**: Model source exported (`laya_stub_heuristic` / `qr_rules_v2`) and LLM phrases verified verbatim against input. |
+| **Primary Inspection Layer** | Mail Transfer Agent (MTA) / Gateway | Cloud Pre-Delivery Filter | **In-Situ Application Layer (Gmail Shadow DOM)** |
+| **Privacy & Data Sovereignty** | ❌ Transmits raw unredacted mail to external MTAs | ❌ Scans unredacted mail on Google cloud servers | ✅ **Air-Gapped Client Redaction (PII dies in browser DOM)** |
+| **Zero-Trust QR Code Security (Quishing)** | ❌ Complete blind spot (treats QR as raw image) | ⚠️ Generic OCR; misses zero-day quishing lures | ✅ **Native QR Decoder + Severity Floors (Min 90 for spoof)** |
+| **Shortened URL Redirect Inspection** | ❌ Static domain blocklist (fails on zero-day shortlinks) | ⚠️ Static Google Safe Browsing URL lookup | ✅ **Safe Peek Engine (Zero-execution 5-hop HEAD tracer)** |
+| **Explainability & Grounding** | ❌ Outputs raw headers (`X-Spam-Status`) or binary flag | ⚠️ Generic category warnings ("Why is this in Spam?") | ✅ **Verbatim Span Highlighting + Grounded LLM Verification** |
+| **Context Switching & Friction** | ❌ Requires manual inspection of raw message source | ⚠️ Passive inbox sorting; no active triage drawer | ✅ **Zero Context Switching (Neo-Brutalist Shadow DOM Banner)** |
+| **Model Transparency** | ⚠️ Opaque Bayesian probability weights | ❌ Black-box proprietary neural network | ✅ **100% Deterministic Sourcing (`laya_stub_heuristic` / `qr_rules_v2`)** |
+| **Actionable Incident Recovery** | ❌ None | ❌ None | ✅ **Interactive Recovery Checklist for compromised users** |
+
+---
+
+### 🔍 Deep Dive: Architectural Differentiators
+
+#### 1. Gmail Default Filter vs. Ratio'd: The Gatekeeper Gap
+Gmail's default spam filter operates **before delivery**. Its primary goal is inbox cleanup — sorting bulk spam into the Spam folder. 
+
+- **The Failure Mode of Pre-Delivery Gatekeeping**: When a sophisticated spear-phishing email, homoglyph attack (`paypa1.com`), or QR code lure slips through Gmail's pre-delivery filter, **Gmail places it directly into the user's Inbox without any visual warning**. The user assumes that because it reached their Inbox, it is safe.
+- **How Ratio'd Closes the Gap**: Ratio'd operates **at the point of consumption** (the active reading view). When the user opens an email, Ratio'd executes real-time header verification, Levenshtein distance checks, sender/reply-to mismatch analysis, and QR code image decoding, mounting a high-contrast Shadow DOM banner right above the email body.
+
+#### 2. Legacy Spam Analyzers vs. Ratio'd: The Explainability & Privacy Void
+Legacy tools like SpamAssassin or external web pastebins process raw, unredacted email text on server gateways.
+
+- **The Privacy Risk**: Sending unredacted emails containing phone numbers, passwords, OTPs, and personal addresses across third-party networks creates massive data leak exposure.
+- **The Explainability Void**: A user receiving a warning like `X-Spam-Score: 6.8 (BAYES_50, URIBL_BLACK)` has no idea *which specific sentence or domain* is dangerous.
+- **How Ratio'd Solves Both**: Ratio'd redacts all PII in local browser memory before any API call is made. When threat flags are returned, Ratio'd highlights the **exact verbatim text span** inside the message body, giving the user immediate, plain-English proof of *why* the email was flagged.
+
+---
+
+## 🔥 Unique Selling Points (USPs): Why Ratio'd is Built Different
+
+Ratio'd isn't just another email scanner — it is a paradigm shift in how individual users and teams defend against AI-generated phishing. Here are the 5 core pillars that set Ratio'd apart:
+
+### 1. 🛡️ Air-Gapped Client PII Redaction (Privacy by Architectural Proof)
+> **"What never leaves your browser can never be leaked."**
+Most AI security tools require you to send your raw emails to their servers, forcing a choice between security and privacy. Ratio'd eliminates this tradeoff. Phone numbers, personal email addresses, and 4–8 digit OTP/PIN codes are masked in local browser memory (`js/redactor.js`) *before* the sanitized payload is sent to the scoring engine.
+
+### 2. ⚡ In-Situ Shadow DOM Banner (Zero Friction, Zero Copy-Paste)
+> **"Security that requires context-switching is security that users will skip."**
+Copying email bodies into a separate web tool is too slow for daily email workflows. Ratio'd embeds directly into Gmail using a **CSS-isolated Shadow DOM container**. It injects live Mail Risk Badges (`[ MAIL: 12/100 ]`) and QR Code Badges (`[ QR CODE: 85/100 ]`) into opened threads and inbox list items without interfering with Gmail's native UI.
+
+### 3. 🎯 Calibrated 70/30 Hybrid Scoring with Hard Severity Override Floors
+> **"Deterministic precision where it matters, soft statistical intelligence where it counts."**
+Pure AI models suffer from hallucinations and false positives; pure rule engines suffer from rigidity. Ratio'd combines a 70% deterministic rule engine with a 30% structural Laya scorer. Furthermore, severe domain spoofing (homoglyphs, typosquatting, display-name impersonation) automatically triggers **hard severity override floors** (min 82/100, forcing a `high_risk` verdict) regardless of how polite or convincing the email text appears.
+
+### 4. 📱 Zero-Trust Quishing Shield (Native QR Image Scanning)
+> **"Unmasking the QR code blind spot in modern email security."**
+As text filters improve, cybercriminals increasingly replace link text with embedded QR code images to bypass traditional scanners. Ratio'd automatically scans email body images asynchronously using `jsQR`, decodes raw URLs, and runs them through a dedicated Zero-Trust QR Engine (`server/rules/qr.js`) that enforces hard risk floors (min 90/100 for typosquatted hosts, min 75/100 for raw IP hosts).
+
+### 5. 🔍 Safe Peek: Zero-Execution Shortened Link Redirect Tracer
+> **"Unmask shortened links before your browser touches them."**
+Attackers hide malicious destinations behind link shorteners (`bit.ly`, `t.co`, `tinyurl`). Ratio'd's **Safe Peek Engine** enables 1-click zero-execution HTTP HEAD tracing (up to 5 hops) directly inside the Shadow DOM banner, revealing the final destination URL, domain age, and threat flags without executing client-side scripts.
 
 ---
 
@@ -312,7 +363,7 @@ flowchart TD
 | **Content Script** | `TRIGGERS` | **Gmail QR Scanner** | Scans open email body images asynchronously for embedded QR codes. |
 | **Content Script / Web App** | `REQUESTS` | **API Router** | Sends sanitized payload to `POST /analyze` (`server.js` / Vercel serverless). |
 | **API Router** | `EVALUATES (70%)` | **Heuristic Rule Engine** | Evaluates 10 signal families, Levenshtein brand distance $\le 2$, and combinations. |
-| **API Router** | `EVALUATES (30%)` | **Laya Signal Scorer** | Evaluates hand-weighted structural signals (`laya_stub_heuristic`). |
+| **API Router** | `EVALUATES (30%)` | **Laya Signal Scorer** | Evaluates hand-weighted structural signals (`laya_stub_heuristic` or `laya_trained_v1`). |
 | **API Router** | `EVALUATES QR` | **Zero-Trust QR Engine** | Evaluates decoded QR payload with strict severity floors (Min 90 for spoofing). |
 | **API Router** | `EXECUTES HEAD` | **Safe Peek Tracer** | Traces shortened URLs (`bit.ly`, `t.co`) up to 5 hops without execution. |
 | **Score Combiner** | `VERIFIES` | **Grounded LLM Verifier** | Verifies LLM explanations verbatim against source text ($temp = 0$). |
@@ -320,7 +371,7 @@ flowchart TD
 
 ---
 
-## ⚙️ Detection Engines & Scoring Mathematics
+## ⚙️ Detection Engines, Laya & Scoring Mathematics
 
 ### 1. Hybrid Scoring Formula
 Ratio'd calculates an overall threat score ($S_{\text{raw}}$) by combining the deterministic Rule Engine ($R_{\text{score}}$) and the structural Laya Scorer ($P_{\text{signal}}$):
@@ -329,20 +380,24 @@ $$S_{\text{raw}} = \left( R_{\text{score}} \times 0.70 \right) + \left( P_{\text
 
 $$S_{\text{final}} = \text{clamp}(S_{\text{raw}}, 0, 100)$$
 
+---
+
 ### 2. Severity Override Rules
 To ensure sophisticated domain spoofing cannot pass as safe due to polite wording, hard override floors apply:
 - **Severe Domain Spoof** (Homoglyph / Typosquat / Brand Stuffing / Urgency + Credential demand):
-  $$S_{\text{final}} = \max\left(82, S_{\text{final}}\right) \implies \text{Verdict forced to } \texttt{high\_risk}$$
+  $$S_{\text{final}} = \max(82, S_{\text{final}}) \implies \text{Verdict forced to } \text{high\_risk}$$
 - **Any Other Severe Rule Triggered** (when $S_{\text{final}} < 70$):
-  $$S_{\text{final}} = \max\left(75, S_{\text{final}}\right)$$
+  $$S_{\text{final}} = \max(75, S_{\text{final}})$$
 - **Official Brand Sender Cap**: If the sender domain is verified in `OFFICIAL_BRAND_DOMAINS` and no credential request exists:
-  $$S_{\text{final}} = \min\left(25, S_{\text{final}}\right) \implies \text{Verdict capped to } \texttt{safe}$$
+  $$S_{\text{final}} = \min(25, S_{\text{final}}) \implies \text{Verdict capped to } \text{safe}$$
+
+---
 
 ### 3. Verdict Categories
-- $\texttt{high\_risk} \ge 66$
-- $\texttt{suspicious} \ge 35$
-- $\texttt{promo\_clutter} \ge 2 \text{ promo signals and } S_{\text{final}} < 40$
-- Else $\texttt{safe}$
+- `high_risk`: $S_{\text{final}} \ge 66$
+- `suspicious`: $S_{\text{final}} \ge 35$
+- `promo_clutter`: $\ge 2 \text{ promo signals and } S_{\text{final}} < 40$
+- Else `safe`
 
 ---
 
@@ -375,6 +430,39 @@ Per domain, three brand verification algorithms run:
 - **Signature Footer Impersonation**: $+45$ pts (e.g., `© 2025 PayPal, LLC` sent from unverified address).
 - **Urgency + Credential Harvesting Combo**: $+45$ pts.
 - **Shortener + Time Pressure Combo**: $+30$ pts.
+
+---
+
+### 5. What is Laya & Why We Built It (`server/laya/`)
+
+#### 🧠 What is Laya?
+**Laya** (`server/laya/client.js` & `server/laya/inference.js`) is Ratio'd's **Structural Signal & Statistical Threat Engine**. It acts as a high-speed, zero-dependency contextual classifier that evaluates structural layout patterns, token density, and behavioral indicators in parallel with the deterministic Rule Engine.
+
+Laya operates in a **Dual-Engine Architecture**:
+1. **Trained ML Inference Mode (`laya_trained_v1`)**: When `trained_model.json` is present, Laya executes a pure JavaScript **Sublinear TF-IDF + L2 Normalized Logistic Regression Model** in native Node.js without requiring Python, C++ bindings, or external ONNX runtimes.
+2. **Hand-Weighted Heuristic Fallback (`laya_stub_heuristic`)**: When running standalone, Laya executes a deterministic, auditable structural feature evaluator that scores high-precision signals (Punycode hosts, bare IP literals, data URIs, base64 blobs, credential/wire prompts, and multi-domain link farms).
+
+#### 🎯 Why We Built Laya (The Architectural Rationale)
+Rule engines and statistical models have complementary strengths and weaknesses. Building Ratio'd on either one alone would compromise security:
+
+- **Why Rule Engines Alone Fail**: Deterministic rules are fast and 100% auditable, but they are binary. A message either triggers a rule or it doesn't. Sophisticated zero-day phishing lures that alter phrasing or use novel vocabulary can slip past static rules if no exact match exists.
+- **Why Pure ML Models / LLMs Alone Fail**: Black-box ML models are prone to unpredictable false positives, latency penalties, and hallucinations. A model might flag a legitimate receipt simply because it contains financial vocabulary.
+- **The Laya Synergy (30% Laya + 70% Rules)**: Laya supplies a continuous, soft probability gradient ($P_{\text{signal}}$) weighted at **30%** of the total score. It measures structural density (e.g., base64 payload size, link count to text ratio, urgency token frequency). The deterministic Rule Engine controls **70%** of the score and holds **hard override authority** (forcing $S_{\text{final}} \ge 82$ on severe domain spoofs).
+
+#### 🛡️ Auditable Structural Signal Weights in Laya
+| Signal Name | Weight | Technical Detection Condition | Security Rationale |
+| :--- | :---: | :--- | :--- |
+| `punycode_host` | $+0.34$ | `https?://[^\s/]*xn--` | Detects Internationalized Domain Name (IDN) homoglyph tricks designed to fool visually. |
+| `ip_literal_link` | $+0.34$ | `https?://\d{1,3}(\.\d{1,3}){3}` | Legitimate services use registered domains; bare IP links hide hosting infrastructure. |
+| `data_uri` | $+0.30$ | `data:(text/html\|application/javascript)` | Used to smuggle executable HTML/JS payloads past email gateway filters. |
+| `base64_blob` | $+0.24$ | `[A-Za-z0-9+/]{120,}={0,2}` | Identifies obfuscated attachments, hidden redirects, or encoded inline scripts. |
+| `credential_or_wire` | $+0.20$ | Keyword density (`verify/confirm account` or `gift card/bitcoin/wire`) | Identifies high-risk action demands combined with financial or auth pressure. |
+| `link_farm` | $+0.18$ | $\ge 5$ distinct outbound domain hosts | Detects multi-redirect scam hubs disguised as complex emails. |
+
+*Corroboration Damping*: To prevent multiple minor structural signals from over-inflating risk on complex legitimate newsletters, Laya applies a **damping factor of $-0.06$** for every structural signal beyond the second.
+
+#### 💡 Source Transparency Invariant
+Every response returned by `/analyze` explicitly includes `engine.model_source` (`laya_trained_v1` or `laya_stub_heuristic`). We **never** mask heuristic scoring as trained AI verdicts, ensuring 100% transparency for security auditors.
 
 ---
 
@@ -547,7 +635,8 @@ Ratio-d/
 │   ├── privacy/
 │   │   └── log.js                 # Privacy logger (records redaction counts only)
 │   ├── laya/
-│   │   └── client.js              # Hand-weighted structural signal scorer
+│   │   ├── client.js              # Hand-weighted structural signal scorer
+│   │   └── inference.js           # Trained TF-IDF + Logistic Regression inference engine
 │   ├── llm/
 │   │   ├── client.js              # Grounded LLM explanation generator
 │   │   └── prompt.js              # Strict grounding system prompts
