@@ -428,10 +428,18 @@ function injectRatiodBanner(targetElement, data) {
 
   const displayVerdictLabel = verdict === "promo_clutter" ? "PROMO CLUTTER" : verdict.toUpperCase();
 
+  let logoSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23EA3E2B'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFFFFF' font-size='28' font-weight='800' font-family='sans-serif'%3ER%3C/text%3E%3C/svg%3E";
+  try {
+    if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getURL === "function") {
+      const url = chrome.runtime.getURL("icons/icon48.png");
+      if (url) logoSrc = url;
+    }
+  } catch (e) {}
+
   container.innerHTML = `
     <div class="ratiod-header">
       <div class="ratiod-badge-group">
-        <img class="ratiod-logo" src="${chrome.runtime.getURL("icons/icon48.png")}" alt="" width="28" height="28">
+        <img class="ratiod-logo" src="${escapeHtml(logoSrc)}" alt="" width="28" height="28">
         <span class="ratiod-tag tag-${escapeHtml(verdict)}">[ ${escapeHtml(displayVerdictLabel)} ]</span>
         <span class="ratiod-score">RISK SCORE: ${escapeHtml(score)}/100</span>
       </div>
