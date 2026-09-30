@@ -578,3 +578,10 @@ We welcome community contributions! Please adhere to our code style standards:
 *Ratio'd is open-source software released under the [MIT License](./LICENSE).*
 
 </div>
+
+
+---
+
+### 7. Ending Remarks
+   Ratio’d is a very well-suited scam analyser, from its website UI to the Chrome extension. We ensured a user-friendly experience, rather than a standalone console. We implemented it as a Chrome extension because we knew the only way to make people use Ratio’d was to simplify the experience. That’s why we purchased a Chrome extension developer licence. Some might think Ratio’d isn’t a new innovation, but frankly, scam analysis and detection haven’t been solved yet. Even a multi-trillion-dollar company like Google couldn’t solve it. Gmail claims it successfully detects 99.9% of emails, but frankly, just open your Gmail and I can bet in the first 10 emails, there’ll be at least one promotional, suspicious email incorrectly labelled as safe by Gmail. We don’t claim to be perfect; spam mail detection is a continuous process and can’t be 100% successful. We simply claim we’re better than Gmail for spam detection. That’s our moat. You don’t need to switch Gmail; we’ll work directly inside your Gmail. The only hassle you need to do is go to the Chrome Web Store and download Ratio’d. And when it comes to traditional spam detectors, we’re better than them. In this case, our MVP is Laya, which uses the latest ML to capture non-deterministic semantics, keyword density, and structural feature entropy. We’ve given equal weightage to the application and model layers. Lastly, whether Ratio’d wins or not, it’s here to stay. We’ll keep adding new features to Ratio’d. The next stage includes getting listed on Microsoft Edge and Brave extension stores, adding Outlook and Apple Mail access, developing a scam detection application for mobile phones, analysing images for scams, creating an organisation-specific layer, giving users access to their scam detection analytics, and developing a WhatsApp chatbot. Any suggestions for improving Ratio’d are greatly appreciated. 
+   
