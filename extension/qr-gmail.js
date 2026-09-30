@@ -11,12 +11,12 @@
     if (v === "safe") return; // stay quiet on clean codes
     var host = document.createElement("div"), sh = host.attachShadow({ mode: "open" });
     var st = document.createElement("style");
-    st.textContent = ".b{font:13px monospace;border:3px solid #121212;background:#F8F7F2;box-shadow:4px 4px 0 #121212;padding:10px;margin:8px 0}.h{font-weight:800;color:" + (v === "high_risk" ? "#EA3E2B" : "#E8720C") + "}code{display:block;word-break:break-all;margin:6px 0}";
+    st.textContent = ".b{font:12px 'JetBrains Mono',monospace;border:2px solid #121212;background:#F8F7F2;box-shadow:3px 3px 0 #121212;padding:8px 10px;margin:6px 0;border-radius:6px}.h{font-weight:800;color:" + (v === "high_risk" ? "#EA3E2B" : "#E8720C") + "}code{display:block;word-break:break-all;margin:4px 0;background:#fff;border:1px dashed #121212;padding:3px 6px;border-radius:4px}";
     var b = document.createElement("div"); b.className = "b";
-    var h = document.createElement("div"); h.className = "h"; h.textContent = "[ QR " + v.toUpperCase() + " ]  RISK SCORE: " + Number(res.score) + "/100";
+    var h = document.createElement("div"); h.className = "h"; h.textContent = "[ 📱 QR SECURITY CODE ALERT ]  RISK SCORE: " + Number(res.score) + "/100 (" + v.toUpperCase() + ")";
     var c = document.createElement("code"); c.textContent = String(res.defanged);
-    var ul = document.createElement("ul");
-    (res.flags || []).slice(0, 6).forEach(function (f) { var li = document.createElement("li"); li.textContent = f.reason; ul.append(li); });
+    var ul = document.createElement("ul"); ul.style.margin = "4px 0 0 16px"; ul.style.padding = "0";
+    (res.flags || []).slice(0, 4).forEach(function (f) { var li = document.createElement("li"); li.textContent = f.reason; ul.append(li); });
     b.append(h, c, ul); sh.append(st, b);
     anchor.parentNode.insertBefore(host, anchor);
   }
@@ -32,7 +32,13 @@
         var blob = await (await fetch(img.src, { credentials: "include" })).blob();
         var bmp = await createImageBitmap(blob);
         var codes = await window.QrScan.decodeBitmap(bmp);
-        for (var j = 0; j < codes.length; j++) banner(img, await window.QrScan.analyze(codes[j]));
+        for (var j = 0; j < codes.length; j++) {
+          var qrRes = await window.QrScan.analyze(codes[j]);
+          if (window.updateRatiodBannerQr) {
+            window.updateRatiodBannerQr(qrRes);
+          }
+          banner(img, qrRes);
+        }
       } catch (e) { /* CORS / proxy failure: skip silently */ }
     }
   }

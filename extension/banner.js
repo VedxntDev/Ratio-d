@@ -305,12 +305,128 @@ function injectRatiodBanner(targetElement, data) {
 
     .ratiod-score {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       background-color: #FFFFFF;
       border: 1.5px solid #121212;
-      padding: 4px 10px;
+      padding: 4px 8px;
       border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 2px 2px 0 #121212;
+    }
+
+    .ratiod-score-mail {
+      background-color: #FFFFFF;
+      color: #121212;
+    }
+
+    .ratiod-score-qr {
+      background-color: #FFFFFF;
+      color: #121212;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .ratiod-score-qr.qr-high_risk, .ratiod-score-qr.qr-malicious {
+      background-color: #EA3E2B;
+      color: #FFFFFF;
+    }
+
+    .ratiod-score-qr.qr-suspicious {
+      background-color: #FFD23F;
+      color: #121212;
+    }
+
+    .ratiod-score-qr.qr-safe {
+      background-color: #9BE86D;
+      color: #121212;
+    }
+
+    .ratiod-score-qr.qr-none {
+      background-color: #EFE9DC;
+      color: #4A4741;
+    }
+
+    .score-type-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 1px 4px;
+      margin-right: 6px;
+      border-radius: 3px;
+      border: 1px solid #121212;
+      background: #EFE9DC;
+      color: #121212;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    .ratiod-score-qr.qr-high_risk .score-type-badge,
+    .ratiod-score-qr.qr-malicious .score-type-badge {
+      background: #FFFFFF;
+      color: #EA3E2B;
+      border-color: #121212;
+    }
+
+    .drawer-sub-heading {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #4A4741;
+      margin: 4px 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .qr-banner-card {
+      background: #FFFFFF;
+      border: 1.5px solid #121212;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 6px 0 10px 0;
+      box-shadow: 2px 2px 0 #121212;
+    }
+
+    .qr-banner-card.card-high_risk, .qr-banner-card.card-malicious {
+      border-left: 6px solid #EA3E2B;
+    }
+    .qr-banner-card.card-suspicious {
+      border-left: 6px solid #E8720C;
+    }
+    .qr-banner-card.card-safe {
+      border-left: 6px solid #9BE86D;
+    }
+
+    .qr-banner-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .qr-banner-payload-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      color: #121212;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .qr-banner-code {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      word-break: break-all;
+      background: #F8F7F2;
+      border: 1.5px dashed #121212;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin: 6px 0;
+      color: #121212;
     }
 
     .ratiod-body { margin-top: 12px; }
@@ -422,7 +538,8 @@ function injectRatiodBanner(targetElement, data) {
   container.className = "ratiod-container";
 
   const verdict = data.verdict || "safe";
-  const score = data.score !== undefined ? data.score : 0;
+  const mailScore = data.mail_score !== undefined ? data.mail_score : (data.score !== undefined ? data.score : 0);
+  const score = data.score !== undefined ? data.score : mailScore;
   const flags = data.flags || [];
   const explanation = data.explanation || "No threat signals detected.";
   const nextSteps = data.next_steps || [];
@@ -430,6 +547,29 @@ function injectRatiodBanner(targetElement, data) {
   const totalMasked = (privacy.phones_masked || 0) + (privacy.emails_masked || 0) + (privacy.otp_masked || 0);
 
   const displayVerdictLabel = verdict === "promo_clutter" ? "PROMO CLUTTER" : verdict.toUpperCase();
+
+  const qrData = data.qr || (window.__latestQrScanResult ? window.__latestQrScanResult : null);
+  let qrScoreText = "NO QR DETECTED";
+  let qrChipClass = "qr-none";
+  let qrVerdictLabel = "NONE";
+  let qrFlags = [];
+  let qrPayload = "";
+  let qrDefanged = "";
+  let qrKind = "";
+
+  if (qrData) {
+    const rawQrScore = Number(qrData.score !== undefined ? qrData.score : (qrData.risk_score || 0));
+    const rawQrVerdict = String(qrData.verdict || qrData.legacy_verdict || "safe").toLowerCase();
+    const isHigh = rawQrVerdict === "high_risk" || rawQrVerdict === "malicious" || rawQrScore >= 66;
+    const isSuspicious = !isHigh && (rawQrVerdict === "suspicious" || rawQrScore >= 35);
+    qrVerdictLabel = isHigh ? "HIGH RISK" : (isSuspicious ? "SUSPICIOUS" : "SAFE");
+    qrScoreText = `${rawQrScore}/100 [ ${qrVerdictLabel} ]`;
+    qrChipClass = isHigh ? "qr-high_risk" : (isSuspicious ? "qr-suspicious" : "qr-safe");
+    qrFlags = qrData.flags || [];
+    qrPayload = qrData.payload || "";
+    qrDefanged = qrData.defanged || qrPayload;
+    qrKind = qrData.payload_kind || "";
+  }
 
   let authBadgeHtml = "";
   const authSummary = data.auth || (data.engine && data.engine.auth_status ? { status: data.engine.auth_status } : null);
@@ -457,7 +597,8 @@ function injectRatiodBanner(targetElement, data) {
         <img class="ratiod-logo" src="${escapeHtml(logoSrc)}" alt="" width="28" height="28">
         <span class="ratiod-tag tag-${escapeHtml(verdict)}">[ ${escapeHtml(displayVerdictLabel)} ]</span>
         ${authBadgeHtml}
-        <span class="ratiod-score">RISK SCORE: ${escapeHtml(score)}/100</span>
+        <span class="ratiod-score ratiod-score-mail" title="Mail Security Risk Score"><span class="score-type-badge">MAIL</span>${escapeHtml(mailScore)}/100</span>
+        <span class="ratiod-score ratiod-score-qr ${escapeHtml(qrChipClass)}" id="banner-qr-score" title="QR Security Code Risk Score"><span class="score-type-badge">QR CODE</span><span id="banner-qr-score-val">${escapeHtml(qrScoreText)}</span></span>
       </div>
       <div class="ratiod-header-actions">
         <button class="ratiod-iconbtn" id="btn-collapse" type="button" aria-expanded="true" aria-controls="ratiod-body" title="Collapse">
@@ -478,15 +619,41 @@ function injectRatiodBanner(targetElement, data) {
       </div>
 
       <div class="ratiod-drawer" id="analysis-drawer" role="region" aria-label="Full Ratio'd analysis">
-        <div class="drawer-section-title">[ DETECTED THREAT &amp; PROMOTIONAL SPANS ]</div>
-        ${flags.length > 0 ? flags.map(f => `
-          <div class="flag-item">
-            <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
-            ${(f.span && (f.span.includes("http") || f.span.includes("bit.ly") || f.span.includes("."))) ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(f.span)}">[ &#128269; Safe Peek ]</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
-          </div>
-        `).join('') : '<div class="flag-item">No explicit rule flags triggered.</div>'}
+        <div class="drawer-section-title">[ ✉️ MAIL SECURITY ANALYSIS ]</div>
+        <div class="drawer-sub-heading">Mail Risk Score: ${escapeHtml(mailScore)}/100 &bull; Status: ${escapeHtml(displayVerdictLabel)}</div>
+        <div id="drawer-mail-flags">
+          ${flags.length > 0 ? flags.map(f => `
+            <div class="flag-item">
+              <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
+              ${(f.span && (f.span.includes("http") || f.span.includes("bit.ly") || f.span.includes("."))) ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(f.span)}">[ &#128269; Safe Peek ]</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
+            </div>
+          `).join('') : '<div class="flag-item">No explicit email threat rules triggered.</div>'}
+        </div>
 
-        <div class="drawer-section-title" style="margin-top: 12px;">[ RECOMMENDED ACTION CHECKLIST ]</div>
+        <div class="drawer-section-title" style="margin-top: 14px;">[ 📱 QR SECURITY CODE ANALYSIS ]</div>
+        <div id="drawer-qr-section">
+          ${qrData ? `
+            <div class="qr-banner-card card-${escapeHtml(qrChipClass.replace('qr-', ''))}">
+              <div class="qr-banner-card-header">
+                <div><strong>QR CODE VERDICT:</strong> <span class="ratiod-tag tag-${escapeHtml(qrChipClass.replace('qr-', ''))}">[ ${escapeHtml(qrVerdictLabel)} ]</span></div>
+                <span class="ratiod-score">QR RISK SCORE: ${escapeHtml(qrData.score !== undefined ? qrData.score : 0)}/100</span>
+              </div>
+              <div class="qr-banner-payload-label">DECODED QR PAYLOAD ${qrKind ? `(${escapeHtml(qrKind)})` : ''}:</div>
+              <code class="qr-banner-code">${escapeHtml(qrDefanged || qrPayload)}</code>
+              ${qrPayload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(qrPayload)}">[ &#128269; Safe Peek QR Link ]</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-top:8px;">DETECTED QR CODE SIGNALS:</div>
+              ${qrFlags.length > 0 ? qrFlags.map(f => `
+                <div class="flag-item" style="margin-top:4px;">
+                  <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
+                </div>
+              `).join('') : '<div class="flag-item" style="margin-top:4px;">No suspicious QR code patterns detected.</div>'}
+            </div>
+          ` : `
+            <div class="flag-item" id="qr-empty-msg">No QR codes detected in this message. Email images are monitored for embedded QR threats.</div>
+          `}
+        </div>
+
+        <div class="drawer-section-title" style="margin-top: 14px;">[ RECOMMENDED ACTION CHECKLIST ]</div>
         <ul class="checklist-list">
           ${nextSteps.map(step => `<li><strong>&bull;</strong> ${escapeHtml(step)}</li>`).join('')}
         </ul>
@@ -523,8 +690,6 @@ function injectRatiodBanner(targetElement, data) {
   if (toggleBtn && drawer) {
     toggleBtn.addEventListener("click", () => {
       const open = drawer.classList.toggle("open");
-      // Keep the accessible state in sync, otherwise screen readers announce
-      // the drawer as collapsed while it is visibly open.
       toggleBtn.setAttribute("aria-expanded", String(open));
       toggleBtn.textContent = open ? "[ HIDE DETAILS ]" : "[ SEE DETAILS ]";
     });
@@ -548,50 +713,56 @@ function injectRatiodBanner(targetElement, data) {
     });
   }
 
-  // Safe Peek Zero-Execution Link Redirect Tracer
-  shadowRoot.querySelectorAll(".flag-peek-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const targetUrl = btn.getAttribute("data-peek-url");
-      const resContainer = btn.nextElementSibling;
-      if (!targetUrl || !resContainer) return;
+  function bindSafePeek(root) {
+    root.querySelectorAll(".flag-peek-btn").forEach((btn) => {
+      if (btn.__bound) return;
+      btn.__bound = true;
+      btn.addEventListener("click", async () => {
+        const targetUrl = btn.getAttribute("data-peek-url");
+        const resContainer = btn.nextElementSibling;
+        if (!targetUrl || !resContainer) return;
 
-      btn.disabled = true;
-      btn.textContent = "[ Tracing... ]";
-      resContainer.style.display = "block";
-      resContainer.textContent = "Tracing redirect route...";
+        btn.disabled = true;
+        btn.textContent = "[ Tracing... ]";
+        resContainer.style.display = "block";
+        resContainer.textContent = "Tracing redirect route...";
 
-      const tryEndpoints = ["http://127.0.0.1:3000/unmask", "https://ratio-d.vercel.app/api/unmask"];
-      let unmasked = null;
-      for (const ep of tryEndpoints) {
-        try {
-          const resp = await fetch(ep, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: targetUrl })
-          });
-          if (resp.ok) {
-            unmasked = await resp.json();
-            break;
-          }
-        } catch {}
-      }
+        const tryEndpoints = ["http://127.0.0.1:3000/unmask", "https://ratio-d.vercel.app/api/unmask"];
+        let unmasked = null;
+        for (const ep of tryEndpoints) {
+          try {
+            const resp = await fetch(ep, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: targetUrl })
+            });
+            if (resp.ok) {
+              unmasked = await resp.json();
+              break;
+            }
+          } catch {}
+        }
 
-      if (unmasked) {
-        const dest = escapeHtml(unmasked.finalDomain || unmasked.finalUrl);
-        const v = escapeHtml(unmasked.risk?.verdict?.toUpperCase() || 'SAFE');
-        const sc = escapeHtml(unmasked.risk?.score || 0);
-        const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EA3E2B' : '#8A8B5C';
-        resContainer.innerHTML = `
-          <strong>Safe Peek:</strong> ${escapeHtml(unmasked.hops)} hop(s) &rarr; Destination: <strong>${dest}</strong><br>
-          Risk Verdict: <span style="font-weight:800;color:${vColor}">${v}</span> (Score: ${sc}/100)
-        `;
-      } else {
-        resContainer.textContent = "Could not trace route (offline or unresolvable).";
-      }
-      btn.disabled = false;
-      btn.textContent = "[ 🔍 Safe Peek ]";
+        if (unmasked) {
+          const dest = escapeHtml(unmasked.finalDomain || unmasked.finalUrl);
+          const v = escapeHtml(unmasked.risk?.verdict?.toUpperCase() || 'SAFE');
+          const sc = escapeHtml(unmasked.risk?.score || 0);
+          const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EA3E2B' : '#8A8B5C';
+          resContainer.innerHTML = `
+            <strong>Safe Peek:</strong> ${escapeHtml(unmasked.hops)} hop(s) &rarr; Destination: <strong>${dest}</strong><br>
+            Risk Verdict: <span style="font-weight:800;color:${vColor}">${v}</span> (Score: ${sc}/100)
+          `;
+        } else {
+          resContainer.textContent = "Could not trace route (offline or unresolvable).";
+        }
+        btn.disabled = false;
+        btn.textContent = "[ 🔍 Safe Peek ]";
+      });
     });
-  });
+  }
+
+  // Safe Peek Zero-Execution Link Redirect Tracer
+  bindSafePeek(shadowRoot);
 
   // Robust One-Click Unsubscribe Click Handler + Glitter Burst + Sparkle Chime Sound
   if (unsubBtn) {
@@ -675,4 +846,123 @@ function injectRatiodBanner(targetElement, data) {
   }
 }
 
+function updateRatiodBannerQr(qrResult) {
+  if (!qrResult) return;
+  window.__latestQrScanResult = qrResult;
+  const host = document.getElementById("ratiod-banner-host");
+  if (!host || !host.shadowRoot) return;
+  const root = host.shadowRoot;
+
+  const rawQrScore = Number(qrResult.score !== undefined ? qrResult.score : (qrResult.risk_score || 0));
+  const rawQrVerdict = String(qrResult.verdict || qrResult.legacy_verdict || "safe").toLowerCase();
+  const isHigh = rawQrVerdict === "high_risk" || rawQrVerdict === "malicious" || rawQrScore >= 66;
+  const isSuspicious = !isHigh && (rawQrVerdict === "suspicious" || rawQrScore >= 35);
+  const qrVerdictUpper = isHigh ? "HIGH RISK" : (isSuspicious ? "SUSPICIOUS" : "SAFE");
+  const qrChipClass = isHigh ? "qr-high_risk" : (isSuspicious ? "qr-suspicious" : "qr-safe");
+  const cardBorderClass = isHigh ? "card-high_risk" : (isSuspicious ? "card-suspicious" : "card-safe");
+
+  // 1. Update QR Score Pill in header
+  const qrPill = root.getElementById("banner-qr-score");
+  const qrPillVal = root.getElementById("banner-qr-score-val");
+  if (qrPill && qrPillVal) {
+    qrPillVal.textContent = `${rawQrScore}/100 [ ${qrVerdictUpper} ]`;
+    qrPill.className = `ratiod-score ratiod-score-qr ${qrChipClass}`;
+  }
+
+  // 2. Elevate overall banner verdict if QR threat is higher
+  if (isHigh) {
+    const verdictTag = root.querySelector(".ratiod-tag");
+    if (verdictTag && !verdictTag.classList.contains("tag-high_risk")) {
+      verdictTag.className = "ratiod-tag tag-high_risk";
+      verdictTag.textContent = "[ HIGH RISK (QR PHISH) ]";
+    }
+    const explanationEl = root.querySelector(".ratiod-explanation");
+    if (explanationEl && !explanationEl.textContent.includes("QR CODE SECURITY ALERT")) {
+      explanationEl.innerHTML = `<strong>[ ⚠️ QR CODE SECURITY ALERT ]:</strong> Quishing payload detected in email image. ${explanationEl.innerHTML}`;
+    }
+  }
+
+  // 3. Update QR section in drawer
+  const qrSection = root.getElementById("drawer-qr-section");
+  if (qrSection) {
+    const defanged = qrResult.defanged || qrResult.payload || "";
+    const payload = qrResult.payload || "";
+    const kind = qrResult.payload_kind || "";
+    const flags = qrResult.flags || [];
+
+    let flagsHtml = '<div class="flag-item" style="margin-top:4px;">No suspicious QR code patterns detected.</div>';
+    if (flags.length > 0) {
+      flagsHtml = flags.map(f => `
+        <div class="flag-item" style="margin-top:4px;">
+          <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
+        </div>
+      `).join('');
+    }
+
+    const peekBtnHtml = payload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(payload)}">[ &#128269; Safe Peek QR Link ]</button><div class="flag-peek-res" style="display:none;"></div>` : '';
+
+    qrSection.innerHTML = `
+      <div class="qr-banner-card ${cardBorderClass}">
+        <div class="qr-banner-card-header">
+          <div><strong>QR CODE VERDICT:</strong> <span class="ratiod-tag tag-${isHigh ? 'high_risk' : (isSuspicious ? 'suspicious' : 'safe')}">[ ${escapeHtml(qrVerdictUpper)} ]</span></div>
+          <span class="ratiod-score">QR RISK SCORE: ${escapeHtml(rawQrScore)}/100</span>
+        </div>
+        <div class="qr-banner-payload-label">DECODED QR PAYLOAD ${kind ? `(${escapeHtml(kind)})` : ''}:</div>
+        <code class="qr-banner-code">${escapeHtml(defanged)}</code>
+        ${peekBtnHtml}
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-top:8px;">DETECTED QR CODE SIGNALS:</div>
+        ${flagsHtml}
+      </div>
+    `;
+
+    // Re-bind Safe Peek on newly added QR peek button
+    root.querySelectorAll(".flag-peek-btn").forEach((btn) => {
+      if (btn.__bound) return;
+      btn.__bound = true;
+      btn.addEventListener("click", async () => {
+        const targetUrl = btn.getAttribute("data-peek-url");
+        const resContainer = btn.nextElementSibling;
+        if (!targetUrl || !resContainer) return;
+
+        btn.disabled = true;
+        btn.textContent = "[ Tracing... ]";
+        resContainer.style.display = "block";
+        resContainer.textContent = "Tracing redirect route...";
+
+        const tryEndpoints = ["http://127.0.0.1:3000/unmask", "https://ratio-d.vercel.app/api/unmask"];
+        let unmasked = null;
+        for (const ep of tryEndpoints) {
+          try {
+            const resp = await fetch(ep, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: targetUrl })
+            });
+            if (resp.ok) {
+              unmasked = await resp.json();
+              break;
+            }
+          } catch {}
+        }
+
+        if (unmasked) {
+          const dest = escapeHtml(unmasked.finalDomain || unmasked.finalUrl);
+          const v = escapeHtml(unmasked.risk?.verdict?.toUpperCase() || 'SAFE');
+          const sc = escapeHtml(unmasked.risk?.score || 0);
+          const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EA3E2B' : '#8A8B5C';
+          resContainer.innerHTML = `
+            <strong>Safe Peek:</strong> ${escapeHtml(unmasked.hops)} hop(s) &rarr; Destination: <strong>${dest}</strong><br>
+            Risk Verdict: <span style="font-weight:800;color:${vColor}">${v}</span> (Score: ${sc}/100)
+          `;
+        } else {
+          resContainer.textContent = "Could not trace route (offline or unresolvable).";
+        }
+        btn.disabled = false;
+        btn.textContent = "[ 🔍 Safe Peek ]";
+      });
+    });
+  }
+}
+
 window.injectRatiodBanner = injectRatiodBanner;
+window.updateRatiodBannerQr = updateRatiodBannerQr;
