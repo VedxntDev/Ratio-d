@@ -11,8 +11,8 @@
 .github
 
 # Not part of the deployed site. The console is served from index.html plus
-# js/, styles.css and assets/. The extension and its docs are downloadable
-# from the repo, not the site.
+# js/, styles.css and assets/. The extension source and its docs are excluded
+# because the downloadable builds already contain them.
 #
 # NOTE: server/ must NOT be excluded here. api/index.js does
 # require("../server.js") to share one handler with localhost, and server.js
@@ -21,7 +21,26 @@
 docs/
 extension/
 tools/
+
+# The two published .zip archives MUST stay in the deployment.
+#
+# An earlier version of this file excluded *.zip on the reasoning that the
+# extension was "downloadable from the repo, not the site" - but index.html
+# links to both archives as the manual-install path, and the "Or install the
+# ZIP manually" control is one of only two ways to install without the Web
+# Store. Excluding them made every one of those links 404 in production, which
+# is what Chrome reports as "File wasn't available on site". The local server
+# was unaffected, which is why this only ever reproduced on the deployed site.
+#
+# Archives are excluded by default and the two published ones re-included.
+# Pattern order decides: the last matching rule wins, so the `!` lines below
+# undo the blanket rule for exactly these two files and nothing else. Keeping
+# the blanket rule means an archive that turns up later - a stray backup, a
+# bundle from a future feature - is excluded by default rather than published
+# by accident.
 *.zip
+!ratiod-extension.zip
+!ratiod-full-project.zip
 
 # Tests are run locally and in CI, not by the serverless runtime.
 test-ui-contract.js

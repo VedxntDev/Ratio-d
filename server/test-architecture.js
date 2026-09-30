@@ -171,6 +171,60 @@ const newHosts = [...new Set(hosts.filter((h) => !allowed.includes(h)))];
 check("no new external scripts or CDNs", newHosts.length === 0, newHosts.join(", ") || "none added");
 check("no import/require in the browser controller", !/\bimport\s|\brequire\(/.test(archJs));
 
+/* ---- deployed site must actually serve what the page links to ----
+   A real outage, and the reason it survived so long: .vercelignore excluded
+   *.zip on the reasoning that the extension was "downloadable from the repo",
+   while index.html links to both archives as the manual-install path. Every
+   one of those links 404'd in production, which Chrome reports as "File wasn't
+   available on site". The local server was untouched, so localhost testing
+   could never have caught it - the two environments resolve assets by
+   completely different mechanisms (readFileSync vs the Vercel filesystem
+   handler reading the uploaded tree).
+
+   So these assert the two halves agree: every archive the page links to has to
+   be both allowed by the local server AND kept in the deployment. */
+const vercelignore = fs.readFileSync(path.join(ROOT, ".vercelignore"), "utf8");
+const linkedZips = [...new Set([...html.matchAll(/href="([^"]+\.zip)"/g)].map((m) => m[1]))];
+check("page links at least one downloadable archive", linkedZips.length > 0, linkedZips.join(", "));
+// Re-apply the ignore rules in order (last match wins, `!` re-includes) rather
+// than pattern-matching by eye, so this tracks the real semantics.
+function vercelShips(file) {
+  let ignored = false;
+  for (const raw of vercelignore.split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const negate = line.startsWith("!");
+    const pattern = negate ? line.slice(1) : line;
+    const re = new RegExp("^" + pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*").replace(/\*\*/g, ".*") + "$");
+    if (re.test(file)) ignored = !negate;
+  }
+  return !ignored;
+}
+const unshipped = linkedZips.filter((z) => !vercelShips(z));
+check("every linked archive is kept in the Vercel deployment",
+  unshipped.length === 0,
+  unshipped.length ? "excluded by .vercelignore: " + unshipped.join(", ") : linkedZips.join(", "));
+// Secrets must stay excluded - the fix above must not have loosened anything else.
+check("deploy still excludes local secrets",
+  /^\.env\*/m.test(vercelignore) && /^\.vercel$/m.test(vercelignore));
+
+// Both environments must agree on which archives are public. The local server
+// has its own allowlist in server.js; if the two ever diverge, one environment
+// serves an archive the other 404s, which is exactly the bug above.
+const serverSrc = fs.readFileSync(path.join(ROOT, "server.js"), "utf8");
+const servedZips = [...new Set([...serverSrc.matchAll(/"([\w.-]+\.zip)"/g)].map((m) => m[1]))];
+check("local server and deployment agree on the archive list",
+  servedZips.length > 0 && servedZips.every((z) => vercelShips(z)),
+  servedZips.join(", "));
+// The re-inclusions must come AFTER the blanket rule, or they are dead lines.
+const viLines = vercelignore.split("\n");
+const zipRuleIndex = viLines.findIndex((l) => l.trim() === "*.zip");
+const zipReincludeIndexes = servedZips.map((f) => viLines.findIndex((l) => l.trim() === "!" + f));
+check("archive re-inclusions come after the blanket *.zip rule",
+  zipRuleIndex !== -1 && zipReincludeIndexes.every((i) => i > zipRuleIndex),
+  "blanket rule at line " + (zipRuleIndex + 1) + ", re-includes at lines " +
+    zipReincludeIndexes.map((i) => i + 1).join(", "));
+
 /* ---- safe DOM construction ---- */
 // Match real assignment, not the word "innerHTML" in an explanatory comment.
 check("copy is set with textContent, not innerHTML", !/innerHTML\s*(\+?=)/.test(archJs));
