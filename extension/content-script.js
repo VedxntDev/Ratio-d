@@ -103,8 +103,11 @@ const memVerdictCache = {};
  */
 function normalizeSubjectKey(value) {
   return String(value == null ? "" : value)
-    .replace(/[\u2026\u0085]/g, "...")   // … -> ...
-    .replace(/\.{2,}\s*$/g, "")          // trailing ellipsis
+    .replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "") // Ratio'd badge text
+    .replace(/^\[[^\]]+\]\s*/g, "")                                     // Other bracketed tags like [External]
+    .replace(/^(?:re|fwd|fw):\s*/i, "")                                 // Email thread prefixes
+    .replace(/[\u2026\u0085]/g, "...")                                  // … -> ...
+    .replace(/\.{2,}\s*$/g, "")                                         // trailing ellipsis
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase()
@@ -123,21 +126,34 @@ function getVerdictCache() {
 function saveVerdictToCache(key, data) {
   if (!key || !data) return;
   try {
-    const cleanKey = normalizeSubjectKey(key);
-    if (!cleanKey) return;
+    const keys = Array.isArray(key) ? key : [key];
     const entry = {
       verdict: data.verdict,
       score: data.score !== undefined ? data.score : 0,
       flags: (data.flags || []).slice()
     };
-    memVerdictCache[cleanKey] = entry;
-
     const cache = getVerdictCache();
-    cache[cleanKey] = entry;
-    // Cap cache to 250 items
-    const keys = Object.keys(cache);
-    if (keys.length > 250) {
-      delete cache[keys[0]];
+
+    for (const k of keys) {
+      if (!k) continue;
+      const cleanKey = normalizeSubjectKey(k);
+      if (cleanKey) {
+        memVerdictCache[cleanKey] = entry;
+        cache[cleanKey] = entry;
+      }
+      const rawKey = String(k).trim().toLowerCase();
+      if (rawKey && rawKey !== cleanKey) {
+        memVerdictCache[rawKey] = entry;
+        cache[rawKey] = entry;
+      }
+    }
+
+    // Cap cache to 300 items
+    const allKeys = Object.keys(cache);
+    if (allKeys.length > 300) {
+      for (let i = 0; i < allKeys.length - 250; i++) {
+        delete cache[allKeys[i]];
+      }
     }
     sessionStorage.setItem(VERDICT_CACHE_KEY, JSON.stringify(cache));
   } catch (e) {}
@@ -145,11 +161,56 @@ function saveVerdictToCache(key, data) {
 
 function getCachedVerdict(key) {
   if (!key) return null;
-  const cleanKey = normalizeSubjectKey(key);
-  if (!cleanKey) return null;
-  if (memVerdictCache[cleanKey]) return memVerdictCache[cleanKey];
+  const keys = Array.isArray(key) ? key : [key];
   const cache = getVerdictCache();
-  return cache[cleanKey] || null;
+
+  for (const k of keys) {
+    if (!k) continue;
+    const rawKey = String(k).trim().toLowerCase();
+    if (rawKey) {
+      if (memVerdictCache[rawKey]) return memVerdictCache[rawKey];
+      if (cache[rawKey]) return cache[rawKey];
+    }
+    const cleanKey = normalizeSubjectKey(k);
+    if (cleanKey) {
+      if (memVerdictCache[cleanKey]) return memVerdictCache[cleanKey];
+      if (cache[cleanKey]) return cache[cleanKey];
+    }
+  }
+  return null;
+}
+
+function extractCleanRowSubject(row) {
+  const subjectElem = row.querySelector("span.bog, .bog, .y6, span.bqe");
+  if (!subjectElem) return "";
+  const pill = subjectElem.querySelector(".ratiod-inbox-pill");
+  if (pill) {
+    const clone = subjectElem.cloneNode(true);
+    clone.querySelectorAll(".ratiod-inbox-pill").forEach(p => p.remove());
+    return clone.innerText.trim();
+  }
+  return subjectElem.innerText.trim();
+}
+
+function getRowIdentifiers(row) {
+  const ids = [];
+  const legacyId = row.getAttribute("data-legacy-thread-id");
+  if (legacyId) ids.push(legacyId);
+  const threadId = row.getAttribute("data-thread-id");
+  if (threadId) ids.push(threadId);
+  const rowId = row.getAttribute("id");
+  if (rowId) ids.push(rowId);
+  const link = row.querySelector("a[href*='#']");
+  if (link) {
+    const href = link.getAttribute("href") || "";
+    const hash = href.includes("#") ? href.split("#")[1] : href;
+    if (hash) {
+      ids.push(hash);
+      const lastPart = hash.split("/").pop();
+      if (lastPart && lastPart !== hash) ids.push(lastPart);
+    }
+  }
+  return ids;
 }
 
 function updateBadgeElement(badge, verdict, score, flags) {
@@ -321,8 +382,8 @@ function scanAndAnalyzeGmail() {
   if (rawBodyText.length < 5) return;
 
   // Extract Subject and Sender from open email header
-  const subjectElem = document.querySelector("h2.hP, .ha h2");
-  const subject = subjectElem ? subjectElem.innerText.trim() : "";
+  const subjectElem = document.querySelector("h2.hP, .ha h2, [data-thread-perm-id] h2, [role='main'] h2, h1.ha, .hP");
+  const subject = subjectElem ? subjectElem.innerText.replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "").trim() : "";
 
   const senderInfo = extractGmailSender(emailBodyElem);
   const senderAddress = senderInfo.senderAddress;
@@ -353,16 +414,41 @@ function scanAndAnalyzeGmail() {
     if (window.injectRatiodBanner) {
       window.injectRatiodBanner(emailBodyElem, data);
     }
-    // 2. Persist authoritative verdict to cache (keyed by Subject and URL Thread)
-    if (subject) {
-      saveVerdictToCache(subject, data);
+    // 2. Persist authoritative verdict to cache across all subject & thread identifiers
+    const keysToSave = [];
+    if (subject) keysToSave.push(subject);
+
+    const threadElem = document.querySelector("[data-thread-perm-id], [data-legacy-thread-id]");
+    if (threadElem) {
+      const permId = threadElem.getAttribute("data-thread-perm-id");
+      if (permId) keysToSave.push(permId);
+      const legId = threadElem.getAttribute("data-legacy-thread-id");
+      if (legId) keysToSave.push(legId);
     }
-    const currentHashKey = window.location.hash.replace(/^#/, "");
-    if (currentHashKey) {
-      saveVerdictToCache(currentHashKey, data);
+
+    if (window.location.hash) {
+      const hashKey = window.location.hash.replace(/^#/, "");
+      if (hashKey) {
+        keysToSave.push(hashKey);
+        const lastPart = hashKey.split("/").pop();
+        if (lastPart) keysToSave.push(lastPart);
+      }
     }
-    // 3. Immediately refresh visible inbox badges to eliminate any mismatch
-    scanInboxRows();
+
+    saveVerdictToCache(keysToSave, data);
+
+    // 3. Immediately synchronize any active row in split view
+    const activeRow = document.querySelector("tr.zA.aqw, tr.zA[aria-selected='true'], tr.zA.apv, tr.zA.btb");
+    if (activeRow) {
+      const activeBadge = activeRow.querySelector(".ratiod-inbox-pill");
+      if (activeBadge) {
+        updateBadgeElement(activeBadge, data.verdict, data.score, data.flags);
+        activeRow.setAttribute("data-ratiod-sig", `authoritative|${data.verdict}${data.score}`);
+      }
+    }
+
+    // 4. Immediately refresh visible inbox badges to eliminate any mismatch
+    scanInboxRows(true);
   };
 
   // 1. Client-Side Local PII Redaction
@@ -422,7 +508,7 @@ function scanAndAnalyzeGmail() {
  * Inspects all inbox rows, checks cache for authoritative deep analysis,
  * executes intelligent heuristics, and updates or injects badges seamlessly.
  */
-function scanInboxRows() {
+function scanInboxRows(forceUpdate = false) {
   if (!window.RatiodFallback) return;
 
   const rows = document.querySelectorAll("tr.zA");
@@ -437,25 +523,25 @@ function scanInboxRows() {
 
   rows.forEach((row) => {
     const senderElem = row.querySelector(".yX, .bqe, .zF, span[email], td.yX");
-    const subjectElem = row.querySelector("span.bog, .bog, .y6, span.bqe");
     const snippetElem = row.querySelector(".y2");
 
     const sender = senderElem ? (senderElem.getAttribute("email") || senderElem.getAttribute("title") || senderElem.innerText || "") : "";
-    const subject = subjectElem ? subjectElem.innerText.trim() : "";
+    const subject = extractCleanRowSubject(row);
     const snippet = snippetElem ? snippetElem.innerText.trim() : "";
 
     const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
 
-    // Check if authoritative deep-analysis result exists in cache for this subject!
-    // Must go through normalizeSubjectKey: the banner saved this under the
-    // open-message header subject, which Gmail truncates differently.
+    // Check if authoritative deep-analysis result exists in cache!
+    // Try thread identifiers first, then clean subject and normalized key.
+    const rowIds = getRowIdentifiers(row);
     const cacheKey = normalizeSubjectKey(subject);
-    const cachedVerdict = cacheKey ? getCachedVerdict(subject) : null;
+    const lookupKeys = [...rowIds, subject, cacheKey].filter(Boolean);
+    const cachedVerdict = getCachedVerdict(lookupKeys);
 
     // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
     const rowSignature = `${combinedText}|${cachedVerdict ? cachedVerdict.verdict + cachedVerdict.score : 'none'}`;
     const existingBadge = row.querySelector(".ratiod-inbox-pill");
-    if (existingBadge && row.getAttribute("data-ratiod-sig") === rowSignature) {
+    if (!forceUpdate && existingBadge && row.getAttribute("data-ratiod-sig") === rowSignature) {
       return;
     }
 
@@ -469,14 +555,7 @@ function scanInboxRows() {
       score = cachedVerdict.score;
       flags = cachedVerdict.flags || [];
     } else if (isSpamView) {
-      // Gmail quarantined this message. Previously this branch hardcoded
-      // `score = 78; verdict = "high_risk"` and rendered a red "RISK 78" pill -
-      // a fabricated measurement, identical on every row, which contradicted
-      // the banner reading the same message.
-      //
-      // It is now honest about its provenance: the number is the real score
-      // from analysing the row, and the badge says Gmail filtered it rather
-      // than claiming phishing.
+      // Gmail quarantined this message.
       const redactedSpamRow = redactPiiLocally(combinedText || "Email Message");
       const spamResult = window.RatiodFallback.analyze(redactedSpamRow);
 
@@ -505,17 +584,32 @@ function scanInboxRows() {
       score = result.score;
       flags = (result.flags || []).slice();
 
-      // Detect urgent action / payment update bait in subject or snippet
-      const isBillingUrgency = /(action (needed|required)|immediate attention|update (your )?(payment|billing|card|account)|billing (problem|issue)|overdue|suspended)/i.test(combinedText);
-      if (isBillingUrgency) {
+      // Threat / Urgency / Security Alert detection in subject or snippet
+      const isUrgentOrSuspicious = /(action (needed|required)|immediate attention|update (your )?(payment|billing|card|account)|billing (problem|issue)|overdue|suspended|account (locked|restricted|disabled|hold)|security (alert|warning|notice)|unusual (activity|login|sign-in)|unauthorized access|verify (your )?(account|identity|billing)|password reset|confirm (your )?(account|identity)|2fa|critical security|suspicious activity)/i.test(combinedText);
+      if (isUrgentOrSuspicious) {
         if (score < 45) {
           score = 48;
           verdict = "suspicious";
         }
         flags.unshift({
-          span: "Urgent Payment / Billing Demand",
-          reason: "Message prompts immediate action regarding account billing or payment method"
+          span: "Urgent Security / Account Demand",
+          reason: "Message prompts urgent action regarding account security, billing, or access restriction"
         });
+      }
+
+      // Brand display-name impersonation check from free-mail or mismatched address in inbox row
+      if (sender) {
+        const freeMailPattern = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com|proton(mail\.com|me)|aol\.com)\b/i;
+        const brandPattern = /\b(paypal|netflix|microsoft|google|apple|amazon|chase|wellsfargo|bank of america|dhl|fedex|ups)\b/i;
+        const brandMatch = sender.match(brandPattern);
+        if (brandMatch && freeMailPattern.test(sender)) {
+          score = Math.max(score, 82);
+          verdict = "high_risk";
+          flags.unshift({
+            span: sender,
+            reason: `Brand display name '${brandMatch[0]}' paired with free/unrelated mailbox address`
+          });
+        }
       }
 
       // Promotions / Marketing awareness
@@ -533,7 +627,7 @@ function scanInboxRows() {
       // Synchronize in place if deep analysis or cache updated verdict/score!
       const curVerdict = existingBadge.getAttribute("data-verdict");
       const curScore = existingBadge.getAttribute("data-score");
-      if (curVerdict !== verdict || curScore !== String(score)) {
+      if (forceUpdate || curVerdict !== verdict || curScore !== String(score)) {
         updateBadgeElement(existingBadge, verdict, score, flags);
       }
       return;
@@ -553,10 +647,11 @@ function scanInboxRows() {
     badge.className = "ratiod-inbox-pill";
     updateBadgeElement(badge, verdict, score, flags);
 
-    if (target.prepend) {
-      target.prepend(badge);
-    } else if (target.parentNode) {
+    // Mount badge as a sibling BEFORE target so it never enters span.bog.innerText
+    if (target.parentNode) {
       target.parentNode.insertBefore(badge, target);
+    } else if (target.prepend) {
+      target.prepend(badge);
     }
   });
 }

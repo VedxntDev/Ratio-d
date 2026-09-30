@@ -164,7 +164,28 @@ async function checkExtensionSource() {
       normalizeSubjectKey("Quarterly Report") === "quarterly report");
     check("an empty subject yields an empty key",
       normalizeSubjectKey("") === "");
+
+    // The key must strip any prepended badge text or email reply/forward prefixes,
+    // so an existing badge in the DOM can never cause a cache miss between badge and banner.
+    check("badge prefix in row text does not desync key from clean header subject",
+      normalizeSubjectKey("[ 🟢 SAFE ] " + headerSubject) === normalizeSubjectKey(headerSubject),
+      "badge text stripped");
+    check("suspicious badge prefix does not desync key",
+      normalizeSubjectKey("[ 🟠 SUSP 48 ] " + rowSubject) === normalizeSubjectKey(headerSubject),
+      "suspicious badge stripped");
+    check("risk badge prefix does not desync key",
+      normalizeSubjectKey("[ 🔴 RISK 82 ] " + rowSubject) === normalizeSubjectKey(headerSubject),
+      "risk badge stripped");
+    check("Re: and Fwd: prefixes do not desync key",
+      normalizeSubjectKey("Re: " + headerSubject) === normalizeSubjectKey(headerSubject),
+      "thread prefixes stripped");
   }
+
+  // The badge must be mounted as a sibling before the target, not nested inside span.bog
+  check("badge is mounted as a sibling before target rather than polluting inner text",
+    /target\.parentNode\.insertBefore\(badge,\s*target\)/.test(contentScript));
+  check("clean row subject extraction removes .ratiod-inbox-pill",
+    /extractCleanRowSubject/.test(contentScript) && /\.ratiod-inbox-pill/.test(contentScript));
 
   // The offline engine must agree, or a degraded connection re-creates the bug.
   const offline = fs.readFileSync(path.join(ROOT, "extension/fallback-engine.js"), "utf8");

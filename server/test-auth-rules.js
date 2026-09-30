@@ -122,6 +122,50 @@ it("Check D: High-value brand with completely missing authentication signatures"
   assert(flags.some(f => f.rule === "AUTH_BRAND_UNAUTHENTICATED"));
 });
 
+// Regression: ordinary personal mail from a consumer mailbox is not a spoof.
+//
+// gmail.com and icloud.com belong to Google and Apple and are therefore in
+// OFFICIAL_BRAND_DOMAINS, so isProtectedBrandDomain() returns true for them.
+// evaluateAuthentication() used that directly, and every plain email sent from
+// a Gmail or Outlook address scored ~41 "suspicious" for having no DKIM
+// signature - including an empty one from a friend. gmail.com, outlook.com and
+// icloud.com were all affected; the other providers were not, purely because
+// they are absent from the brand list, which is why this looked inconsistent.
+it("Free webmail never counts as an institutional brand sender", () => {
+  for (const domain of ["gmail.com", "outlook.com", "icloud.com", "yahoo.com", "hotmail.com", "live.com"]) {
+    const { flags } = evaluateRules(`From: someone@${domain}\nSubject: hi\n\n`, "email", {
+      fromDomain: domain
+    });
+    assert(
+      !flags.some(f => f.rule === "AUTH_BRAND_UNAUTHENTICATED"),
+      `${domain} must not be treated as an unauthenticated brand sender`
+    );
+  }
+});
+
+// The exact reported message: no content at all, from a personal Gmail address.
+it("An empty personal email is safe, not suspicious", () => {
+  const { ruleScore, flags } = evaluateRules(
+    "From: Utkarsh Upadhyaya <upadhyayautkarsh80@gmail.com>\nSubject: \n\n",
+    "email",
+    { fromDomain: "gmail.com" }
+  );
+  assert.strictEqual(flags.length, 0, "no flags expected: " + flags.map(f => f.rule).join(", "));
+  assert.ok(ruleScore < 35, `expected a low score, got ${ruleScore}`);
+});
+
+// The exemption must not become a free pass for real phishing sent from a
+// consumer mailbox. Without a brand claim there is nothing to misattribute, so
+// the body-level rules have to carry the detection on their own.
+it("Free webmail does not launder a phishing body", () => {
+  const { ruleScore } = evaluateRules(
+    "From: attacker@gmail.com\nSubject: s\n\nURGENT your account is suspended verify your password http://bit.ly/z",
+    "email",
+    { fromDomain: "gmail.com" }
+  );
+  assert.ok(ruleScore >= 35, `phishing body must still score high, got ${ruleScore}`);
+});
+
 it("Backward compatibility: Omitting auth object preserves existing scoring and defaults safely", () => {
   const text = "From: friend@example.com\nSubject: Hey\n\nCatch up this weekend?";
   const { ruleScore, flags, isAuthDisqualified, authSummary } = evaluateRules(text, "email", null);

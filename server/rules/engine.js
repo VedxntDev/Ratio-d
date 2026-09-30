@@ -735,7 +735,25 @@ function evaluateAuthentication(auth, senderDomain) {
     return false;
   };
 
-  const isBrand = isProtectedBrandDomain(fromDomain);
+  // Free webmail must never count as a brand sender here.
+  //
+  // gmail.com legitimately belongs to Google and icloud.com to Apple, so both
+  // are in OFFICIAL_BRAND_DOMAINS and isProtectedBrandDomain() returns true for
+  // them. Without this exclusion, every ordinary personal email sent from a
+  // Gmail or Outlook address tripped AUTH_BRAND_UNAUTHENTICATED and scored ~41
+  // "suspicious" for no reason at all - a friend emailing you from their own
+  // Gmail account is the single most common case in an inbox.
+  //
+  // The identical exclusion already exists in the main evaluateRules() path
+  // (and is documented on FREE_MAIL_DOMAINS), but this authentication path was
+  // missed, so the same domain was simultaneously "official" here and
+  // "not official" there.
+  //
+  // The reasoning is the same: no brand sends its own transactional mail from a
+  // consumer mailbox, so there is no legitimate case to preserve. Real spoofing
+  // is still caught by Checks B and C, which key on an actual signature being
+  // present and MISALIGNED rather than absent.
+  const isBrand = isProtectedBrandDomain(fromDomain) && !isFreeMailDomain(fromDomain);
 
   // Check B: DKIM Alignment Mismatch (The Smoking Gun)
   if (isBrand && signedBy) {
