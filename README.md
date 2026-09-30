@@ -209,15 +209,15 @@ flowchart TD
 
     subgraph ENGINE ["Detection & Rule Processing"]
         C -->|POST /analyze| D{"API Router (server.js / Vercel)"}
-        D -->|Parallel Execution| E["Rule Engine (server/rules/engine.js)\nHomoglyphs, Levenshtein <= 2, Combos"]
-        D -->|Parallel Execution| F["Laya Scorer (server/laya/client.js)\nWeighted Structural Signals"]
-        E --> G["Score Combiner\n0.70 * Rules + 0.30 * Laya"]
+        D -->|Parallel Execution| E["Rule Engine (server/rules/engine.js)<br/>Homoglyphs, Levenshtein <= 2, Combos"]
+        D -->|Parallel Execution| F["Laya Scorer (server/laya/client.js)<br/>Weighted Structural Signals"]
+        E --> G["Score Combiner<br/>0.70 * Rules + 0.30 * Laya"]
         F --> G
     end
 
     subgraph EXPLANATION ["Explanation & Grounding"]
         G --> H{"LLM Key Configured?"}
-        H -->|Yes| I["Grounded LLM (server/llm/)\nVerbatim Flag Verification"]
+        H -->|Yes| I["Grounded LLM (server/llm/)<br/>Verbatim Flag Verification"]
         H -->|No| J["Deterministic Template Engine"]
         I --> K["Final JSON Verdict"]
         J --> K
@@ -249,7 +249,7 @@ flowchart LR
         F --> H["Brand Impersonation & Typosquat Check (Levenshtein <= 2)"]
         F --> I["Abused TLD Check (.xyz, .top, .icu, .buzz)"]
         F --> J["Credential Path Check (/login, /verify, /account)"]
-        H --> K["Scoring Floor Calibration\n(Impersonation: Min 90, IP Literal: Min 75)"]
+        H --> K["Scoring Floor Calibration<br/>(Impersonation: Min 90, IP Literal: Min 75)"]
         I --> K
         J --> K
     end
@@ -288,22 +288,16 @@ sequenceDiagram
 
 ---
 
-### Diagram 4: Eraser.io-Style Component Architecture & Entity Relationship Map
+### Diagram 4: Component Architecture & Entity Relationship Map
 ```mermaid
 flowchart TD
-    %% Eraser.io Architectural Layout for Ratio'd System
-    classDef clientFill fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
-    classDef serverFill fill:#F2FCEE,stroke:#559127,stroke-width:2px,color:#121212
-    classDef engineFill fill:#FFECEB,stroke:#EA3E2B,stroke-width:2px,color:#121212
-    classDef renderFill fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
-
     subgraph CLIENT_LAYER ["🌐 CLIENT APPLICATION LAYER (Browser / Gmail DOM)"]
         direction TB
-        EXT["🧩 Chrome Extension MV3\n(extension/manifest.json)"] :::clientFill
-        CS["📜 Content Script\n(extension/content-script.js)"] :::clientFill
-        RED["🔒 Air-Gapped Redactor\n(js/redactor.js)"] :::clientFill
-        QR_SCAN["📱 Gmail QR Scanner\n(extension/qr-gmail.js)"] :::clientFill
-        WEB_APP["💻 Web Console UI\n(index.html / js/app.js)"] :::clientFill
+        EXT["🧩 Chrome Extension MV3<br/>(extension/manifest.json)"]
+        CS["📜 Content Script<br/>(extension/content-script.js)"]
+        RED["🔒 Air-Gapped Redactor<br/>(js/redactor.js)"]
+        QR_SCAN["📱 Gmail QR Scanner<br/>(extension/qr-gmail.js)"]
+        WEB_APP["💻 Web Console UI<br/>(index.html / js/app.js)"]
         
         EXT -->|Injects| CS
         CS -->|Redacts PII| RED
@@ -317,20 +311,20 @@ flowchart TD
     end
 
     subgraph SERVER_LAYER ["⚙️ BACKEND & ROUTING LAYER (Node.js / Vercel API)"]
-        API_GATEWAY["⚡ API Router\n(server.js / vercel.json)"] :::serverFill
-        LOG["📊 Privacy Logger\n(server/privacy/log.js)"] :::serverFill
-        TRACER["🔍 Safe Peek Redirect Tracer\n(server/unmask/tracer.js)"] :::serverFill
+        API_GATEWAY["⚡ API Router<br/>(server.js / vercel.json)"]
+        LOG["📊 Privacy Logger<br/>(server/privacy/log.js)"]
+        TRACER["🔍 Safe Peek Redirect Tracer<br/>(server/unmask/tracer.js)"]
 
         API_GATEWAY -->|Logs Counts Only| LOG
         API_GATEWAY -->|Zero-Execution HEAD| TRACER
     end
 
     subgraph DETECTION_CORE ["🧠 HYBRID THREAT ENGINE CORE"]
-        RULE["📏 Heuristic Rule Engine\n(server/rules/engine.js)\n• 10 Signal Families\n• Homoglyphs / Levenshtein <= 2"] :::engineFill
-        LAYA["⚖️ Laya Signal Scorer\n(server/laya/client.js)\n• Structural Features"] :::engineFill
-        QR_RULES["📱 Zero-Trust QR Engine\n(server/rules/qr.js)\n• Brand Spoofing Floor (90)\n• IP Literal Floor (75)"] :::engineFill
-        COMBINER["🎛️ Score Combiner\n(0.70 Rules + 0.30 Laya)"] :::engineFill
-        GROUNDER["🔒 Grounded LLM Verifier\n(server/llm/)\n• Verbatim Flag Check"] :::engineFill
+        RULE["📏 Heuristic Rule Engine<br/>(server/rules/engine.js)<br/>• 10 Signal Families<br/>• Homoglyphs / Levenshtein <= 2"]
+        LAYA["⚖️ Laya Signal Scorer<br/>(server/laya/client.js)<br/>• Structural Features"]
+        QR_RULES["📱 Zero-Trust QR Engine<br/>(server/rules/qr.js)<br/>• Brand Spoofing Floor (90)<br/>• IP Literal Floor (75)"]
+        COMBINER["🎛️ Score Combiner<br/>(0.70 Rules + 0.30 Laya)"]
+        GROUNDER["🔒 Grounded LLM Verifier<br/>(server/llm/)<br/>• Verbatim Flag Check"]
 
         API_GATEWAY -->|POST /analyze| RULE
         API_GATEWAY -->|POST /analyze| LAYA
@@ -342,10 +336,10 @@ flowchart TD
     end
 
     subgraph PRESENTATION ["🎨 SHADOW DOM PRESENTATION & ACTION LAYER"]
-        BANNER["🛡️ Neo-Brutalist Banner\n(extension/banner.js)"] :::renderFill
-        MAIL_BADGE["✉️ Mail Risk Score Pill\n[ MAIL: XX/100 ]"] :::renderFill
-        QR_BADGE["📱 QR Code Score Pill\n[ QR CODE: YY/100 ]"] :::renderFill
-        DRAWER["📂 Expandable Drawer\n• Mail Threat Signals\n• QR Payload & Safe Peek"] :::renderFill
+        BANNER["🛡️ Neo-Brutalist Banner<br/>(extension/banner.js)"]
+        MAIL_BADGE["✉️ Mail Risk Score Pill<br/>[ MAIL: XX/100 ]"]
+        QR_BADGE["📱 QR Code Score Pill<br/>[ QR CODE: YY/100 ]"]
+        DRAWER["📂 Expandable Drawer<br/>• Mail Threat Signals<br/>• QR Payload & Safe Peek"]
 
         GROUNDER --> BANNER
         QR_RULES --> BANNER
@@ -353,6 +347,16 @@ flowchart TD
         BANNER --> QR_BADGE
         BANNER --> DRAWER
     end
+
+    classDef clientFill fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
+    classDef serverFill fill:#F2FCEE,stroke:#559127,stroke-width:2px,color:#121212
+    classDef engineFill fill:#FFECEB,stroke:#EA3E2B,stroke-width:2px,color:#121212
+    classDef renderFill fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
+
+    class EXT,CS,RED,QR_SCAN,WEB_APP clientFill
+    class API_GATEWAY,LOG,TRACER serverFill
+    class RULE,LAYA,QR_RULES,COMBINER,GROUNDER engineFill
+    class BANNER,MAIL_BADGE,QR_BADGE,DRAWER renderFill
 ```
 
 #### Entity & Component Relationship Mapping
@@ -362,42 +366,57 @@ flowchart TD
 | **Content Script** | `EXECUTES IN-MEMORY` | **Air-Gapped Redactor** | Redacts phone numbers, emails, and OTPs in local browser memory before any network hop. |
 | **Content Script** | `TRIGGERS` | **Gmail QR Scanner** | Scans open email body images asynchronously for embedded QR codes. |
 | **Content Script / Web App** | `REQUESTS` | **API Router** | Sends sanitized payload to `POST /analyze` (`server.js` / Vercel serverless). |
-| **API Router** | `EVALUATES (70%)` | **Heuristic Rule Engine** | Evaluates 10 signal families, Levenshtein brand distance $\le 2$, and combinations. |
+| **API Router** | `EVALUATES (70%)` | **Heuristic Rule Engine** | Evaluates 10 signal families, Levenshtein brand distance <= 2, and combinations. |
 | **API Router** | `EVALUATES (30%)` | **Laya Signal Scorer** | Evaluates hand-weighted structural signals (`laya_stub_heuristic` or `laya_trained_v1`). |
 | **API Router** | `EVALUATES QR` | **Zero-Trust QR Engine** | Evaluates decoded QR payload with strict severity floors (Min 90 for spoofing). |
 | **API Router** | `EXECUTES HEAD` | **Safe Peek Tracer** | Traces shortened URLs (`bit.ly`, `t.co`) up to 5 hops without execution. |
-| **Score Combiner** | `VERIFIES` | **Grounded LLM Verifier** | Verifies LLM explanations verbatim against source text ($temp = 0$). |
+| **Score Combiner** | `VERIFIES` | **Grounded LLM Verifier** | Verifies LLM explanations verbatim against source text (temp = 0). |
 | **Threat Engine** | `MOUNTS` | **Shadow DOM Banner** | Injects Neo-Brutalist banner with dual score pills `[MAIL]` & `[QR CODE]`. |
 
 ---
 
 ## ⚙️ Detection Engines, Laya & Scoring Mathematics
 
+Ratio'd uses a deterministic, auditable threat scoring system that combines hard heuristic rules with statistical signal processing.
+
 ### 1. Hybrid Scoring Formula
-Ratio'd calculates an overall threat score ($S_{\text{raw}}$) by combining the deterministic Rule Engine ($R_{\text{score}}$) and the structural Laya Scorer ($P_{\text{signal}}$):
 
-$$S_{\text{raw}} = \left( R_{\text{score}} \times 0.70 \right) + \left( P_{\text{signal}} \times 100 \times 0.30 \right)$$
+The overall threat score is a calibrated combination of the **Rule Engine** (70% weight) and the **Laya Scorer** (30% weight):
 
-$$S_{\text{final}} = \text{clamp}(S_{\text{raw}}, 0, 100)$$
+```
+Raw Score = (Rule Engine Score × 0.70) + (Laya Signal Probability × 100 × 0.30)
 
----
+Final Threat Score = Clamp(Raw Score, 0, 100)
+```
 
-### 2. Severity Override Rules
-To ensure sophisticated domain spoofing cannot pass as safe due to polite wording, hard override floors apply:
-- **Severe Domain Spoof** (Homoglyph / Typosquat / Brand Stuffing / Urgency + Credential demand):
-  $$S_{\text{final}} = \max(82, S_{\text{final}}) \implies \text{Verdict forced to } \text{high\_risk}$$
-- **Any Other Severe Rule Triggered** (when $S_{\text{final}} < 70$):
-  $$S_{\text{final}} = \max(75, S_{\text{final}})$$
-- **Official Brand Sender Cap**: If the sender domain is verified in `OFFICIAL_BRAND_DOMAINS` and no credential request exists:
-  $$S_{\text{final}} = \min(25, S_{\text{final}}) \implies \text{Verdict capped to } \text{safe}$$
+- **Rule Engine Score**: Evaluates brand homoglyphs, Levenshtein distances, and high-risk social engineering signal combinations (0 to 100 points).
+- **Laya Signal Probability**: Structural statistical signal scorer calculating pattern density, punycode links, data URIs, and link farms (0.00 to 1.00 probability).
+- **Score Clamping**: Ensures the final threat output stays strictly bounded between `0` (Safe) and `100` (Critical Risk).
 
 ---
 
-### 3. Verdict Categories
-- `high_risk`: $S_{\text{final}} \ge 66$
-- `suspicious`: $S_{\text{final}} \ge 35$
-- `promo_clutter`: $\ge 2 \text{ promo signals and } S_{\text{final}} < 40$
-- Else `safe`
+### 2. Severity Override Rules (Hard Safety Floors)
+
+To ensure sophisticated domain spoofing or credential harvesting cannot pass as safe due to polite wording, **hard override floors** apply automatically:
+
+| Trigger Condition | Override Math / Floor Rule | Impact on Verdict |
+| :--- | :--- | :--- |
+| **Severe Domain Spoof**<br/>*(Homoglyph, Typosquat, Brand Stuffing, Urgency + Credential demand)* | `Final Score = Max(82, Final Score)` | **Verdict forced to `high_risk`** |
+| **Any Other Severe Rule Triggered**<br/>*(when initial score < 70)* | `Final Score = Max(75, Final Score)` | Forces high-severity floor |
+| **Verified Official Brand Sender**<br/>*(Sender in OFFICIAL_BRAND_DOMAINS with no credential demand)* | `Final Score = Min(25, Final Score)` | **Verdict capped to `safe`** |
+
+---
+
+### 3. Verdict Categories & Risk Thresholds
+
+Ratio'd categorizes the final numerical threat score (`0`–`100`) into four clear, human-readable badges:
+
+| Verdict Badge | Risk Score Range | Trigger Criteria & Description |
+| :--- | :---: | :--- |
+| 🔴 **`high_risk`** | **`66` to `100`** | Severe domain spoofing, credential harvesting demand, or high cumulative scam indicators. Immediate danger. |
+| 🟡 **`suspicious`** | **`35` to `65`** | Moderate threat signals (unverified shortened link, time pressure, free hosting provider). Proceed with caution. |
+| 🔵 **`promo_clutter`** | **`< 40`** *(with >= 2 promo flags)* | Promotional marketing offer, newsletter clutter, or automated unsubscribe link. Low security threat. |
+| 🟢 **`safe`** | **`0` to `34`** | Verified official sender, routine communication, zero threat triggers. |
 
 ---
 
