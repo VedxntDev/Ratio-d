@@ -158,46 +158,64 @@ function scanInboxRows() {
     const redacted = redactPiiLocally(combinedText);
     const result = window.RatiodFallback.analyze(redacted);
 
-    // Target container: inside .y6 (subject wrapper) or prepend to subject line
-    const subjectWrapper = row.querySelector(".y6, span.bog, td.a4W") || row.querySelector("td.xY:not(.yX)") || subjectElem;
+    // Category & marketing awareness: detect Promotions view or marketing language
+    const isPromotionsView = !!document.querySelector('[role="tab"][aria-selected="true"][aria-label*="Promotion"], [role="tab"][aria-selected="true"][data-tooltip*="Promotion"]') ||
+                             (window.location.hash && window.location.hash.includes("category/promotions"));
+    const promoKeywords = /\b(unsubscribe|%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|promo|limited\s+time|webinar|announcing|newsletter|special\s+offer|rewards?\s*(points|expire)|free\s+gift|clearance)\b/i;
+
+    let verdict = result.verdict;
+    let score = result.score;
+    if (verdict === "safe" && (isPromotionsView || promoKeywords.test(combinedText))) {
+      verdict = "promo_clutter";
+      score = Math.max(score, 25);
+    }
+
+    // Target container: prefer span.bog (inline subject text) so badge sits on the same line
+    const subjectWrapper = row.querySelector("span.bog") || row.querySelector(".y6") || row.querySelector("span.bqe") || row.querySelector("td.xY:not(.yX)") || subjectElem;
     if (!subjectWrapper) return;
 
     const badge = document.createElement("span");
     badge.className = "ratiod-inbox-pill";
-    badge.setAttribute("data-verdict", result.verdict);
+    badge.setAttribute("data-verdict", verdict);
     badge.setAttribute("role", "status");
-    badge.setAttribute("aria-label", `Ratio'd Risk: ${result.score}/100 (${result.verdict})`);
+    badge.setAttribute("aria-label", `Ratio'd Risk: ${score}/100 (${verdict})`);
 
     let labelText = "";
-    let bgColor = "#8A8B5C"; // safe olive
-    let textColor = "#FFFFFF";
+    // Website Neo-Brutalist Palette:
+    // Green: #9BE86D, Yellow: #FFD23F, Orange: #E8720C, Red: #EA3E2B, Ink: #121212
+    let bgColor = "#9BE86D";
+    let textColor = "#121212";
 
-    if (result.verdict === "high_risk") {
-      labelText = `[ 🔴 RISK ${result.score} ]`;
+    if (verdict === "high_risk") {
+      labelText = `[ 🔴 RISK ${score} ]`;
       bgColor = "#EA3E2B";
-    } else if (result.verdict === "suspicious") {
-      labelText = `[ 🟠 SUSP ${result.score} ]`;
+      textColor = "#FFFFFF";
+    } else if (verdict === "suspicious") {
+      labelText = `[ 🟠 SUSP ${score} ]`;
       bgColor = "#E8720C";
-    } else if (result.verdict === "promo_clutter") {
+      textColor = "#FFFFFF";
+    } else if (verdict === "promo_clutter") {
       labelText = `[ 🟡 PROMO ]`;
       bgColor = "#FFD23F";
       textColor = "#121212";
     } else {
       labelText = `[ 🟢 SAFE ]`;
-      bgColor = "#8A8B5C";
+      bgColor = "#9BE86D";
+      textColor = "#121212";
     }
 
     badge.innerText = labelText;
     const flagSummary = (result.flags || []).map(f => '• ' + f.span + ': ' + f.reason).join('\n');
-    badge.title = `Ratio'd Pre-Open Analysis: ${result.score}/100 (${result.verdict})\n${flagSummary || 'Clean preview'}`;
+    badge.title = `Ratio'd Pre-Open Analysis: ${score}/100 (${verdict})\n${flagSummary || 'Clean preview'}`;
 
     badge.style.cssText = `
-      display: inline-flex;
-      align-items: center;
-      font-family: 'JetBrains Mono', monospace;
+      display: inline-block;
+      vertical-align: middle;
+      font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
       font-size: 10px;
       font-weight: 800;
-      line-height: 1.2;
+      line-height: 14px;
+      letter-spacing: 0.02em;
       padding: 1px 6px;
       margin-right: 6px;
       border-radius: 4px;
@@ -205,9 +223,9 @@ function scanInboxRows() {
       background-color: ${bgColor};
       color: ${textColor};
       cursor: help;
-      vertical-align: middle;
-      box-shadow: 1px 1px 0px #121212;
+      box-shadow: 1.5px 1.5px 0px #121212;
       user-select: none;
+      white-space: nowrap;
       flex-shrink: 0;
       z-index: 5;
     `;

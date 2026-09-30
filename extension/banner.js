@@ -229,9 +229,9 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     .tag-high_risk { background-color: #EA3E2B; color: #FFFFFF; }
-    .tag-promo_clutter { background-color: #E8720C; color: #FFFFFF; }
+    .tag-promo_clutter { background-color: #FFD23F; color: #121212; }
     .tag-suspicious { background-color: #E8720C; color: #FFFFFF; }
-    .tag-safe { background-color: #8A8B5C; color: #FFFFFF; }
+    .tag-safe { background-color: #9BE86D; color: #121212; }
 
     /* Brand mark, matching the site logo (neo-brutalist R badge). */
     .ratiod-logo {
