@@ -20,7 +20,7 @@
 ---
 <img width="1274" height="568" alt="ratio&#39;d" src="https://github.com/user-attachments/assets/2429effd-376b-44f3-8c2b-5bfb87583f04" />
 
-##How Ratio'd works:
+## How Ratio'd works:
 > After extension is downloaded either by chrome webstore or via Zip folder in website, Reload the gmail
 > <img width="1274" height="568" alt="ratio&#39;d2" src="https://github.com/user-attachments/assets/edfe9038-f7d5-473c-aeea-edbc75bf0c9b" />
 
@@ -32,6 +32,23 @@
 ## Different Features of Ratio'd:
 1. Phishing Email/ SMS Detection :
    <img width="1272" height="568" alt="ratio&#39;d3" src="https://github.com/user-attachments/assets/8b9cf787-6359-4842-b3e4-49db9007edd3" />
+
+2. Qr Phishing Detection :
+   <img width="1272" height="568" alt="ratiod4" src="https://github.com/user-attachments/assets/667ec012-b027-40ba-ba5a-a826b9017cb2" />
+
+3. Headers authentication to test SPF/DKIM spoofing detection
+   <img width="1272" height="568" alt="ratiod10" src="https://github.com/user-attachments/assets/886c6db0-2747-4344-bb34-eb99f31f3491" />
+
+4. Url : Zero-Click Link & Redirect Tracer
+   <img width="1272" height="568" alt="ratiod8" src="https://github.com/user-attachments/assets/c01cd32d-c64b-4105-af08-31e7fc3933be" />
+
+  
+5. QR phishing protection:
+   <img width="1272" height="568" alt="ratio&#39;d3" src="https://github.com/user-attachments/assets/07f1a029-6a58-4344-a0cc-6e356fb8fd1a" />
+
+
+
+
 
 ## 📑 Table of Contents
 1. [Executive Summary & Product Pitch](#-executive-summary--product-pitch)
