@@ -6,6 +6,22 @@
     { "src": "^/(server|docs|extension)([./].*)?$", "status": 404 },
     { "src": "^/(package|vercel)\\.json$", "status": 404 },
     { "src": "^/\\.[^/]+$", "status": 404 },
+    {
+      "src": "^/ratiod-extension\\.zip$",
+      "dest": "/ratiod-extension.zip",
+      "headers": {
+        "Content-Type": "application/zip",
+        "Content-Disposition": "attachment; filename=\"ratiod-extension.zip\""
+      }
+    },
+    {
+      "src": "^/ratiod-full-project\\.zip$",
+      "dest": "/ratiod-full-project.zip",
+      "headers": {
+        "Content-Type": "application/zip",
+        "Content-Disposition": "attachment; filename=\"ratiod-full-project.zip\""
+      }
+    },
     { "handle": "filesystem" },
     { "src": "^/analyze$", "dest": "/api" },
     { "src": "^/api/analyze$", "dest": "/api" },
