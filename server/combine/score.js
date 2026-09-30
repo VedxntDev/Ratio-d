@@ -92,6 +92,12 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
     next_steps.push("Do NOT click links or reply. This email was cryptographically proven to be sent by an unauthorized party.");
     next_steps.push("Report sender address as phishing and block domain immediately.");
     next_steps.push("Verify account status directly at official brand URL in a new browser window.");
+  } else if (isQuarantined && verdict !== "high_risk") {
+    // The generic "suspicious" copy talks about verifying the sender, which is
+    // the wrong instruction for mail the user's own mailbox already filtered.
+    next_steps.push("Your mailbox already routed this to Spam, so the sender is blocked or filtered.");
+    next_steps.push("Treat it as unwanted mail - do not treat it as legitimate.");
+    next_steps.push("No credentials or payment are needed. Delete it, or unsubscribe if you did subscribe.");
   } else if (verdict === "high_risk") {
     next_steps.push("Do NOT click any links, open attachments, or enter passwords on this email.");
     next_steps.push("Report sender address as phishing and block domain immediately.");

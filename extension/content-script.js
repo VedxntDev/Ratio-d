@@ -94,6 +94,12 @@ const memVerdictCache = {};
  *
  * Gmail's own ellipsis is stripped and the remainder is truncated to a fixed
  * width, so both sides derive the same key from the same visible prefix.
+ *
+ * The width is 40 rather than "as much as possible" on purpose. Gmail truncates
+ * the row subject at roughly 50-70 visible characters depending on viewport, so
+ * a longer key would stop being a shared prefix on a narrow window and the keys
+ * would diverge again. 40 sits comfortably inside that range while staying long
+ * enough to keep unrelated subjects apart.
  */
 function normalizeSubjectKey(value) {
   return String(value == null ? "" : value)
@@ -102,7 +108,7 @@ function normalizeSubjectKey(value) {
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase()
-    .slice(0, 60);
+    .slice(0, 40);
 }
 
 function getVerdictCache() {
