@@ -33,6 +33,34 @@ window.ApiClient = {
     return this.isLocalEnvironment() ? LOCAL_HEALTH : "/health";
   },
 
+  unmaskEndpoints() {
+    const sameOrigin = "/unmask";
+    const local = "http://127.0.0.1:3000/unmask";
+    return this.isLocalEnvironment()
+      ? [local, sameOrigin]
+      : [sameOrigin, local];
+  },
+
+  async unmask(targetUrl) {
+    let lastError = null;
+    for (const endpoint of this.unmaskEndpoints()) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: targetUrl })
+        });
+        if (!response.ok) {
+          throw new Error(`${endpoint} returned HTTP ${response.status}`);
+        }
+        return await response.json();
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError || new Error("Failed to trace link redirects");
+  },
+
   /**
    * @param {string} text      Client-redacted message text.
    * @param {string} channel   "email" | "sms".

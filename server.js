@@ -21,6 +21,7 @@ const fs = require("fs");
 const path = require("path");
 
 const { handleAnalyze } = require("./server/routes/analyze");
+const { traceRedirects } = require("./server/unmask/tracer");
 
 const PORT = process.env.PORT || 3000;
 const WEB_ROOT = __dirname;
@@ -157,6 +158,26 @@ async function handler(req, res) {
         return sendJson(res, 200, await handleAnalyze(payload));
       } catch (err) {
         console.error("[RATIO'D] Analysis pipeline error:", err.message);
+        return sendJson(res, 400, { error: err.message });
+      }
+    });
+    return;
+  }
+
+  // 3. Safe Peek URL redirect unmasking endpoint
+  if (req.method === "POST" && (pathname === "/unmask" || pathname === "/api/unmask")) {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+    req.on("end", async () => {
+      try {
+        const payload = JSON.parse(body || "{}");
+        const targetUrl = payload.url || payload.targetUrl;
+        const result = await traceRedirects(targetUrl);
+        return sendJson(res, 200, result);
+      } catch (err) {
+        console.error("[RATIO'D] Unmask tracer error:", err.message);
         return sendJson(res, 400, { error: err.message });
       }
     });

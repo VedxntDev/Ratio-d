@@ -9,6 +9,8 @@
     { "handle": "filesystem" },
     { "src": "^/analyze$", "dest": "/api" },
     { "src": "^/api/analyze$", "dest": "/api" },
+    { "src": "^/unmask$", "dest": "/api" },
+    { "src": "^/api/unmask$", "dest": "/api" },
     { "src": "^/health$", "dest": "/api" },
     { "src": "^/api/health$", "dest": "/api" }
   ]

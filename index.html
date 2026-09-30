@@ -199,6 +199,20 @@
             </div>
             Phone numbers, email addresses, and verification codes are redacted client-side before rule processing. No message content is ever written to logs or disk.
           </div>
+
+          <!-- Safe Peek: Zero-Execution Link Inspector -->
+          <div class="safe-peek-card tactile">
+            <div class="safe-peek-title">
+              <span class="sticker sticker-blue">SAFE PEEK</span>
+              <strong>Zero-Click Link &amp; Redirect Tracer</strong>
+            </div>
+            <p class="safe-peek-desc">Unmask shortened URLs (bit.ly, t.co) &amp; inspect redirect chains safely using zero-execution HEAD requests.</p>
+            <div class="safe-peek-input-row">
+              <input type="url" id="safe-peek-url" class="safe-peek-input" placeholder="Paste link (e.g. bit.ly/3x8... or suspicious URL)" />
+              <button class="btn btn-secondary btn-sm" id="btn-safe-peek" type="button">Trace link</button>
+            </div>
+            <div id="safe-peek-output" class="safe-peek-output" style="display:none;"></div>
+          </div>
         </div>
       </div>
 

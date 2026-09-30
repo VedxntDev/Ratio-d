@@ -378,6 +378,30 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     .flag-span { font-weight: 700; color: #EA3E2B; text-decoration: underline; }
+    .flag-peek-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      margin-left: 8px;
+      border: 1.5px solid #121212;
+      background: #FFFFFF;
+      color: #121212;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #121212;
+      text-transform: uppercase;
+    }
+    .flag-peek-btn:hover { background: #FFD23F; }
+    .flag-peek-res {
+      margin-top: 6px;
+      padding: 6px 8px;
+      background: #F8F7F2;
+      border: 1px dashed #121212;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.4;
+    }
 
     .checklist-list { padding-left: 18px; margin: 6px 0; font-size: 13px; }
     .checklist-list li { margin-bottom: 4px; }
@@ -434,6 +458,7 @@ function injectRatiodBanner(targetElement, data) {
         ${flags.length > 0 ? flags.map(f => `
           <div class="flag-item">
             <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
+            ${(f.span && (f.span.includes("http") || f.span.includes("bit.ly") || f.span.includes("."))) ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(f.span)}">[ &#128269; Safe Peek ]</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
           </div>
         `).join('') : '<div class="flag-item">No explicit rule flags triggered.</div>'}
 
@@ -498,6 +523,51 @@ function injectRatiodBanner(targetElement, data) {
       if (host.parentElement) host.parentElement.removeChild(host);
     });
   }
+
+  // Safe Peek Zero-Execution Link Redirect Tracer
+  shadowRoot.querySelectorAll(".flag-peek-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const targetUrl = btn.getAttribute("data-peek-url");
+      const resContainer = btn.nextElementSibling;
+      if (!targetUrl || !resContainer) return;
+
+      btn.disabled = true;
+      btn.textContent = "[ Tracing... ]";
+      resContainer.style.display = "block";
+      resContainer.textContent = "Tracing redirect route...";
+
+      const tryEndpoints = ["http://127.0.0.1:3000/unmask", "https://ratio-d.vercel.app/api/unmask"];
+      let unmasked = null;
+      for (const ep of tryEndpoints) {
+        try {
+          const resp = await fetch(ep, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: targetUrl })
+          });
+          if (resp.ok) {
+            unmasked = await resp.json();
+            break;
+          }
+        } catch {}
+      }
+
+      if (unmasked) {
+        const dest = escapeHtml(unmasked.finalDomain || unmasked.finalUrl);
+        const v = escapeHtml(unmasked.risk?.verdict?.toUpperCase() || 'SAFE');
+        const sc = escapeHtml(unmasked.risk?.score || 0);
+        const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EA3E2B' : '#8A8B5C';
+        resContainer.innerHTML = `
+          <strong>Safe Peek:</strong> ${escapeHtml(unmasked.hops)} hop(s) &rarr; Destination: <strong>${dest}</strong><br>
+          Risk Verdict: <span style="font-weight:800;color:${vColor}">${v}</span> (Score: ${sc}/100)
+        `;
+      } else {
+        resContainer.textContent = "Could not trace route (offline or unresolvable).";
+      }
+      btn.disabled = false;
+      btn.textContent = "[ 🔍 Safe Peek ]";
+    });
+  });
 
   // Robust One-Click Unsubscribe Click Handler + Glitter Burst + Sparkle Chime Sound
   if (unsubBtn) {

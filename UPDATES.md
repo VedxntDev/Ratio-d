@@ -112,6 +112,17 @@ Following shortlist notification for the next round, engineering focused on prod
 - Added comprehensive milestone timeline section to `README.md` and created this dedicated `UPDATES.md` audit document.
 - Maintained synchronization with `docs/project-context.json` and `docs/report.md`.
 
+### 7. Proactive Pre-Open Gmail Inbox Badging (`extension/content-script.js`)
+- **Proactive Inbox Protection**: Automatically scans inbox rows in Gmail (`tr.zA`, `div[role="row"]`) before the user opens messages.
+- **Client-Side In-Memory Heuristics**: Extracts sender address and subject snippet, redacts PII, and runs fast offline risk scoring via `RatiodFallback`.
+- **Inline Shadow DOM Pill Badges**: Injects non-intrusive risk tags (`[ 🔴 RISK 94 ]`, `[ 🟡 PROMO ]`, `[ 🟢 SAFE ]`) directly beside the subject line in the inbox list, warning users before they trigger tracking pixels or malicious attachments.
+
+### 8. Safe Peek: Zero-Execution Redirect Tracer (`server/unmask/tracer.js`, `POST /unmask`)
+- **Zero-Download HTTP HEAD Inspection**: Recursively traces HTTP 301/302/307/308 redirect chains (up to 5 hops) without downloading response bodies or executing JavaScript payloads.
+- **Rigorous SSRF Defense**: Hardened hostname validator blocks access to `localhost`, link-local, private subnets (10.x, 172.16.x, 192.168.x), AWS cloud metadata (`169.254.169.254`), and non-HTTP protocols (`file://`, `ftp://`).
+- **Destination Threat Scoring**: Automatically passes the unmasked landing domain through the homoglyph, Levenshtein, and risky TLD engines.
+- **Dual UI Integration**: Integrated into the web console (`index.html`) as an interactive URL tracer card, and inside the Gmail extension banner (`banner.js`) with one-click `[ 🔍 Safe Peek ]` links.
+
 ---
 
 ## 🔍 Verification & Evidence

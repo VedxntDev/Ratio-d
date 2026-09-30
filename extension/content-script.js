@@ -127,9 +127,101 @@ function scanAndAnalyzeGmail() {
     });
 }
 
-// Observe Gmail DOM mutation
+/**
+ * Proactive Pre-Open Gmail Inbox Badging
+ * Inspects inbox table rows before the user opens them, runs fast in-memory
+ * heuristic inspection, and injects a non-intrusive status pill badge.
+ */
+function scanInboxRows() {
+  if (!window.RatiodFallback) return;
+
+  const rows = document.querySelectorAll(
+    "tr.zA:not([data-ratiod-badged]), div[role='row']:not([data-ratiod-badged])"
+  );
+  if (!rows || rows.length === 0) return;
+
+  rows.forEach((row) => {
+    row.setAttribute("data-ratiod-badged", "true");
+
+    const senderElem = row.querySelector(".yX, .bqe, .zF, span[email]");
+    const subjectElem = row.querySelector(".y6, .bog, span.bqe");
+    const snippetElem = row.querySelector(".y2");
+
+    const sender = senderElem ? (senderElem.getAttribute("email") || senderElem.innerText || "") : "";
+    const subject = subjectElem ? subjectElem.innerText : "";
+    const snippet = snippetElem ? snippetElem.innerText : "";
+
+    const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
+    if (combinedText.length < 5) return;
+
+    // Fast in-memory heuristic analysis
+    const redacted = redactPiiLocally(combinedText);
+    const result = window.RatiodFallback.analyze(redacted);
+
+    // Only inject badge if container exists
+    const targetMount = subjectElem || row.querySelector("td.xY, div.xY") || row;
+    if (!targetMount) return;
+
+    const badge = document.createElement("span");
+    badge.className = "ratiod-inbox-pill";
+    badge.setAttribute("data-verdict", result.verdict);
+    badge.setAttribute("role", "status");
+    badge.setAttribute("aria-label", `Ratio'd Risk: ${result.score}/100 (${result.verdict})`);
+
+    let labelText = "";
+    let bgColor = "#8A8B5C"; // safe olive
+    let textColor = "#FFFFFF";
+
+    if (result.verdict === "high_risk") {
+      labelText = `[ 🔴 RISK ${result.score} ]`;
+      bgColor = "#EA3E2B";
+    } else if (result.verdict === "suspicious") {
+      labelText = `[ 🟠 SUSP ${result.score} ]`;
+      bgColor = "#E8720C";
+    } else if (result.verdict === "promo_clutter") {
+      labelText = `[ 🟡 PROMO ]`;
+      bgColor = "#FFD23F";
+      textColor = "#121212";
+    } else {
+      labelText = `[ 🟢 SAFE ]`;
+      bgColor = "#8A8B5C";
+    }
+
+    badge.innerText = labelText;
+    const flagSummary = (result.flags || []).map(f => '• ' + f.span + ': ' + f.reason).join('\n');
+    badge.title = `Ratio'd Pre-Open Analysis: ${result.score}/100 (${result.verdict})\n${flagSummary || 'Clean preview'}`;
+
+    badge.style.cssText = `
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1.2;
+      padding: 1px 5px;
+      margin-right: 6px;
+      margin-left: 2px;
+      border-radius: 4px;
+      border: 1.5px solid #121212;
+      background-color: ${bgColor};
+      color: ${textColor};
+      cursor: help;
+      vertical-align: middle;
+      box-shadow: 1px 1px 0px #121212;
+      user-select: none;
+    `;
+
+    if (subjectElem && subjectElem.parentNode) {
+      subjectElem.parentNode.insertBefore(badge, subjectElem);
+    } else {
+      targetMount.prepend(badge);
+    }
+  });
+}
+
+// Observe Gmail DOM mutation for opened messages and inbox lists
 const observer = new MutationObserver(() => {
   scanAndAnalyzeGmail();
+  scanInboxRows();
 });
 
 observer.observe(document.body, {
@@ -138,4 +230,7 @@ observer.observe(document.body, {
 });
 
 // Periodic check every 1 second
-setInterval(scanAndAnalyzeGmail, 1000);
+setInterval(() => {
+  scanAndAnalyzeGmail();
+  scanInboxRows();
+}, 1000);

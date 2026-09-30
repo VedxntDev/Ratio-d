@@ -189,4 +189,56 @@ document.addEventListener("DOMContentLoaded", () => {
       `).join('');
     }
   }
+
+  // 8. Safe Peek Link Tracer Handler
+  const safePeekUrlInput = document.getElementById("safe-peek-url");
+  const safePeekBtn = document.getElementById("btn-safe-peek");
+  const safePeekOutput = document.getElementById("safe-peek-output");
+
+  safePeekBtn?.addEventListener("click", async () => {
+    const rawUrl = safePeekUrlInput?.value?.trim();
+    if (!rawUrl) return;
+
+    safePeekBtn.disabled = true;
+    safePeekBtn.textContent = "Tracing...";
+    safePeekOutput.style.display = "block";
+    safePeekOutput.innerHTML = "<em>Initiating zero-execution HEAD redirect inspection...</em>";
+
+    try {
+      const res = await window.ApiClient.unmask(rawUrl);
+      let hopsHtml = `<div style="margin-bottom:8px;font-weight:800;">[ TRACE RESULTS: ${res.hops} HOP(S) ]</div>`;
+
+      (res.chain || []).forEach((hop) => {
+        const statusClass = hop.status >= 300 && hop.status < 400 ? "#E8720C" : hop.status === 200 ? "#8A8B5C" : "#EA3E2B";
+        hopsHtml += `
+          <div class="safe-peek-hop">
+            <span class="safe-peek-status" style="color:${statusClass};">[${hop.status || "ERR"}]</span>
+            <span>${hop.url}</span>
+            ${hop.redirectsTo ? ` &rarr; <span class="safe-peek-dest">${hop.redirectsTo}</span>` : ""}
+            ${hop.error ? ` <span style="color:#EA3E2B;">(${hop.error})</span>` : ""}
+          </div>
+        `;
+      });
+
+      const riskColor = res.risk?.verdict === "high_risk" ? "#EA3E2B" : res.risk?.verdict === "suspicious" ? "#E8720C" : "#8A8B5C";
+      hopsHtml += `
+        <div class="safe-peek-risk" style="color:${riskColor};">
+          FINAL DESTINATION: ${res.finalDomain || res.finalUrl} &mdash; [ ${res.risk?.verdict?.toUpperCase() || 'SAFE'} (SCORE ${res.risk?.score || 0}/100) ]
+        </div>
+      `;
+
+      if (res.risk?.flags && res.risk.flags.length > 0) {
+        hopsHtml += `<div style="margin-top:6px;font-size:0.75rem;color:var(--color-ink);">` +
+          res.risk.flags.map(f => `&bull; ${f.span}: ${f.reason}`).join("<br>") +
+          `</div>`;
+      }
+
+      safePeekOutput.innerHTML = hopsHtml;
+    } catch (err) {
+      safePeekOutput.innerHTML = `<span style="color:#EA3E2B;font-weight:700;">Trace Failed:</span> ${err.message}`;
+    } finally {
+      safePeekBtn.disabled = false;
+      safePeekBtn.textContent = "Trace link";
+    }
+  });
 });
