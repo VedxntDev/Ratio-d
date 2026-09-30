@@ -11,7 +11,7 @@ const { logPrivacyTelemetry } = require("../privacy/log");
 function computePrivacyStatsFromText(text) {
   const phonesMatch = text.match(/\[PHONE_REDACTED\]|(\+?\d{1,3}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}/g);
   const emailsMatch = text.match(/\[EMAIL_REDACTED\]|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
-  const otpMatch = text.match(/\[OTP_REDACTED\]|\b(OTP|code|passcode|PIN)\b/gi);
+  const otpMatch = text.match(/\[OTP_REDACTED\]|\b(OTP|code|passcode|PIN)\b(?:\s+(?:is|was|:|-))?\s*:?\s*(\d{4,8})\b/gi);
 
   return {
     phones_masked: phonesMatch ? phonesMatch.length : 0,
@@ -22,7 +22,7 @@ function computePrivacyStatsFromText(text) {
 
 async function handleAnalyze(reqBody) {
   const startedAt = Date.now();
-  const { text, channel = "email" } = reqBody;
+  const { text, channel = "email", auth: rawAuth, senderAddress, senderName } = reqBody;
 
   if (!text || typeof text !== "string") {
     throw new Error("Missing or invalid 'text' field in request body.");
@@ -30,11 +30,37 @@ async function handleAnalyze(reqBody) {
 
   const validChannel = (channel === "sms" || channel === "email") ? channel : "email";
 
+  const cleanSenderAddress = (typeof senderAddress === "string") ? senderAddress.trim() : "";
+  const cleanSenderName = (typeof senderName === "string") ? senderName.trim() : "";
+  const senderInfo = (cleanSenderAddress || cleanSenderName)
+    ? { senderAddress: cleanSenderAddress, senderName: cleanSenderName }
+    : null;
+
+  // Sanitize authentication payload if present
+  let auth = null;
+  if (rawAuth && typeof rawAuth === "object") {
+    const sanitizeStr = (s) => {
+      if (!s || typeof s !== "string") return null;
+      const clean = s.toLowerCase().trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+      return clean.length > 0 ? clean : null;
+    };
+    const fromDomain = sanitizeStr(rawAuth.fromDomain);
+    const mailedBy = sanitizeStr(rawAuth.mailedBy);
+    const signedBy = sanitizeStr(rawAuth.signedBy);
+    const dmarc = sanitizeStr(rawAuth.dmarc);
+    const spf = sanitizeStr(rawAuth.spf);
+    const dkim = sanitizeStr(rawAuth.dkim);
+
+    if (fromDomain || mailedBy || signedBy || dmarc || spf || dkim) {
+      auth = { fromDomain, mailedBy, signedBy, dmarc, spf, dkim };
+    }
+  }
+
   // 1. Compute privacy redaction counts on backend from incoming client-redacted telemetry
   const privacyStats = computePrivacyStatsFromText(text);
 
   // 2. Evaluate Rule Engine
-  const { ruleScore, flags, isPromoClutter } = evaluateRules(text, validChannel);
+  const { ruleScore, flags, isPromoClutter, isAuthDisqualified, authSummary } = evaluateRules(text, validChannel, auth, senderInfo);
 
   // 3. Evaluate Laya Model (Stating transparently whether heuristic fallback or container)
   const layaResult = await evaluateLayaModel(text, flags);
@@ -43,7 +69,7 @@ async function handleAnalyze(reqBody) {
   // isPromoClutter is forwarded deliberately: the engine already decided
   // promo-clutter using a 2+ signal threshold and a low-score cap. Recomputing
   // it here from "any promo flag" labelled ordinary newsletters as clutter.
-  const { score, verdict, next_steps } = combineScore(ruleScore, layaResult, validChannel, flags, isPromoClutter);
+  const { score, verdict, next_steps } = combineScore(ruleScore, layaResult, validChannel, flags, isPromoClutter, isAuthDisqualified);
 
   // 5. Generate Grounded Explanation.
   // Deterministic by default; uses the LLM prompt only when a key is configured,
@@ -64,9 +90,11 @@ async function handleAnalyze(reqBody) {
     explanation,
     next_steps,
     privacy: privacyStats,
+    auth: authSummary || null,
     engine: {
       rules: "deterministic-homoglyph-levenshtein",
       rule_flags: flags.length,
+      auth_status: authSummary ? authSummary.status : "unverified",
       model_source: layaResult.source,
       model_label: layaResult.label,
       model_probability: layaResult.probability,

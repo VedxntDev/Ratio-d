@@ -16,7 +16,7 @@ function redactPiiLocally(text) {
   redacted = redacted.replace(emailRegex, "[EMAIL_REDACTED]");
 
   // OTP regex
-  const otpRegex = /\b(OTP|code|passcode|PIN)?\s?:?\s?(\d{4,8})\b/gi;
+  const otpRegex = /\b(OTP|code|passcode|PIN)\b(?:\s+(?:is|was|:|-))?\s*:?\s*(\d{4,8})\b/gi;
   redacted = redacted.replace(otpRegex, (match, prefix, digits) => {
     return (prefix ? prefix + " " : "") + "[OTP_REDACTED]";
   });
@@ -78,8 +78,32 @@ function renderFallbackAnalysis(emailBodyElem, redactedText) {
 }
 
 // Shared verdict cache to eliminate any mismatch between open-email banner and inbox badge
-const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v2";
+const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v3";
 const memVerdictCache = {};
+
+/**
+ * Normalise a subject into a stable cache key.
+ *
+ * This function is the entire reason the badge and the banner used to disagree.
+ * The banner saves its verdict under the OPEN-MESSAGE header subject
+ * (`h2.hP`) while the inbox row looks it up under the LIST-ROW subject
+ * (`span.bog`). Gmail truncates those two to different lengths and appends an
+ * ellipsis, so the keys never matched, `cachedVerdict` was always null, and
+ * every Spam row fell through to a hardcoded badge - showing a red RISK pill
+ * beside a green SAFE banner for the same message.
+ *
+ * Gmail's own ellipsis is stripped and the remainder is truncated to a fixed
+ * width, so both sides derive the same key from the same visible prefix.
+ */
+function normalizeSubjectKey(value) {
+  return String(value == null ? "" : value)
+    .replace(/[\u2026\u0085]/g, "...")   // … -> ...
+    .replace(/\.{2,}\s*$/g, "")          // trailing ellipsis
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase()
+    .slice(0, 60);
+}
 
 function getVerdictCache() {
   try {
@@ -93,7 +117,8 @@ function getVerdictCache() {
 function saveVerdictToCache(key, data) {
   if (!key || !data) return;
   try {
-    const cleanKey = String(key).toLowerCase().trim();
+    const cleanKey = normalizeSubjectKey(key);
+    if (!cleanKey) return;
     const entry = {
       verdict: data.verdict,
       score: data.score !== undefined ? data.score : 0,
@@ -114,7 +139,8 @@ function saveVerdictToCache(key, data) {
 
 function getCachedVerdict(key) {
   if (!key) return null;
-  const cleanKey = String(key).toLowerCase().trim();
+  const cleanKey = normalizeSubjectKey(key);
+  if (!cleanKey) return null;
   if (memVerdictCache[cleanKey]) return memVerdictCache[cleanKey];
   const cache = getVerdictCache();
   return cache[cleanKey] || null;
@@ -175,6 +201,109 @@ function updateBadgeElement(badge, verdict, score, flags) {
   `;
 }
 
+function extractGmailAuthDetails(messageContainer) {
+  let fromDomain = null;
+  let mailedBy = null;
+  let signedBy = null;
+
+  try {
+    const senderElem = document.querySelector(".gE.iv.gt span[email], .gD[email], .go");
+    const senderEmail = senderElem ? (senderElem.getAttribute("email") || senderElem.innerText.trim()) : "";
+    if (senderEmail && senderEmail.includes("@")) {
+      fromDomain = senderEmail.split("@").pop().replace(/[>\]\s]/g, "").toLowerCase().trim();
+    }
+
+    const mailedByElem = document.querySelector(".amG, [aria-label*='mailed-by' i], [data-tooltip*='mailed-by' i]");
+    if (mailedByElem) {
+      mailedBy = (mailedByElem.innerText || mailedByElem.getAttribute("aria-label") || "").trim().toLowerCase();
+    }
+
+    const signedByElem = document.querySelector(".amq, [aria-label*='signed-by' i], [data-tooltip*='signed-by' i]");
+    if (signedByElem) {
+      signedBy = (signedByElem.innerText || signedByElem.getAttribute("aria-label") || "").trim().toLowerCase();
+    }
+
+    // Fallback: search across table rows in header details card if open
+    if (!mailedBy || !signedBy) {
+      const detailRows = document.querySelectorAll(".ajy tr, .g3 tr, table.cf tr");
+      detailRows.forEach(row => {
+        const text = (row.innerText || "").toLowerCase();
+        if (!mailedBy && text.includes("mailed-by:")) {
+          const m = text.match(/mailed-by:\s*([a-zA-Z0-9.-]+)/i);
+          if (m) mailedBy = m[1].toLowerCase().trim();
+        }
+        if (!signedBy && text.includes("signed-by:")) {
+          const m = text.match(/signed-by:\s*([a-zA-Z0-9.-]+)/i);
+          if (m) signedBy = m[1].toLowerCase().trim();
+        }
+      });
+    }
+
+    if (mailedBy) mailedBy = mailedBy.replace(/^mailed-by:\s*/i, "").replace(/[<>]/g, "").trim();
+    if (signedBy) signedBy = signedBy.replace(/^signed-by:\s*/i, "").replace(/[<>]/g, "").trim();
+  } catch (e) {}
+
+  return {
+    fromDomain: fromDomain || null,
+    mailedBy: mailedBy || null,
+    signedBy: signedBy || null
+  };
+}
+
+function fetchWithTimeout(url, options, timeoutMs = 600) {
+  if (typeof AbortController === "undefined") {
+    return fetch(url, options);
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
+
+function extractGmailSender(container) {
+  let senderAddress = "";
+  let senderName = "";
+
+  const root = container ? (container.closest(".gs, .adn, [role='main']") || document) : document;
+
+  // Primary selector: span.gD contains the display name and 'email' attribute
+  const gdElem = root.querySelector("span.gD, .gE.iv.gt span[email], span[email]");
+  if (gdElem) {
+    senderAddress = gdElem.getAttribute("email") || "";
+    senderName = (gdElem.innerText || gdElem.textContent || "").trim();
+  }
+
+  // Fallback for address: span.go or hovercard
+  if (!senderAddress) {
+    const fallbackElem = root.querySelector("span.go, span[data-hovercard-id], .go");
+    if (fallbackElem) {
+      senderAddress = fallbackElem.getAttribute("email") ||
+                      fallbackElem.getAttribute("data-hovercard-id") ||
+                      (fallbackElem.innerText || fallbackElem.textContent || "").replace(/[<>]/g, "").trim();
+    }
+  }
+
+  if (senderAddress && senderAddress.includes("<")) {
+    const m = senderAddress.match(/<([^>]+)>/);
+    if (m) senderAddress = m[1].trim();
+  }
+
+  if (!senderName || senderName === senderAddress) {
+    const nameElem = root.querySelector("span.gD, .zF, .qu");
+    if (nameElem) {
+      const candidate = (nameElem.getAttribute("name") || nameElem.innerText || nameElem.textContent || "").trim();
+      if (candidate && candidate !== senderAddress) {
+        senderName = candidate;
+      }
+    }
+  }
+
+  return {
+    senderAddress: senderAddress.trim(),
+    senderName: senderName.trim()
+  };
+}
+
 function scanAndAnalyzeGmail() {
   const emailBodyElem = document.querySelector(
     ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
@@ -189,8 +318,12 @@ function scanAndAnalyzeGmail() {
   const subjectElem = document.querySelector("h2.hP, .ha h2");
   const subject = subjectElem ? subjectElem.innerText.trim() : "";
 
-  const senderElem = document.querySelector(".gE.iv.gt span[email], .gD[email], .go");
-  const senderEmail = senderElem ? (senderElem.getAttribute("email") || senderElem.innerText.trim()) : "";
+  const senderInfo = extractGmailSender(emailBodyElem);
+  const senderAddress = senderInfo.senderAddress;
+  const senderName = senderInfo.senderName;
+  const senderHeader = senderName
+    ? (senderAddress ? `${senderName} <${senderAddress}>` : senderName)
+    : senderAddress;
 
   // Check if Gmail placed this in Spam or shows a quarantine warning
   const spamBanner = document.querySelector(".mE, .b8, div[role='alert'], .a2k");
@@ -200,7 +333,7 @@ function scanAndAnalyzeGmail() {
 
   let fullTextToAnalyze = "";
   if (spamWarning) fullTextToAnalyze += `Security Warning: ${spamWarning}\n`;
-  if (senderEmail) fullTextToAnalyze += `From: ${senderEmail}\n`;
+  if (senderHeader) fullTextToAnalyze += `From: ${senderHeader}\n`;
   if (subject) fullTextToAnalyze += `Subject: ${subject}\n\n`;
   fullTextToAnalyze += rawBodyText;
 
@@ -229,26 +362,48 @@ function scanAndAnalyzeGmail() {
   // 1. Client-Side Local PII Redaction
   const redactedText = redactPiiLocally(fullTextToAnalyze);
 
-  // 2. Direct fetch to local security backend (http://127.0.0.1:3000/analyze)
-  fetch("http://127.0.0.1:3000/analyze", {
+  // 2. Extract Header Authentication Details (SPF/DKIM/From)
+  const authDetails = extractGmailAuthDetails(emailBodyElem);
+  const authPayload = {
+    fromDomain: authDetails.fromDomain || null,
+    mailedBy: authDetails.mailedBy || null,
+    signedBy: authDetails.signedBy || null
+  };
+
+  const payload = {
+    text: redactedText,
+    channel: "email",
+    auth: authPayload,
+    senderAddress: senderAddress || "",
+    senderName: senderName || ""
+  };
+
+  // 3. Fast direct fetch to local security backend (http://127.0.0.1:3000/analyze) with 600ms timeout
+  fetchWithTimeout("http://127.0.0.1:3000/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: redactedText, channel: "email" })
-  })
-    .then(res => res.json())
+    body: JSON.stringify(payload)
+  }, 600)
+    .then(res => {
+      if (!res.ok) throw new Error("Local HTTP " + res.status);
+      return res.json();
+    })
     .then(data => onAnalysisComplete(data))
     .catch(() => {
-      // Fallback 1: Try Vercel deployed backend endpoint
-      fetch("https://ratio-d.vercel.app/api/analyze", {
+      // Fallback 1: Try Vercel deployed backend endpoint (1500ms timeout)
+      fetchWithTimeout("https://ratio-d.vercel.app/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: redactedText, channel: "email" })
-      })
-        .then(res => res.json())
+        body: JSON.stringify(payload)
+      }, 1500)
+        .then(res => {
+          if (!res.ok) throw new Error("Vercel HTTP " + res.status);
+          return res.json();
+        })
         .then(data => onAnalysisComplete(data))
         .catch(() => {
-          // Fallback 2: Client-side local fallback engine
-          const fb = window.RatiodFallback ? window.RatiodFallback.analyze(redactedText) : {
+          // Fallback 2: Client-side local fallback engine (instant 0ms)
+          const fb = window.RatiodFallback ? window.RatiodFallback.analyze(redactedText, "email", authPayload) : {
             score: 12, verdict: "safe", flags: [], explanation: "Analyzed with offline heuristic.", next_steps: []
           };
           onAnalysisComplete(fb);
@@ -286,8 +441,17 @@ function scanInboxRows() {
     const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
 
     // Check if authoritative deep-analysis result exists in cache for this subject!
-    const cacheKey = subject.toLowerCase().trim();
-    const cachedVerdict = cacheKey ? getCachedVerdict(cacheKey) : null;
+    // Must go through normalizeSubjectKey: the banner saved this under the
+    // open-message header subject, which Gmail truncates differently.
+    const cacheKey = normalizeSubjectKey(subject);
+    const cachedVerdict = cacheKey ? getCachedVerdict(subject) : null;
+
+    // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
+    const rowSignature = `${combinedText}|${cachedVerdict ? cachedVerdict.verdict + cachedVerdict.score : 'none'}`;
+    const existingBadge = row.querySelector(".ratiod-inbox-pill");
+    if (existingBadge && row.getAttribute("data-ratiod-sig") === rowSignature) {
+      return;
+    }
 
     let verdict = "safe";
     let score = 0;
@@ -299,13 +463,34 @@ function scanInboxRows() {
       score = cachedVerdict.score;
       flags = cachedVerdict.flags || [];
     } else if (isSpamView) {
-      // Quarantined in Spam
-      score = 78;
-      verdict = "high_risk";
-      flags = [{
+      // Gmail quarantined this message. Previously this branch hardcoded
+      // `score = 78; verdict = "high_risk"` and rendered a red "RISK 78" pill -
+      // a fabricated measurement, identical on every row, which contradicted
+      // the banner reading the same message.
+      //
+      // It is now honest about its provenance: the number is the real score
+      // from analysing the row, and the badge says Gmail filtered it rather
+      // than claiming phishing.
+      const redactedSpamRow = redactPiiLocally(combinedText || "Email Message");
+      const spamResult = window.RatiodFallback.analyze(redactedSpamRow);
+
+      verdict = spamResult.verdict;
+      score = spamResult.score;
+      flags = (spamResult.flags || []).slice();
+
+      // Being in Spam is evidence the mailbox distrusted the message, so the
+      // row is floored out of "safe" - but it is a filter decision, not proof
+      // of phishing, so it never escalates to high_risk on its own.
+      if (verdict === "safe" || verdict === "promo_clutter") {
+        verdict = "suspicious";
+      }
+      score = Math.max(score, 45);
+
+      flags.unshift({
         span: "Quarantined in Spam",
-        reason: "Google security and reputation filters flagged this message as spam/phishing"
-      }];
+        reason: "Gmail routed this message to the Spam folder before Ratio'd analysed it",
+        type: "quarantine"
+      });
     } else {
       // Run heuristic analysis on preview snippet
       const redacted = redactPiiLocally(combinedText || "Email Message");
@@ -335,8 +520,9 @@ function scanInboxRows() {
       }
     }
 
+    row.setAttribute("data-ratiod-sig", rowSignature);
+
     // Check if row already has a badge mounted
-    const existingBadge = row.querySelector(".ratiod-inbox-pill");
     if (existingBadge) {
       // Synchronize in place if deep analysis or cache updated verdict/score!
       const curVerdict = existingBadge.getAttribute("data-verdict");
@@ -369,10 +555,57 @@ function scanInboxRows() {
   });
 }
 
-// Observe Gmail DOM mutation for opened messages and inbox lists
-const observer = new MutationObserver(() => {
-  scanAndAnalyzeGmail();
+// ---------------------------------------------------------------------------
+// High-Performance Debounced Scheduler
+// Replaces aggressive unthrottled MutationObserver execution with
+// requestIdleCallback / requestAnimationFrame debouncing to guarantee 0 FPS lag.
+// ---------------------------------------------------------------------------
+
+let debounceTimer = null;
+
+function scheduleScan(delay = 140) {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => {
+        executeScanPass();
+      }, { timeout: 250 });
+    } else {
+      window.requestAnimationFrame(() => {
+        executeScanPass();
+      });
+    }
+  }, delay);
+}
+
+function executeScanPass() {
+  if (document.hidden) return;
+  const isEmailOpen = !!document.querySelector(
+    ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
+  );
+  if (isEmailOpen) {
+    scanAndAnalyzeGmail();
+  }
   scanInboxRows();
+}
+
+// Observe Gmail DOM mutation with smart debounce to prevent UI thread lock
+const observer = new MutationObserver((mutations) => {
+  let hasRelevantMutations = false;
+  for (let i = 0; i < mutations.length; i++) {
+    const target = mutations[i].target;
+    if (target && target.nodeType === 1) {
+      // Ignore mutations within Ratio'd's own banner Shadow DOM or pills to avoid mutation feedback loops
+      if (target.classList && (target.classList.contains("ratiod-shadow-host") || target.classList.contains("ratiod-inbox-pill"))) {
+        continue;
+      }
+      hasRelevantMutations = true;
+      break;
+    }
+  }
+  if (hasRelevantMutations) {
+    scheduleScan(150);
+  }
 });
 
 observer.observe(document.body, {
@@ -380,8 +613,17 @@ observer.observe(document.body, {
   subtree: true
 });
 
-// Periodic check every 1 second
+// React instantly to Gmail SPA view transitions without continuous polling
+window.addEventListener("hashchange", () => scheduleScan(30), { passive: true });
+window.addEventListener("popstate", () => scheduleScan(30), { passive: true });
+
+// Low-overhead passive background heartbeat (every 5 seconds, only when tab is active)
 setInterval(() => {
-  scanAndAnalyzeGmail();
-  scanInboxRows();
-}, 1000);
+  if (!document.hidden) {
+    scheduleScan(0);
+  }
+}, 5000);
+
+// Initial scan
+scheduleScan(100);
+

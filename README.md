@@ -663,15 +663,7 @@ labelled `PROMO CLUTTER` with warning colours while its own explanation said
 | `manifest.json` | MV3. Injects `banner.js` + `content-script.js` into `mail.google.com` at `document_idle`. Permissions: `activeTab`, `storage` only. `host_permissions` covers the local engine, localhost, and the Vercel deployment. `web_accessible_resources` exposes the three small icons to the banner. |
 | `content-script.js` | Stages 0–2: DOM watcher, client redactor, transport with its fallback chain. |
 | `banner.js` | Stage 9: the Shadow DOM banner, its styles, and all the action handlers. |
-| `background.js` | A service worker that logs on install and proxies an `ANALYZE_EMAIL` message. |
 | `icons/` | 16/48/128/512 px, generated from `assets/logo.svg`. |
-
-> ⚠️ **`background.js` is currently a dead path.** It implements an
-> `ANALYZE_EMAIL` message handler, but `content-script.js` never calls it —
-> that was a deliberate move away from `chrome.runtime` messaging. It is
-> harmless, but it implies an architecture the code intentionally abandoned,
-> and it is the first thing to delete if you want the codebase honest about
-> how it actually works.
 
 **`banner.js` internals worth knowing:**
 - `escapeHtml()` handles `& < > " '`. Used on `span`, `reason`, `explanation`,
@@ -968,7 +960,6 @@ touch.
 │   ├── manifest.json
 │   ├── content-script.js          # Stages 0-2: watcher, redactor, transport
 │   ├── banner.js                  # Stage 9: Shadow DOM banner injector
-│   ├── background.js              # Service worker (currently unused)
 │   └── icons/                     # 16 / 48 / 128 / 512
 ├── server/                        # Analysis pipeline (shared by both runtimes)
 │   ├── routes/analyze.js          # POST /analyze orchestrator
@@ -1104,17 +1095,14 @@ than no tool.
    examples, so **no precision or false-positive rate has been measured**. If
    this is described as "AI-powered detection", that is overselling it.
 
-2. **The OTP redaction regex over-masks.**
-   `/\b(OTP|code|passcode|PIN)?\s?:?\s?(\d{4,8})\b/gi` makes the keyword group
-   **optional**, so any standalone 4–8 digit number becomes `[OTP_REDACTED]` —
-   order numbers, years, prices, account fragments. Harmless for safety, but it
-   mangles legitimate mail and inflates the "items masked" count. The fix is to
-   require the keyword.
+2. **OTP redaction requires nearby keyword.** The keyword group (OTP, code,
+   passcode, PIN) is mandatory nearby, ensuring standalone numbers (e.g.
+   "Order #48213") are not mangled while verification codes remain protected.
 
-3. **It reads the body only.** `content-script.js` passes `innerText`. Sender,
-   subject, headers, SPF/DKIM results and link `href`s are never inspected,
-   even though the rules in `rules/engine.js` are written to expect a `From:`
-   line. A spoofed display name passing SPF is out of reach.
+3. **Sender headers extracted from Gmail DOM.** `content-script.js` extracts
+   `senderAddress` and `senderName` from Gmail's header DOM (`span[email]`,
+   `span.gD`) and forwards them in the API payload, allowing the engine to catch
+   display-name spoofing directly.
 
 4. **Gmail's private selectors are fragile.** `.a3s.aiL` and friends break on a
    Google redesign, and the extension then fails *silently* — it simply stops
@@ -1125,23 +1113,18 @@ than no tool.
    Those are the highest-value signals in real phishing and none are
    implemented.
 
-6. **The brand list is 31 names, 28 of them matchable** (`MIN_BRAND_LEN = 4`
-   drops `dhl` and `ups`). A typosquat of a company that is not on that list is
-   invisible to the homoglyph, Levenshtein, display-name and signature checks,
-   and can only be caught by the generic pattern and structural rules. The new
-   signals added for the mixed corpus — Reply-To mismatch, mixed-script
-   homoglyphs, free-hosting senders, inheritance pretexts — were chosen
-   specifically because they are brand-independent, and that is the direction
-   further work should take.
+6. **Brand list and carrier exceptions.** The brand list covers major platforms
+   plus regional carriers (`singpost`). Short 3-letter carriers (`dhl`, `ups`)
+   are supported via explicit word-boundary carrier exceptions without lowering
+   the global `MIN_BRAND_LEN = 4` threshold. Typosquats of unlisted companies
+   fall through to generic structural rules.
 
 7. **PII is never transmitted, but text can be.** With no local server, the
    extension falls back to `ratio-d.vercel.app`, so redacted message text does
    leave the machine. The privacy guarantee is "no PII leaves", not "nothing
    leaves".
 
-8. **`background.js` is dead code** that implies a messaging architecture the
-   content script deliberately abandoned.
-9. **The archive-integrity guard is narrower than it appears.**
+8. **The archive-integrity guard is narrower than it appears.**
    `test-extension-package.js` drift-checks `manifest.json` and `banner.js`
    plus the file listings — it does not hash every entry. Editing any other
    shipped file leaves `ratiod-full-project.zip` silently stale while the suite

@@ -51,6 +51,27 @@ Subject: [GitHub] Please reset your password
 Body: We received a request to reset your GitHub password. Click here to reset: https://github.com/password_reset. If you did not request this, ignore this email.`,
     expectedVerdict: "safe",
     maxScore: 35
+  },
+  {
+    name: "6. Explicit Sender Header: Spoofed Brand Display Name with Evil Address",
+    text: `Subject: Security Alert: Unauthorized transaction detected\nBody: We noticed an unauthorized payment from your account. Please log in immediately to secure your funds.`,
+    senderInfo: { senderName: "PayPal Security", senderAddress: "attacker@evil-domain.com" },
+    expectedVerdict: "high_risk",
+    minScore: 50
+  },
+  {
+    name: "7. Explicit Sender Header: Legitimate Brand Sender Qualifies for Official Cap",
+    text: `Subject: Your receipt for transaction 9821\nBody: Thank you for your payment. Your receipt is attached for your records.`,
+    senderInfo: { senderName: "PayPal", senderAddress: "service@paypal.com" },
+    expectedVerdict: "safe",
+    maxScore: 25
+  },
+  {
+    name: "8. Explicit Sender Header: Sender vs Link Domain Mismatch",
+    text: `Subject: Invoice Ready\nBody: Your monthly invoice is ready. Download it here: https://unrelated-phishing.xyz/download.`,
+    senderInfo: { senderName: "Acme Billing", senderAddress: "billing@acme-corp.com" },
+    expectedVerdict: "suspicious",
+    minScore: 35
   }
 ];
 
@@ -62,8 +83,8 @@ function runTests() {
   let passed = 0;
 
   for (const tc of TEST_CASES) {
-    const { ruleScore, flags, isPromoClutter } = evaluateRules(tc.text, "email");
-    const layaMock = { probability: ruleScore >= 70 ? 0.9 : 0.1 };
+    const { ruleScore, flags, isPromoClutter } = evaluateRules(tc.text, "email", null, tc.senderInfo || null);
+    const layaMock = { probability: ruleScore >= 70 ? 0.9 : (ruleScore >= 35 ? 0.5 : 0.1) };
     // Forward isPromoClutter exactly as the API route does, so this exercises
     // the real code path rather than the fallback.
     const { score, verdict, next_steps } = combineScore(ruleScore, layaMock, "email", flags, isPromoClutter);
@@ -71,6 +92,8 @@ function runTests() {
     let isSuccess = false;
     if (tc.expectedVerdict === "high_risk") {
       isSuccess = (verdict === "high_risk" && score >= tc.minScore);
+    } else if (tc.expectedVerdict === "suspicious") {
+      isSuccess = ((verdict === "suspicious" || verdict === "high_risk") && score >= tc.minScore);
     } else if (tc.expectedVerdict === "safe") {
       isSuccess = (verdict === "safe" && score <= tc.maxScore);
     } else if (tc.expectedVerdict === "promo_clutter") {
@@ -87,6 +110,9 @@ function runTests() {
   }
 
   console.log(`Summary: ${passed}/${TEST_CASES.length} Tests Passed.\n`);
+  if (passed !== TEST_CASES.length) {
+    process.exit(1);
+  }
 }
 
 runTests();

@@ -282,8 +282,8 @@ async function main() {
     records: 11, recall: REQUIRED_RECALL_B, spec: REQUIRED_SPECIFICITY_B
   });
   const c = fs.existsSync(USER_CORPUS_PATH)
-    ? await runCorpus("corpus C (user dataset, 13 scam + 1 ham)", USER_CORPUS_PATH, {
-        records: 14, recall: 0.85, spec: 1.0
+    ? await runCorpus("corpus C (user dataset, 33 scam + 1 ham)", USER_CORPUS_PATH, {
+        records: 34, recall: 0.85, spec: 1.0
       })
     : null;
 

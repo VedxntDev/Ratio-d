@@ -232,6 +232,9 @@ function injectRatiodBanner(targetElement, data) {
     .tag-promo_clutter { background-color: #FFD23F; color: #121212; }
     .tag-suspicious { background-color: #E8720C; color: #FFFFFF; }
     .tag-safe { background-color: #9BE86D; color: #121212; }
+    .tag-auth-spoof { background-color: #EA3E2B; color: #FFFFFF; }
+    .tag-auth-verified { background-color: #9BE86D; color: #121212; }
+    .tag-auth-unverified { background-color: #EFE9DC; color: #4A4741; }
 
     /* Brand mark, matching the site logo (neo-brutalist R badge). */
     .ratiod-logo {
@@ -428,6 +431,18 @@ function injectRatiodBanner(targetElement, data) {
 
   const displayVerdictLabel = verdict === "promo_clutter" ? "PROMO CLUTTER" : verdict.toUpperCase();
 
+  let authBadgeHtml = "";
+  const authSummary = data.auth || (data.engine && data.engine.auth_status ? { status: data.engine.auth_status } : null);
+  if (authSummary && authSummary.status) {
+    if (authSummary.status === "spoof") {
+      authBadgeHtml = `<span class="ratiod-tag tag-auth-spoof">[ ⚠️ SPOOF: DKIM MISMATCH ]</span>`;
+    } else if (authSummary.status === "verified") {
+      authBadgeHtml = `<span class="ratiod-tag tag-auth-verified">[ 🔒 AUTH: VERIFIED ]</span>`;
+    } else if (authSummary.status === "unverified") {
+      authBadgeHtml = `<span class="ratiod-tag tag-auth-unverified">[ AUTH: UNVERIFIED ]</span>`;
+    }
+  }
+
   let logoSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23EA3E2B'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFFFFF' font-size='28' font-weight='800' font-family='sans-serif'%3ER%3C/text%3E%3C/svg%3E";
   try {
     if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getURL === "function") {
@@ -441,6 +456,7 @@ function injectRatiodBanner(targetElement, data) {
       <div class="ratiod-badge-group">
         <img class="ratiod-logo" src="${escapeHtml(logoSrc)}" alt="" width="28" height="28">
         <span class="ratiod-tag tag-${escapeHtml(verdict)}">[ ${escapeHtml(displayVerdictLabel)} ]</span>
+        ${authBadgeHtml}
         <span class="ratiod-score">RISK SCORE: ${escapeHtml(score)}/100</span>
       </div>
       <div class="ratiod-header-actions">

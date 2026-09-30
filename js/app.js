@@ -105,6 +105,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   analyzeBtn?.addEventListener("click", runAnalysisPipeline);
 
+  function parseRawHeaders(raw) {
+    if (!raw || typeof raw !== "string") return {};
+    const auth = {};
+    const fromMatch = raw.match(/^From:\s*.*?@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/mi) || raw.match(/header\.from=([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+    if (fromMatch) auth.fromDomain = fromMatch[1].toLowerCase();
+
+    const dkimMatch = raw.match(/\bd=([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i) || raw.match(/header\.d=([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+    if (dkimMatch) auth.signedBy = dkimMatch[1].toLowerCase();
+
+    const spfMatch = raw.match(/smtp\.mailfrom=([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i) || raw.match(/mailed-by[:\s]+([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+    if (spfMatch) auth.mailedBy = spfMatch[1].toLowerCase();
+
+    const dmarcMatch = raw.match(/\bdmarc=([a-zA-Z]+)/i);
+    if (dmarcMatch) auth.dmarc = dmarcMatch[1].toLowerCase();
+
+    return auth;
+  }
+
   // 5. Main Analysis Pipeline Execution
   async function runAnalysisPipeline() {
     const rawText = textarea.value.trim();
@@ -112,6 +130,21 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Please paste a message or select a sample preset first.");
       return;
     }
+
+    // Extract auth parameters if provided
+    const authFromDomain = document.getElementById("auth-from-domain")?.value?.trim();
+    const authMailedBy = document.getElementById("auth-mailed-by")?.value?.trim();
+    const authSignedBy = document.getElementById("auth-signed-by")?.value?.trim();
+    const authRawHeaders = document.getElementById("auth-raw-headers")?.value?.trim();
+
+    let authPayload = null;
+    if (authRawHeaders) {
+      const parsed = parseRawHeaders(authRawHeaders);
+      authPayload = { ...parsed };
+    }
+    if (authFromDomain) authPayload = { ...(authPayload || {}), fromDomain: authFromDomain };
+    if (authMailedBy) authPayload = { ...(authPayload || {}), mailedBy: authMailedBy };
+    if (authSignedBy) authPayload = { ...(authPayload || {}), signedBy: authSignedBy };
 
     // Ensure latest redaction pass
     const { redactedText, stats } = window.Redactor.redact(rawText);
@@ -124,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.PipelineController.animatePipeline(1);
 
       // Call API
-      const result = await window.ApiClient.analyze(redactedText, currentChannel, stats);
+      const result = await window.ApiClient.analyze(redactedText, currentChannel, stats, authPayload);
 
       // Stage 3: Explain (0.6s)
       window.PipelineController.animatePipeline(2);
@@ -175,6 +208,27 @@ document.addEventListener("DOMContentLoaded", () => {
     // Verdict Badge
     verdictBadge.className = `verdict-badge verdict-${verdict}`;
     verdictBadge.textContent = `[ VERDICT · ${verdict.toUpperCase()} ]`;
+
+    // Auth Status Badge
+    const authStatus = result.engine?.auth_status || result.auth?.status;
+    const authBadgeElem = document.getElementById("auth-status-badge");
+    if (authBadgeElem) {
+      if (authStatus === "spoof") {
+        authBadgeElem.style.display = "inline-block";
+        authBadgeElem.className = "auth-badge auth-badge-spoof";
+        authBadgeElem.textContent = "[ ⚠️ SPOOF: DKIM MISMATCH ]";
+      } else if (authStatus === "verified") {
+        authBadgeElem.style.display = "inline-block";
+        authBadgeElem.className = "auth-badge auth-badge-verified";
+        authBadgeElem.textContent = "[ 🔒 AUTH: VERIFIED ]";
+      } else if (authStatus === "unverified" && result.auth) {
+        authBadgeElem.style.display = "inline-block";
+        authBadgeElem.className = "auth-badge auth-badge-unverified";
+        authBadgeElem.textContent = "[ AUTH: UNVERIFIED ]";
+      } else {
+        authBadgeElem.style.display = "none";
+      }
+    }
 
     // Explanation Box
     explanationBox.textContent = explanation;

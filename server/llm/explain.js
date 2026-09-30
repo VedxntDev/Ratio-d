@@ -33,6 +33,18 @@ function generateDeterministicExplanation(verdict, flags, channel = "email") {
     return `Analysis complete: no explicit scam indicators or malicious patterns were detected in this ${channel.toUpperCase()} message. Standard security precautions still apply.`;
   }
 
+  // The mailbox's own verdict gets its own wording, and it must be checked
+  // BEFORE the verdict branches below. This message is the one a user actually
+  // hit: Gmail displayed "You have blocked <address>" and routed the mail to
+  // Spam, while this function said the message was "consistent with legitimate
+  // mail". A quarantine notice is not a threat claim - the user may simply have
+  // blocked an over-eager sender - but it absolutely is not an all-clear, so it
+  // is reported as unwanted mail that the mailbox already filtered.
+  if (flags.some(f => f.type === "quarantine")) {
+    const quarantineReasons = flags.filter(f => f.type === "quarantine").map(f => f.reason);
+    return `QUARANTINED BY YOUR MAIL PROVIDER: this ${channel.toUpperCase()} message was routed to Spam before Ratio'd analysed it. ${quarantineReasons.join("; ")}. That reflects a filter decision or a blocked sender rather than confirmed phishing, but the message is unwanted - do not treat it as legitimate mail.`;
+  }
+
   const reasons = flags.map((f) => f.reason);
   const spans = flags.map((f) => `'${f.span}'`);
 

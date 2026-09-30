@@ -31,7 +31,7 @@ window.Redactor = {
     });
 
     // 3. OTP / verification code masking
-    const otpRegex = /\b(OTP|code|passcode|PIN)?\s?:?\s?(\d{4,8})\b/gi;
+    const otpRegex = /\b(OTP|code|passcode|PIN)\b(?:\s+(?:is|was|:|-))?\s*:?\s*(\d{4,8})\b/gi;
     redacted = redacted.replace(otpRegex, (match, prefix, digits) => {
       otpCount++;
       return (prefix ? prefix + " " : "") + "[OTP_REDACTED]";

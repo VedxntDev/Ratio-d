@@ -63,7 +63,7 @@ check("manifest_version is 3", manifest.manifest_version === 3, String(manifest.
 check("name present", Boolean(manifest.name), manifest.name);
 check("version present", Boolean(manifest.version), manifest.version);
 check("description present", Boolean(manifest.description));
-check("background service_worker declared", Boolean(manifest.background && manifest.background.service_worker));
+check("no dead background service worker declared", !manifest.background);
 check("gmail content script declared",
   manifest.content_scripts?.[0]?.matches?.includes("https://mail.google.com/*"));
 check("host_permissions include the live API",
@@ -80,11 +80,10 @@ const missing = referenced.filter((f) => !listing.includes(f));
 check(`all ${referenced.length} manifest-referenced files packaged`, missing.length === 0,
   missing.length ? "MISSING: " + missing.join(", ") : "none missing");
 
-// Required scripts must not be minified away or empty.
 // Required scripts must not be minified away or empty. banner.css is
 // deliberately NOT here: the banner injects its styles inline from banner.js,
 // so the file was dead weight in a published archive.
-["background.js", "content-script.js", "banner.js"].forEach((f) => {
+["content-script.js", "banner.js"].forEach((f) => {
   check(`${f} packaged and non-empty`,
     listing.includes(f) &&
       fs.statSync(path.join(ROOT, "extension", f)).size > 100);

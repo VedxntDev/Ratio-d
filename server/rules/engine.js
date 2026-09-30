@@ -20,6 +20,7 @@ const KNOWN_BRANDS = [
   "usps",
   "fedex",
   "dhl",
+  "ups",
   "facebook",
   "instagram",
   "twitter",
@@ -37,8 +38,8 @@ const KNOWN_BRANDS = [
   "iras",
   "visa",
   "mastercard",
-  "dhl",
-  "ups"
+  "singpost",
+  "singaporepost"
 ];
 
 /**
@@ -48,7 +49,8 @@ const KNOWN_BRANDS = [
  * impersonation. Short brands are dropped rather than risk false positives.
  */
 const MIN_BRAND_LEN = 4;
-const MATCHABLE_BRANDS = KNOWN_BRANDS.filter((b) => b.length >= MIN_BRAND_LEN);
+const SHORT_CARRIER_BRANDS = new Set(["dhl", "ups"]);
+const MATCHABLE_BRANDS = KNOWN_BRANDS.filter((b) => b.length >= MIN_BRAND_LEN || SHORT_CARRIER_BRANDS.has(b));
 
 const OFFICIAL_BRAND_DOMAINS = {
   microsoft: ["microsoft.com", "office.com", "live.com", "outlook.com", "microsoftonline.com", "accountprotection.microsoft.com"],
@@ -66,14 +68,32 @@ const OFFICIAL_BRAND_DOMAINS = {
   usps: ["usps.com", "usps.gov"],
   fedex: ["fedex.com"],
   ups: ["ups.com"],
-  dhl: ["dhl.com"],
+  dhl: ["dhl.com", "dhl.de"],
   singtel: ["singtel.com", "singtel.com.sg"],
+  singpost: ["singpost.com", "singpost.gov.sg", "singpost.com.sg"],
+  singaporepost: ["singpost.com", "singpost.gov.sg", "singpost.com.sg"],
   grab: ["grab.com", "grab.co.id", "grab.sg"],
   metamask: ["metamask.io", "consensys.io"],
   iras: ["iras.gov.sg"],
   visa: ["visa.com", "visa.co"],
   mastercard: ["mastercard.com", "mastercard.co"]
 };
+
+/**
+ * Check if a domain belongs to a protected institutional or financial brand.
+ */
+function isProtectedBrandDomain(domain) {
+  if (!domain) return false;
+  const d = domain.toLowerCase().replace(/^www\./, "");
+  if (ALL_OFFICIAL_DOMAINS.has(d)) return true;
+  for (const brand of MATCHABLE_BRANDS) {
+    const officialDomains = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
+    if (officialDomains.some(official => d === official || d.endsWith(`.${official}`))) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Every domain that is the official home of some brand in the list above.
@@ -225,13 +245,14 @@ function levenshteinDistance(a, b) {
 const URGENCY_PATTERNS = [
   { regex: /expire(s|d|ing)?\s+today/i, reason: "Urgency trigger ('expires today')" },
   { regex: /action\s+required/i, reason: "Urgency trigger ('action required')" },
-  { regex: /within\s+\d+\s*(hours?|mins?|minutes?|days?)/i, reason: "Psychological time limit constraint" },
+  { regex: /within\s+(?:the\s+next\s+)?\d+\s*(?:hours?|mins?|minutes?|days?)/i, reason: "Psychological time limit constraint" },
   { regex: /account\s+(suspended|locked|terminated|restricted|disabled|expired)/i, reason: "Fear trigger: account suspension/lock warning" },
   { regex: /unusual\s+(activity|login|transaction|charge|access)/i, reason: "Fear trigger: unusual security activity alarm" },
   { regex: /click\s+here\s+to\s+(verify|update|confirm|login|restore)/i, reason: "Urgent action demand" },
   { regex: /will\s+be\s+(suspended|locked|disabled|terminated|deactivated|closed|expired)/i, reason: "Threat of account loss ('will be suspended')" },
   { regex: /your\s+(account|payment|parcel|package|order)\s+(has\s+been|was|is)\s+(suspended|locked|cancelled|held|failed)/i, reason: "Claimed account/package hold" },
-  { regex: /final\s+notice|last\s+warning/i, reason: "Escalating panic phrase" }
+  { regex: /final\s+notice|last\s+warning/i, reason: "Escalating panic phrase" },
+  { regex: /failure\s+to\s+renew|photos\s+(?:and\s+videos\s+)?will\s+be\s+(?:deleted|removed)|data\s+is\s+scheduled\s+for\s+deletion|permanently\s+(?:purged|removed)/i, reason: "Threatened data deletion / storage loss urgency" }
 ];
 
 const CREDENTIAL_PATTERNS = [
@@ -267,6 +288,50 @@ const PROMOTIONAL_CLUTTER_PATTERNS = [
   { regex: /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i, reason: "Registration triggered by a keyword reply, not a form" },
   { regex: /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i, reason: "Bulk sender states its own opt-out terms in the body" },
   { regex: /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i, reason: "Cold brochure request with no self-service path" }
+];
+
+/**
+ * Mailbox-provider quarantine notices.
+ *
+ * These are NOT properties of the message: they are the verdict Gmail already
+ * reached and is displaying to the user. The extension copies that banner text
+ * into the analyzed payload (see extension/content-script.js), and until this
+ * existed no rule matched it, so the single most decisive piece of evidence in
+ * the request was silently discarded.
+ *
+ * The concrete case that motivated this: a newsletter from an official brand
+ * domain (quora.com) that the user had blocked. Gmail quarantined it and said
+ * so on screen, but "You have blocked <address>" matched nothing, the official
+ * domain cap clamped the score to 25, and the banner reported "consistent with
+ * legitimate mail" next to a red RISK badge in the same window.
+ *
+ * Deliberately narrow, and it never claims the message is a threat - being
+ * blocked is a user preference, not proof of phishing - so it floors the score
+ * into the promo/unwanted band rather than forcing high_risk. Only the explicit
+ * "suspected phishing" / "not opened by anyone" wording escalates, because
+ * those describe Google's own classifier disagreeing with the sender.
+ */
+const QUARANTINE_NOTICE_PATTERNS = [
+  {
+    regex: /you have blocked\s+[^\s@]+@[^\s<>()]+/i,
+    reason: "Sender is on the recipient's blocked-senders list, so Gmail routed this to Spam",
+    escalate: false
+  },
+  {
+    regex: /why is this message in spam\?/i,
+    reason: "Gmail quarantined this message and displayed its spam explanation",
+    escalate: false
+  },
+  {
+    regex: /this message (?:was )?(?:may look )?like spam|looks like (?:unwanted|bulk)/i,
+    reason: "Mailbox provider classified this message as unwanted bulk mail",
+    escalate: false
+  },
+  {
+    regex: /suspected (?:phishing|spam)|not opened by (?:any|everyone)|recipients haven't opened/i,
+    reason: "Mailbox provider flagged this message as suspected phishing",
+    escalate: true
+  }
 ];
 
 const SUSPICIOUS_DOMAINS = [
@@ -352,7 +417,8 @@ const FAKE_SUBSCRIPTION_PATTERNS = [
   { regex: /rewards?\s+will\s+expire|rewards?\s+expire\s+in\s+\d+|your\s+rewards?\b/i, reason: "Unsolicited 'your rewards expire' bait" },
   { regex: /claim\s+your\s+reward|get\s+\d+\s*(?:sgd|usd|eur|gbp|rm)\s+now/i, reason: "Reward claim pushed from unsolicited mail" },
   { regex: /membership\s+renewal|bill\s+receipt\s*[-:]\s*ord\d+/i, reason: "Fake membership renewal record" },
-  { regex: /cashback\s+will\s+expire|claim\s+[\w$]+\s*cashback/i, reason: "Unsolicited cashback expiry lure" }
+  { regex: /cashback\s+will\s+expire|claim\s+[\w$]+\s*cashback/i, reason: "Unsolicited cashback expiry lure" },
+  { regex: /storage\s+(?:has\s+reached|reached)\s+critical\s+limit|storage\s+sync\s+(?:has\s+been\s+)?paused|storage\s+limit\s+(?:exceeded|reached)|cloud\s+files\s+will\s+be\s+removed|without\s+cloud\s+space|cloud\s+has\s+been\s+disabled/i, reason: "Fake cloud storage service disruption / deletion threat" }
 ];
 
 const FAKE_SECURITY_PATTERNS = [
@@ -360,7 +426,8 @@ const FAKE_SECURITY_PATTERNS = [
   { regex: /enable\s+2fa\s+now|2fa\s+will\s+be\s+enabled/i, reason: "2FA enrolment pushed from an email link" },
   { regex: /protect\s+your\s+wallet|keeping\s+your\s+digital\s+assets\s+safe/i, reason: "Wallet-protection pretext" },
   { regex: /we\s+tried\s+to\s+charge\s+your\s+account\s+but\s+the\s+transaction\s+was\s+declined/i, reason: "Declined-payment bait" },
-  { regex: /(?:new|unread)\s+message\s+(?:waiting\s+for\s+you|on\s+your\s+dashboard)/i, reason: "Fake dashboard unread message lure" }
+  { regex: /(?:new|unread)\s+message\s+(?:waiting\s+for\s+you|on\s+your\s+dashboard)/i, reason: "Fake dashboard unread message lure" },
+  { regex: /cloud\s+antivirus\s+expired|threat\s+to\s+your\s+device|compromise\s+your\s+sim\s+card|renew\s+your\s+shield|unprotected\s+against\s+cyber\s+attacks|subscription\s+(?:termination\s+notice|will\s+be\s+closed|has\s+closed)/i, reason: "Fake security threat or subscription termination alert" }
 ];
 
 const INVESTMENT_PATTERNS = [
@@ -374,7 +441,7 @@ const INVESTMENT_PATTERNS = [
 const HEALTH_CLAIM_PATTERNS = [
   { regex: /self-?healing\s+protocol|vision\s+restoration\s+protocol/i, reason: "Unverifiable medical 'protocol' claim" },
   { regex: /from\s+nearly\s+blind\s+to\s+perfect\s+20\/20|clinical\s+trials?,?\s*[\d,]+\+?\s*patients/i, reason: "Implausible medical outcome statistic" },
-  { regex: /before\s+the\s+video\s+is\s+taken\s+down|watch\s+the\s+presentation/i, reason: "Artificial urgency to view a claim now" },
+  { regex: /before\s+the\s+video\s+is\s+taken\s+down|watch\s+the\s+(?:free\s+|unedited\s+|full\s+|banned\s+|silhouette\s+)?(?:presentation|video|seminar|report)/i, reason: "Artificial urgency to view a health claim/video" },
   { regex: /researchers\s+uncover|\bprotocol\s+is\s+changing\s+lives\b/i, reason: "Viral-marketing medical claim" },
   // Direct-response health-device advertorials. These quote no clinical trial
   // and cite no regulator, but assert a specific therapeutic outcome for a
@@ -384,7 +451,16 @@ const HEALTH_CLAIM_PATTERNS = [
   { regex: /reduce\s+spinal\s+pressure|support\s+disc\s+rehydration|create\s+space\s+between\s+vertebrae/i, reason: "Consumer device claims a specific therapeutic outcome for a medical condition" },
   { regex: /for\s+people\s+dealing\s+with\s+(?:recurring\s+)?(?:back\s+(?:pain|discomfort)|sciatica|joint\s+pain)/i, reason: "Targets a named medical complaint with an at-home product" },
   { regex: /(?:save|discount)\s+\d{1,3}%\s+on\b[\s\S]{0,80}money-?back\s+trial|money-?back\s+trial[\s\S]{0,80}(?:save|discount)\s+\d{1,3}%/i, reason: "Deep discount plus money-back trial, the standard health-device advertorial close" },
-  { regex: /insulin\s+vampire|parasit\w+\s+infection|causing\s+type\s+2\s+diabetes|ancient\s+.*ritual|flushes?\s+it\s+out\s+of\s+the\s+pancreas/i, reason: "Fabricated parasite or miracle cure claim for a chronic condition" }
+  { regex: /insulin\s+vampire|parasit\w+\s+infection|causing\s+type\s+2\s+diabetes|ancient\s+.*ritual|flushes?\s+it\s+out\s+of\s+the\s+pancreas/i, reason: "Fabricated parasite or miracle cure claim for a chronic condition" },
+  { regex: /vicks\s+vapo\s*rub|vapo\s*rub\s+trick|vick\s+trick|shrink\s+(?:your\s+|inflamed\s+|enlarged\s+)?prostate|waking\s+up\s+\d+(?:-\d+)?\s+times\s+a\s+night\s+to\s+pee/i, reason: "Unsubstantiated prostate shrink / miracle cure claim" },
+  { regex: /steelpower|rock\s+hard\s+stamina|male\s+vitality|men['’]?s\s+health\s+(?:alert|intelligence)/i, reason: "Direct-response male vitality advertorial" },
+  { regex: /tomato\s+skin\s+(?:morning\s+)?protocol|tomato\s+skin\s+trick|stop\s+taking\s+flomax|flowstrong|firehose\s+stream|prostate\s+swelling/i, reason: "Miracle food / alternative protocol claim replacing medical treatment" },
+  { regex: /rekindle\s+your\s+spark|instant\s+readiness|no\s+last-minute\s+pills|natural\s+mix\s+works|erection\s+solution/i, reason: "Alternative male performance drink / natural mix advertorial" },
+  { regex: /horsewood|increases?\s+your\s+penis|[\d.]+\s*inch\s+gains?|doctor\s+exposes\s+the\s+trick/i, reason: "Fabricated anatomical growth / miracle medical trick" },
+  { regex: /silhouette\s+video|endopump|stiff\s+as\s+steel|stiffens?\s+your\s+johnson|chicken-choking|restores\s+the\s+natural\s+blood\s+flow|jackhammer\s+her/i, reason: "Sensationalist performance remedy / silhouette video claim" },
+  { regex: /prostavive|dissolves?\s+prostate\s+clog|spring\s+water\s+juice|pee\s+(?:hard\s+against\s+the\s+bowl|like\s+a\s+water\s+cannon|like\s+a\s+river)/i, reason: "Unsubstantiated prostate juice / urinary miracle remedy claim" },
+  { regex: /diabetic\s+parasite|glycolean|why\s+your\s+doctor\s+hasn['’]?t\s+told\s+you|pharmaceutical\s+industry\s+is\s+furious|get\s+this\s+segment\s+scrubbed/i, reason: "Conspiracy-based diabetes miracle cure / parasite claim" },
+  { regex: /barbara\s+o['’]?neill|banned\s+(?:lecture|seminar|video)|leaked\s+(?:lecture|broadcast|seminar)|regenerates?\s+dead\s+nerves|calm\s+(?:the\s+)?burning\s+and\s+tingling|neuropathic\s+pain/i, reason: "Fabricated 'banned lecture' / unverified neuropathy cure claim" }
 ];
 
 const PERSONAL_DATA_PATTERNS = [
@@ -448,7 +524,7 @@ const SOCIAL_ENGINEERING_FAMILIES = [
   { name: "fake_subscription", points: 18, patterns: FAKE_SUBSCRIPTION_PATTERNS },
   { name: "fake_security", points: 20, patterns: FAKE_SECURITY_PATTERNS },
   { name: "investment", points: 15, patterns: INVESTMENT_PATTERNS },
-  { name: "health_claim", points: 15, patterns: HEALTH_CLAIM_PATTERNS },
+  { name: "health_claim", points: 20, patterns: HEALTH_CLAIM_PATTERNS },
   { name: "personal_data", points: 15, patterns: PERSONAL_DATA_PATTERNS, corroboration: false },
   { name: "contact_stranger", points: 15, patterns: CONTACT_STRANGER_PATTERNS },
   { name: "inheritance", points: 25, patterns: INHERITANCE_PATTERNS }
@@ -613,17 +689,164 @@ function extractLinkDomains(text) {
   return Array.from(found);
 }
 
-function evaluateRules(text, channel = "email") {
+/**
+ * Evaluates cryptographic and envelope authentication headers (SPF, DKIM, DMARC).
+ */
+function evaluateAuthentication(auth, senderDomain) {
+  const flags = [];
+  let score = 0;
+  let isAuthDisqualified = false;
+
+  if (!auth || typeof auth !== "object") {
+    return { flags, score, isAuthDisqualified };
+  }
+
+  const fromDomain = (auth.fromDomain || senderDomain || "").toLowerCase().trim().replace(/^www\./, "");
+  const signedBy = auth.signedBy ? auth.signedBy.toLowerCase().trim().replace(/^www\./, "") : null;
+  const mailedBy = auth.mailedBy ? auth.mailedBy.toLowerCase().trim().replace(/^www\./, "") : null;
+  const dmarc = auth.dmarc ? auth.dmarc.toLowerCase().trim() : null;
+  const spf = auth.spf ? auth.spf.toLowerCase().trim() : null;
+  const dkim = auth.dkim ? auth.dkim.toLowerCase().trim() : null;
+
+  // Check A: Explicit Failures
+  if (dmarc === "fail" || dkim === "fail" || spf === "fail") {
+    flags.push({
+      span: fromDomain || senderDomain || "Authentication Check",
+      reason: "Cryptographic sender authentication failed (DMARC/DKIM/SPF violation).",
+      type: "rule",
+      rule: "AUTH_CRYPTO_FAIL"
+    });
+    score += 85;
+    isAuthDisqualified = true;
+  }
+
+  // Known legitimate shared email service providers / relay infrastructure for SPF
+  const SHARED_RELAYS = new Set([
+    "amazonses.com", "sendgrid.net", "mailgun.org", "mailgun.net", "mandrillapp.com",
+    "sparkpostmail.com", "mailchimpapp.net", "mcsv.net", "hubspotemail.net", "postmarkapp.com",
+    "zendesk.com", "freshdesk.com", "salesforce.com", "exacttarget.com", "sailthru.com"
+  ]);
+
+  const isSharedRelay = (domain) => {
+    if (!domain) return false;
+    for (const relay of SHARED_RELAYS) {
+      if (domain === relay || domain.endsWith("." + relay)) return true;
+    }
+    return false;
+  };
+
+  const isBrand = isProtectedBrandDomain(fromDomain);
+
+  // Check B: DKIM Alignment Mismatch (The Smoking Gun)
+  if (isBrand && signedBy) {
+    const isDkimAligned = signedBy === fromDomain || signedBy.endsWith("." + fromDomain);
+    if (!isDkimAligned) {
+      flags.push({
+        span: fromDomain,
+        reason: `Sender claims '${fromDomain}', but message was digitally signed by unrelated domain '${signedBy}'.`,
+        type: "rule",
+        rule: "AUTH_DKIM_ALIGNMENT_MISMATCH"
+      });
+      score += 80;
+      isAuthDisqualified = true;
+    }
+  }
+
+  // Check C: SPF Envelope Mismatch
+  if (isBrand && mailedBy) {
+    const isSpfAligned = mailedBy === fromDomain || mailedBy.endsWith("." + fromDomain) || isSharedRelay(mailedBy);
+    if (!isSpfAligned) {
+      flags.push({
+        span: fromDomain,
+        reason: `Mail envelope ('${mailedBy}') does not align with sender domain '${fromDomain}'.`,
+        type: "rule",
+        rule: "AUTH_SPF_ENVELOPE_MISMATCH"
+      });
+      score += 50;
+    }
+  }
+
+  // Check D: Unauthenticated High-Value Brand
+  if (isBrand && !signedBy && !mailedBy && !dmarc && !dkim && !spf) {
+    flags.push({
+      span: fromDomain,
+      reason: `Email claims to be from institutional brand '${fromDomain}' but carries no cryptographic signature.`,
+      type: "rule",
+      rule: "AUTH_BRAND_UNAUTHENTICATED"
+    });
+    score += 40;
+  }
+
+  return {
+    flags,
+    score,
+    isAuthDisqualified
+  };
+}
+
+function evaluateRules(text, channel = "email", auth = null, senderInfo = null) {
   const flags = [];
   let rawScore = 0;
   let isPromoClutter = false;
-  let isLegitimateOfficialSender = false;
+  let isBrandSender = false;
 
   if (!text || typeof text !== "string") {
-    return { ruleScore: 0, flags: [], isPromoClutter: false };
+    return { ruleScore: 0, flags: [], isPromoClutter: false, isAuthDisqualified: false, authSummary: null };
+  }
+
+  let explicitSenderAddress = "";
+  let explicitSenderName = "";
+  if (typeof senderInfo === "string") {
+    explicitSenderAddress = senderInfo.trim();
+  } else if (senderInfo && typeof senderInfo === "object") {
+    explicitSenderAddress = (senderInfo.senderAddress || "").trim();
+    explicitSenderName = (senderInfo.senderName || "").trim();
+  }
+
+  let explicitSenderDomain = "";
+  if (explicitSenderAddress && explicitSenderAddress.includes("@")) {
+    explicitSenderDomain = explicitSenderAddress.split("@").pop().toLowerCase().trim().replace(/^www\./, "");
   }
 
   const extractedDomains = extractDomains(text);
+  if (explicitSenderDomain && !extractedDomains.includes(explicitSenderDomain)) {
+    extractedDomains.unshift(explicitSenderDomain);
+  }
+  const fromDomains = extractFromDomains(text);
+  const senderDomain = (auth && auth.fromDomain)
+    ? auth.fromDomain.toLowerCase().trim().replace(/^www\./, "")
+    : (explicitSenderDomain || fromDomains[0] || (extractedDomains.length ? extractedDomains[0] : ""));
+
+  if (explicitSenderDomain) {
+    for (const brand of MATCHABLE_BRANDS) {
+      const officialDomains = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
+      const isOfficial = officialDomains.some(official => explicitSenderDomain === official || explicitSenderDomain.endsWith(`.${official}`));
+      if (isOfficial && !isFreeMailDomain(explicitSenderDomain)) {
+        isBrandSender = true;
+        break;
+      }
+    }
+  }
+
+  // 0. Cryptographic / Header Authentication Evaluation
+  let isAuthDisqualified = false;
+  let isAuthAligned = true;
+  if (auth && typeof auth === "object") {
+    const authResult = evaluateAuthentication(auth, senderDomain);
+    if (authResult.flags.length > 0) {
+      flags.push(...authResult.flags);
+      rawScore += authResult.score;
+    }
+    isAuthDisqualified = authResult.isAuthDisqualified;
+
+    const fromDom = (auth.fromDomain || senderDomain || "").toLowerCase().trim().replace(/^www\./, "");
+    if (auth.signedBy) {
+      const sBy = auth.signedBy.toLowerCase().trim().replace(/^www\./, "");
+      isAuthAligned = (sBy === fromDom || sBy.endsWith("." + fromDom)) && !isAuthDisqualified;
+    } else {
+      isAuthAligned = !isAuthDisqualified && !isProtectedBrandDomain(fromDom);
+    }
+  }
 
   // 1. Homoglyph, Typosquat & Subdomain Brand-Stuffing Checks
   for (const rawDomain of extractedDomains) {
@@ -633,7 +856,7 @@ function evaluateRules(text, channel = "email") {
     // A domain we know belongs to a real company is never a spoof, however
     // close it sits to a brand name (shopify.com vs spotify.com).
     if (LEGITIMATE_DOMAINS.has(rawDomain)) {
-      isLegitimateOfficialSender = true;
+      isBrandSender = true;
       continue;
     }
 
@@ -641,7 +864,7 @@ function evaluateRules(text, channel = "email") {
     // Free webmail is excluded - gmail.com belongs to Google, but a message
     // sent from a personal mailbox is not an official Google message.
     if (ALL_OFFICIAL_DOMAINS.has(rawDomain) && !isFreeMailDomain(rawDomain)) {
-      isLegitimateOfficialSender = true;
+      isBrandSender = true;
       continue;
     }
 
@@ -653,6 +876,7 @@ function evaluateRules(text, channel = "email") {
     const normalizedAltSld = normalizeAltForBrandCheck(sld);
 
     for (const brand of MATCHABLE_BRANDS) {
+      const isShortCarrier = SHORT_CARRIER_BRANDS.has(brand);
       const officialDomains = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
       const isOfficial = officialDomains.some(official => rawDomain === official || rawDomain.endsWith(`.${official}`));
 
@@ -660,27 +884,31 @@ function evaluateRules(text, channel = "email") {
         // A free mailbox is never an official sender, even when the domain
         // genuinely belongs to the brand (gmail.com is Google's, but a message
         // sent from a personal Gmail is not a message from Google).
-        if (!isFreeMailDomain(rawDomain)) isLegitimateOfficialSender = true;
+        if (!isFreeMailDomain(rawDomain)) isBrandSender = true;
         continue;
       }
 
       // Check A: Character substitution (Homoglyph, e.g. m1crosoft -> microsoft,
       // paypa1 -> paypal). Either reading of the digit may resolve the brand.
-      const hasHomoglyphSubstitution =
+      const hasHomoglyphSubstitution = !isShortCarrier &&
         (normalizedSld.includes(brand) || normalizedAltSld.includes(brand)) && !sld.includes(brand);
 
       // Check B: Subdomain or hyphen brand-stuffing (e.g. microsoft-support.com, login-microsoft.com)
-      const hasBrandStuffing = (normalizedFullHost.includes(brand) || sld.includes(brand)) && !isOfficial;
+      const hasBrandStuffing = !isOfficial && (
+        isShortCarrier
+          ? new RegExp(`(^|[-.])${brand}([-.]|$)`, "i").test(fullHost)
+          : (normalizedFullHost.includes(brand) || sld.includes(brand))
+      );
 
       // Check C: Levenshtein distance check (e.g. microsft, micosoft, appple)
       // The length must also be within +/-2, otherwise unrelated short domains
       // can sit an edit or two away from a brand by coincidence.
-      const distance = Math.min(
+      const distance = isShortCarrier ? 99 : Math.min(
         levenshteinDistance(normalizedSld, brand),
         levenshteinDistance(normalizedAltSld, brand)
       );
       const lengthDelta = Math.abs(sld.length - brand.length);
-      const isCloseTypo = distance > 0 && distance <= 2 && lengthDelta <= 2 && sld.length >= MIN_BRAND_LEN;
+      const isCloseTypo = !isShortCarrier && distance > 0 && distance <= 2 && lengthDelta <= 2 && sld.length >= MIN_BRAND_LEN;
 
       if (hasHomoglyphSubstitution) {
         flags.push({
@@ -706,6 +934,8 @@ function evaluateRules(text, channel = "email") {
       }
     }
   }
+
+  const isLegitimateOfficialSender = isBrandSender && isAuthAligned && !isAuthDisqualified;
 
   // 2. Urgency and Credential Patterns
   let hasUrgency = false;
@@ -776,7 +1006,6 @@ function evaluateRules(text, channel = "email") {
   // lookalike host is a deliberate attempt to defeat reply-path filtering on
   // the receiving organisation. This fires independently of any brand list, so
   // it works for institutions the engine has never heard of.
-  const fromDomains = extractFromDomains(text);
   const replyToDomains = extractReplyToDomains(text);
   const replyToRedirect = replyToDomains.find(
     (rt) => !fromDomains.some((fd) => rt === fd || rt.endsWith("." + fd) || fd.endsWith("." + rt))
@@ -840,15 +1069,27 @@ function evaluateRules(text, channel = "email") {
   // like ordinary mail to them. The display name is where attackers are
   // careless, and a mismatch against a known brand is very high precision.
   const displayNames = extractSenderDisplayNames(text);
+  if (explicitSenderName && !displayNames.includes(explicitSenderName)) {
+    displayNames.unshift(explicitSenderName);
+  }
   const senderDomainsForDisplay = extractSenderDomains(text);
+  if (explicitSenderDomain && !senderDomainsForDisplay.includes(explicitSenderDomain)) {
+    senderDomainsForDisplay.unshift(explicitSenderDomain);
+  }
   const claimedBrands = [];
   for (const name of displayNames) {
     const normalizedName = normalizeForBrandCheck(name).replace(/\s+/g, "");
     const altName = normalizeAltForBrandCheck(name).replace(/\s+/g, "");
     for (const brand of MATCHABLE_BRANDS) {
-      if (brand.length < 5) continue;
-      const hit = normalizedName.includes(brand) || altName.includes(brand) ||
-        name.toLowerCase().replace(/\s+/g, "").includes(brand);
+      const isShortCarrier = SHORT_CARRIER_BRANDS.has(brand);
+      if (brand.length < 5 && !isShortCarrier) continue;
+      let hit = false;
+      if (isShortCarrier) {
+        hit = new RegExp(`\\b${brand}\\b`, "i").test(name);
+      } else {
+        hit = normalizedName.includes(brand) || altName.includes(brand) ||
+          name.toLowerCase().replace(/\s+/g, "").includes(brand);
+      }
       if (!hit) continue;
       // An official brand domain is allowed to use its own name. The
       // `${brand}.com` fallback matters: without it, every brand missing an
@@ -920,7 +1161,8 @@ function evaluateRules(text, channel = "email") {
   const hasSignatureFooter = SIGNATURE_FOOTER_PATTERNS.some((re) => re.test(text));
   if (hasSignatureFooter && !isLegitimateOfficialSender) {
     const bodyBrands = MATCHABLE_BRANDS.filter((brand) => {
-      if (brand.length < 4) return false;
+      const isShortCarrier = SHORT_CARRIER_BRANDS.has(brand);
+      if (brand.length < 4 && !isShortCarrier) return false;
       const official = OFFICIAL_BRAND_DOMAINS[brand] || [`${brand}.com`];
       const senderIsOfficial = senderDomainsForDisplay.some(
         (d) => !isFreeMailDomain(d) && official.some((o) => d === o || d.endsWith("." + o))
@@ -998,6 +1240,9 @@ function evaluateRules(text, channel = "email") {
   // Only evaluated for senders that are NOT an official brand domain, so that
   // legitimate cross-domain mail (GitHub -> Vercel) is never penalised.
   const senderDomains = extractSenderDomains(text);
+  if (explicitSenderDomain && !senderDomains.includes(explicitSenderDomain)) {
+    senderDomains.unshift(explicitSenderDomain);
+  }
   const linkDomains = extractLinkDomains(text);
   if (!isLegitimateOfficialSender && senderDomains.length && linkDomains.length) {
     for (const sender of senderDomains) {
@@ -1055,21 +1300,64 @@ function evaluateRules(text, channel = "email") {
     rawScore = Math.max(45, rawScore + promoCount * 12);
   }
 
+  // Mailbox-provider quarantine notice. This runs BEFORE the official-domain
+  // cap below, because that cap clamps any brand-domain mail to 25 and would
+  // otherwise erase the one signal that matters here: Gmail has already
+  // quarantined this message and told the user why.
+  let isQuarantined = false;
+  let quarantineEscalated = false;
+  for (const pattern of QUARANTINE_NOTICE_PATTERNS) {
+    const match = text.match(pattern.regex);
+    if (!match) continue;
+    flags.push({ span: match[0], reason: pattern.reason, type: "quarantine" });
+    isQuarantined = true;
+    if (pattern.escalate) quarantineEscalated = true;
+  }
+
+  // A blocked sender is a user preference, not proof of a threat, so this floors
+  // the score into the unwanted-marketing band instead of forcing high_risk. It
+  // still has to clear "safe", because reporting a message the user's own
+  // mailbox quarantined as "consistent with legitimate mail" is the exact
+  // contradiction this fixes.
+  if (isQuarantined) {
+    rawScore = Math.max(rawScore, 45);
+    if (quarantineEscalated) rawScore = Math.max(rawScore, 70);
+  }
+
   // 5. Official Domain Exemption: If official sender domain with no typosquats, cap false positives
-  if (isLegitimateOfficialSender && !hasCredentialRequest) {
+  //
+  // The quarantine floor is deliberately excluded from this cap. An official
+  // brand domain being legitimate says nothing about whether THIS message was
+  // filtered, and letting the cap win is what produced "SAFE / 16" beside a red
+  // RISK 78 badge for the same message.
+  if (isLegitimateOfficialSender && !hasCredentialRequest && !isQuarantined) {
     rawScore = Math.min(25, rawScore);
   }
+
+  const authStatus = isAuthDisqualified
+    ? "spoof"
+    : (auth && auth.signedBy && isAuthAligned ? "verified" : "unverified");
 
   const finalRuleScore = Math.min(100, rawScore);
   return {
     ruleScore: finalRuleScore,
     flags,
-    isPromoClutter
+    isPromoClutter,
+    isQuarantined,
+    isAuthDisqualified,
+    authSummary: {
+      status: authStatus,
+      fromDomain: (auth && auth.fromDomain) || senderDomain || null,
+      signedBy: (auth && auth.signedBy) || null,
+      mailedBy: (auth && auth.mailedBy) || null
+    }
   };
 }
 
 module.exports = {
   evaluateRules,
+  evaluateAuthentication,
+  isProtectedBrandDomain,
   normalizeForBrandCheck,
   normalizeAltForBrandCheck,
   levenshteinDistance,

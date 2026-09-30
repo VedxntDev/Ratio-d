@@ -3,7 +3,7 @@
  * Enforces rule-engine domain spoofing / brand impersonation disqualification (min score 80, verdict high_risk).
  */
 
-function combineScore(ruleScore, layaModel, channel = "email", flags = [], enginePromoClutter = null) {
+function combineScore(ruleScore, layaModel, channel = "email", flags = [], enginePromoClutter = null, isAuthDisqualified = false) {
   const layaScore = Math.round((layaModel?.probability || 0) * 100);
 
   let rawFinalScore = Math.round((ruleScore * 0.70) + (layaScore * 0.30));
@@ -26,7 +26,31 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
     ? Boolean(enginePromoClutter)
     : promoFlagCount >= 2;
 
-  const hasSevereDomainSpoof = flags.some(f =>
+  // The mailbox provider already quarantined this message and is telling the
+  // user so on screen. Being routed to Spam is not evidence of phishing, so it
+  // is deliberately excluded from the severe/disqualifying tests above - but it
+  // must never be blended away to "safe" either.
+  //
+  // The 0.70/0.30 blend is the reason it needed an explicit floor: a quarantine
+  // notice arriving with an otherwise clean body produced ruleScore 45 against
+  // a model probability near 0.02, which averages back down into the low 30s
+  // and lands as "LOW RISK ... consistent with legitimate mail" while Gmail is
+  // showing the user a red Spam warning for the same message.
+  const isQuarantined = flags.some(f => f.type === "quarantine");
+  if (isQuarantined) {
+    rawFinalScore = Math.max(rawFinalScore, 45);
+  }
+
+  const hasSevereAuthSpoof = isAuthDisqualified || flags.some(f =>
+    f.rule === "AUTH_CRYPTO_FAIL" ||
+    f.rule === "AUTH_DKIM_ALIGNMENT_MISMATCH" ||
+    (f.reason && (
+      f.reason.includes("Cryptographic sender authentication failed") ||
+      f.reason.includes("digitally signed by unrelated domain")
+    ))
+  );
+
+  const hasSevereDomainSpoof = hasSevereAuthSpoof || flags.some(f =>
     f.reason.toLowerCase().includes("homoglyph") ||
     f.reason.toLowerCase().includes("typosquat") ||
     f.reason.toLowerCase().includes("brand impersonation") ||
@@ -36,11 +60,14 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
   const hasSevereRule = hasSevereDomainSpoof || flags.some(f =>
     f.reason.includes("Credential harvesting") ||
     f.reason.includes("Link mismatch") ||
-    f.reason.includes("suspicious domain")
+    f.reason.includes("suspicious domain") ||
+    f.rule === "AUTH_SPF_ENVELOPE_MISMATCH"
   );
 
-  // Domain spoofing or brand impersonation alone is disqualifying (minimum score 80, high_risk)
-  if (hasSevereDomainSpoof) {
+  // Authentication mismatch or domain spoofing alone is disqualifying
+  if (hasSevereAuthSpoof) {
+    rawFinalScore = Math.max(88, rawFinalScore);
+  } else if (hasSevereDomainSpoof) {
     rawFinalScore = Math.max(82, rawFinalScore);
   } else if (hasSevereRule && rawFinalScore < 70) {
     rawFinalScore = Math.max(75, rawFinalScore);
@@ -49,7 +76,7 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
   const score = Math.min(100, Math.max(0, rawFinalScore));
 
   let verdict = "safe";
-  if (hasSevereDomainSpoof || score >= 66) {
+  if (hasSevereAuthSpoof || hasSevereDomainSpoof || score >= 66) {
     verdict = "high_risk";
   } else if (hasPromoClutter) {
     verdict = "promo_clutter";
@@ -61,7 +88,11 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
 
   const next_steps = [];
 
-  if (verdict === "high_risk") {
+  if (hasSevereAuthSpoof) {
+    next_steps.push("Do NOT click links or reply. This email was cryptographically proven to be sent by an unauthorized party.");
+    next_steps.push("Report sender address as phishing and block domain immediately.");
+    next_steps.push("Verify account status directly at official brand URL in a new browser window.");
+  } else if (verdict === "high_risk") {
     next_steps.push("Do NOT click any links, open attachments, or enter passwords on this email.");
     next_steps.push("Report sender address as phishing and block domain immediately.");
     next_steps.push("Verify account status directly at official brand URL in a new browser window.");

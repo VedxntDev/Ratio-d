@@ -68,16 +68,22 @@ window.ApiClient = {
    *                           compatibility only — per Part A.5 the backend
    *                           derives `privacy` from the redacted text itself,
    *                           so the client never transmits PII telemetry.
+   * @param {object} [auth]    Optional SPF/DKIM/DMARC auth details.
    */
-  async analyze(text, channel = "email", stats) {
+  async analyze(text, channel = "email", stats, auth = null) {
     let lastError = null;
+
+    const payload = { text, channel };
+    if (auth && typeof auth === "object") {
+      payload.auth = auth;
+    }
 
     for (const endpoint of this.endpoints()) {
       try {
         const response = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, channel })
+          body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
@@ -94,7 +100,7 @@ window.ApiClient = {
       "[API CLIENT] No analysis backend reachable; using browser fallback engine.",
       lastError && lastError.message
     );
-    return this.clientSideFallback(text, channel);
+    return this.clientSideFallback(text, channel, auth);
   },
 
   /**
@@ -107,9 +113,9 @@ window.ApiClient = {
    * site cannot serve /extension/* (vercel.json 404s it).
    * server/test-fallback-parity.js keeps the two behaviourally identical.
    */
-  clientSideFallback(text, channel = "email") {
+  clientSideFallback(text, channel = "email", auth = null) {
     if (window.RatiodFallback) {
-      return window.RatiodFallback.analyze(text);
+      return window.RatiodFallback.analyze(text, channel, auth);
     }
 
     // If the shared engine failed to load, fall back to a single combined

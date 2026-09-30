@@ -77,6 +77,22 @@ async function main() {
   assert(b.verdict === "safe", `benign message misclassified as ${b.verdict}`);
   console.log(`benign   OK  -> ${b.score}/${b.verdict} (no false positive)`);
 
+  // 5. Explicit sender headers test (contract verification)
+  const spoofRes = await fetch(`${BASE}/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: "Security Alert: Please update your password immediately.",
+      channel: "email",
+      senderName: "PayPal Security",
+      senderAddress: "alert@evil-hacker.com",
+    }),
+  });
+  const spoof = await spoofRes.json();
+  assert(spoof.verdict === "high_risk", `expected high_risk for spoofed sender, got ${spoof.verdict}`);
+  assert(spoof.flags.some((f) => f.reason.includes("Brand impersonation")), "missing brand impersonation flag");
+  console.log(`sender-spoof OK -> ${spoof.score}/${spoof.verdict} (flagged brand impersonation)`);
+
   console.log("\nALL UI <-> BACKEND CONTRACTS SATISFIED");
 }
 

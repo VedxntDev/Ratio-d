@@ -221,6 +221,16 @@ check("documented redaction is what the redactor really does",
 check("documented redaction counts are real",
   red.stats.phones_masked === 1 && red.stats.emails_masked === 1);
 
+const orderTest = w.Redactor.redact("Order #48213 has shipped.");
+check("standalone number like Order #48213 is not redacted as OTP",
+  !orderTest.redactedText.includes("[OTP_REDACTED]") && orderTest.redactedText.includes("48213") && orderTest.stats.otp_masked === 0,
+  orderTest.redactedText);
+
+const otpTest = w.Redactor.redact("Your OTP is 48213.");
+check("Your OTP is 48213 is redacted",
+  otpTest.redactedText.includes("[OTP_REDACTED]") && !otpTest.redactedText.includes("48213") && otpTest.stats.otp_masked === 1,
+  otpTest.redactedText);
+
 /* ---- the chart must not overstate what actually ran ---- */
 check("chart does not present the stub as a live Laya container",
   /stub_heuristic/.test(STAGES.find((s) => s.n === 6).example) &&

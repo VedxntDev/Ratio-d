@@ -144,8 +144,8 @@ stay guarded.
 
 `POST /analyze` (also `/api/analyze`, `/api`) · `GET /health`
 
-Request: `{ text: string, channel: "email" | "sms" }` — `text` is **already
-client-redacted**.
+Request: `{ text: string, channel: "email" | "sms", auth?: object, senderAddress?: string, senderName?: string }` — `text` is **already
+client-redacted**. Real sender headers extracted by the extension from Gmail DOM (`senderAddress`, `senderName`) are forwarded to the engine.
 
 Response: `{ score, verdict, flags, explanation, next_steps, privacy, engine }`
 
@@ -213,10 +213,7 @@ The ones that bite first:
 
 1. No trained model; every weight is hand-chosen.
 2. No precision measurement — only 2 ham messages exist.
-3. OTP redaction over-masks (the keyword group is optional, so any standalone
-   4–8 digit number is replaced).
-4. Body text only — sender, subject, headers, SPF/DKIM and link `href`s are
-   never inspected, though `rules/engine.js` is written to expect a `From:` line.
+3. OTP redaction requires mandatory keywords (OTP/code/PIN) nearby so ordinary numbers (e.g. Order #48213) are preserved.
+4. Sender address and display name headers are extracted from Gmail DOM (`span[email]`, `span.gD`) and evaluated by the engine.
 5. Gmail private selectors break silently on a Google redesign.
 6. No attachment scanning, no HTML-phishing analysis.
-7. `extension/background.js` is dead code.

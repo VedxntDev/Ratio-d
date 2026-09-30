@@ -180,6 +180,34 @@
             <span class="textarea-corner" aria-hidden="true">TXT</span>
           </div>
 
+          <!-- Collapsible Headers & Authentication Drawer -->
+          <details class="auth-drawer" id="auth-drawer">
+            <summary class="auth-drawer-summary">
+              <span class="sticker sticker-blue">OPTIONAL</span>
+              <strong>Headers &amp; Authentication (SPF / DKIM / DMARC)</strong>
+            </summary>
+            <div class="auth-drawer-content">
+              <div class="auth-field-row">
+                <label for="auth-from-domain" class="auth-label">From Domain:</label>
+                <input type="text" id="auth-from-domain" class="auth-input" placeholder="e.g. paypal.com" />
+              </div>
+              <div class="auth-field-grid">
+                <div class="auth-field-col">
+                  <label for="auth-mailed-by" class="auth-label">mailed-by (SPF Envelope):</label>
+                  <input type="text" id="auth-mailed-by" class="auth-input" placeholder="e.g. sendgrid.net" />
+                </div>
+                <div class="auth-field-col">
+                  <label for="auth-signed-by" class="auth-label">signed-by (DKIM Domain):</label>
+                  <input type="text" id="auth-signed-by" class="auth-input" placeholder="e.g. malicious-relay.ru" />
+                </div>
+              </div>
+              <div class="auth-field-row">
+                <label for="auth-raw-headers" class="auth-label">Or Paste Raw Headers (Auto-parse):</label>
+                <textarea id="auth-raw-headers" class="auth-raw-textarea" rows="2" placeholder="Authentication-Results: spf=pass... header.d=..."></textarea>
+              </div>
+            </div>
+          </details>
+
           <div class="privacy-toggle-row">
             <span id="privacy-counts" class="privacy-counts">[OK] Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
             <button class="btn-preset btn-preset-ghost" id="btn-clear" type="button">Clear</button>
@@ -241,7 +269,10 @@
             </div>
 
             <div class="verdict-info">
-              <span class="verdict-badge verdict-safe" id="verdict-badge">[ VERDICT · READY ]</span>
+              <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+                <span class="verdict-badge verdict-safe" id="verdict-badge">[ VERDICT · READY ]</span>
+                <span class="auth-badge" id="auth-status-badge" style="display:none;"></span>
+              </div>
               <div class="verdict-score-num">
                 <span id="score-num">0</span><span class="score-denom">/100</span>
               </div>

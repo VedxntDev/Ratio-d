@@ -41,23 +41,35 @@
     { name: "fake_subscription", points: 18, patterns: [
       /storage\s+is\s+full|upgrade\s+(your\s+)?storage|not\s+backing\s+up/i,
       /your\s+subscription\s+(ends|is\s+about\s+to\s+expire)/i,
-      /rewards?\s+will\s+expire|claim\s+your\s+reward/i ] },
+      /rewards?\s+will\s+expire|claim\s+your\s+reward/i,
+      /storage\s+(?:has\s+reached|reached)\s+critical\s+limit|storage\s+sync\s+(?:has\s+been\s+)?paused|storage\s+limit\s+(?:exceeded|reached)|cloud\s+files\s+will\s+be\s+removed|without\s+cloud\s+space|cloud\s+has\s+been\s+disabled/i ] },
     { name: "fake_security", points: 20, patterns: [
       /2fa\s+(will\s+be\s+|is\s+now\s+)?mandatory|enable\s+2fa\s+now/i,
       /mandatory\s+for\s+all\s+\w+\s+accounts|two-factor\s+authentication/i,
-      /protect\s+your\s+wallet|transaction\s+was\s+declined/i ] },
+      /protect\s+your\s+wallet|transaction\s+was\s+declined/i,
+      /cloud\s+antivirus\s+expired|threat\s+to\s+your\s+device|compromise\s+your\s+sim\s+card|renew\s+your\s+shield|unprotected\s+against\s+cyber\s+attacks|subscription\s+(?:termination\s+notice|will\s+be\s+closed|has\s+closed)/i ] },
     { name: "investment", points: 15, patterns: [
       /\$[A-Z]{2,6}\s+token|airdrop/i,
       /approved\s+and\s+disbursed\s+within\s+\d+\s+hours?/i,
       /loan\s+solutions|private\s+loan\s+investment|investment\s+opportunit/i ] },
-    { name: "health_claim", points: 15, patterns: [
+    { name: "health_claim", points: 20, patterns: [
       /self-?healing\s+protocol|vision\s+restoration\s+protocol/i,
       /nearly\s+blind\s+to\s+perfect\s+20\/20/i,
-      /before\s+the\s+video\s+is\s+taken\s+down/i,
+      /before\s+the\s+video\s+is\s+taken\s+down|watch\s+the\s+(?:free\s+|unedited\s+|full\s+|banned\s+|silhouette\s+)?(?:presentation|video|seminar|report)/i,
       // Direct-response health-device advertorials: a specific therapeutic
       // outcome for a consumer product, sold on discount + money-back trial.
       /reduce\s+spinal\s+pressure|support\s+disc\s+rehydration|create\s+space\s+between\s+vertebrae/i,
-      /for\s+people\s+dealing\s+with\s+(?:recurring\s+)?(?:back\s+(?:pain|discomfort)|sciatica|joint\s+pain)/i ] },
+      /for\s+people\s+dealing\s+with\s+(?:recurring\s+)?(?:back\s+(?:pain|discomfort)|sciatica|joint\s+pain)/i,
+      /insulin\s+vampire|parasit\w+\s+infection|causing\s+type\s+2\s+diabetes|ancient\s+.*ritual|flushes?\s+it\s+out\s+of\s+the\s+pancreas/i,
+      /vicks\s+vapo\s*rub|vapo\s*rub\s+trick|vick\s+trick|shrink\s+(?:your\s+|inflamed\s+|enlarged\s+)?prostate|waking\s+up\s+\d+(?:-\d+)?\s+times\s+a\s+night\s+to\s+pee/i,
+      /steelpower|rock\s+hard\s+stamina|male\s+vitality|men['’]?s\s+health\s+(?:alert|intelligence)/i,
+      /tomato\s+skin\s+(?:morning\s+)?protocol|tomato\s+skin\s+trick|stop\s+taking\s+flomax|flowstrong|firehose\s+stream|prostate\s+swelling/i,
+      /rekindle\s+your\s+spark|instant\s+readiness|no\s+last-minute\s+pills|natural\s+mix\s+works|erection\s+solution/i,
+      /horsewood|increases?\s+your\s+penis|[\d.]+\s*inch\s+gains?|doctor\s+exposes\s+the\s+trick/i,
+      /silhouette\s+video|endopump|stiff\s+as\s+steel|stiffens?\s+your\s+johnson|chicken-choking|restores\s+the\s+natural\s+blood\s+flow|jackhammer\s+her/i,
+      /prostavive|dissolves?\s+prostate\s+clog|spring\s+water\s+juice|pee\s+(?:hard\s+against\s+the\s+bowl|like\s+a\s+water\s+cannon|like\s+a\s+river)/i,
+      /diabetic\s+parasite|glycolean|why\s+your\s+doctor\s+hasn['’]?t\s+told\s+you|pharmaceutical\s+industry\s+is\s+furious|get\s+this\s+segment\s+scrubbed/i,
+      /barbara\s+o['’]?neill|banned\s+(?:lecture|seminar|video)|leaked\s+(?:lecture|broadcast|seminar)|regenerates?\s+dead\s+nerves|calm\s+(?:the\s+)?burning\s+and\s+tingling|neuropathic\s+pain/i ] },
     { name: "personal_data", points: 15, patterns: [
       /copy\s+of\s+your\s+identification|have\s+your\s+id\s+ready/i,
       /your\s+full\s+names?\s*[:\n]|your\s+country\s*[:\n]/i,
@@ -79,7 +91,7 @@
   var RISKY_TLD = /https?:\/\/[\w.-]*\.(xyz|top|tk|club|work|gq|cf|ml|page|icu|buzz|cam|lol|online|site|space|link|click|fun|trade|quest|cyou|sbs)\b/i;
   var SIX_FIGURE = /[$€£]\s?\d{2,3}(?:,\d{3})+(?:\.\d{2})?|\b\d{2,3}(?:,\d{3})+\s*(?:usd|eur|gbp|sgd|rm)\b/i;
   var CREDENTIAL = /verify\s+your\s+(credentials|password|identity|account)|enter\s+your\s+(password|pin|ssn)|provide\s+(your\s+)?otp|\(login|auth|signin|password-reset\)\s*link/i;
-  var URGENCY = /expires?\s+today|action\s+required|within\s+\d+\s*(hours?|mins?|days?)|account\s+(suspended|locked|terminated|restricted)|unusual\s+(activity|login|transaction)|will\s+be\s+(suspended|locked|disabled)|final\s+notice|last\s+warning|expire\s+in\s+\d+\s*h/i;
+  var URGENCY = /expires?\s+today|action\s+required|within\s+(?:the\s+next\s+)?\d+\s*(hours?|mins?|days?)|account\s+(suspended|locked|terminated|restricted)|unusual\s+(activity|login|transaction)|will\s+be\s+(suspended|locked|disabled)|final\s+notice|last\s+warning|expire\s+in\s+\d+\s*h|failure\s+to\s+renew|photos\s+(?:and\s+videos\s+)?will\s+be\s+(?:deleted|removed)|data\s+is\s+scheduled\s+for\s+deletion|permanently\s+(?:purged|removed)/i;
   var SHORTENER = /https?:\/\/(?:www\.)?(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|buff\.ly|rebrand\.ly|cutt\.ly|shorturl\.at|rb\.gy|tiny\.cc|t\.ly|lnkd\.in)\b/i;
   var NON_LATIN = /[Α-Ωα-ωЀ-ӿ]/;
 
@@ -95,11 +107,30 @@
    */
   var PROMO = [
     /unsubscribe/i,
-    /% off|discount|exclusive\s+invite|limited\s+seats|explore\s+how/i,
+    /%\s+off|discount|exclusive\s+invite|limited\s+seats|explore\s+how/i,
     /put\s+(?:the\s+word\s+)?["“']?[\s-]*(?:remove|remove-me|unsubscribe|stop|opt[\s-]?out)["”']?\s+(?:on|in|to)\s+the\s+subject/i,
     /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i,
     /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i,
     /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i
+  ];
+
+  /*
+   * Mirrors the server's QUARANTINE_NOTICE_PATTERNS.
+   *
+   * Gmail copies its own spam explanation ("You have blocked <address>", "Why is
+   * this message in spam?") into the analysed text, but no offline pattern
+   * matched it. With the server unreachable, a message the mailbox had already
+   * filtered scored 0/safe - the worst possible failure, because it is the
+   * user's own spam folder telling them the mail is fine.
+   *
+   * Floored into the unwanted band, never high_risk: a blocked sender is a user
+   * preference, not proof of phishing.
+   */
+  var QUARANTINE = [
+    { re: /you have blocked\s+[^\s@]+@[^\s<>()]+/i, escalate: false },
+    { re: /why is this message in spam\?/i, escalate: false },
+    { re: /this message (?:was )?(?:may look )?like spam|looks like (?:unwanted|bulk)/i, escalate: false },
+    { re: /suspected (?:phishing|spam)|not opened by (?:any|everyone)|recipients haven't opened/i, escalate: true }
   ];
 
   function domainsOf(text, header) {
@@ -126,14 +157,119 @@
     return null;
   }
 
+  var BRANDS = [
+    "microsoft.com", "office.com", "google.com", "apple.com", "amazon.com", "paypal.com",
+    "netflix.com", "bankofamerica.com", "chase.com", "wellsfargo.com", "stripe.com",
+    "github.com", "linkedin.com", "usps.com", "fedex.com", "ups.com", "dhl.com",
+    "singtel.com", "grab.com", "metamask.io", "iras.gov.sg", "visa.com", "mastercard.com"
+  ];
+
+  function isProtectedBrand(domain) {
+    if (!domain) return false;
+    var d = domain.toLowerCase().replace(/^www\./, "");
+    for (var i = 0; i < BRANDS.length; i++) {
+      var b = BRANDS[i];
+      if (d === b || d.endsWith("." + b)) return true;
+    }
+    return false;
+  }
+
   /**
    * @param {string} text  Already client-redacted message text.
+   * @param {string} [channel] "email" | "sms"
+   * @param {object} [auth] Authentication headers { fromDomain, mailedBy, signedBy, dmarc, spf, dkim }
    * @returns {object} the same response shape the server returns.
    */
-  function analyze(text) {
+  function analyze(text, channel, auth) {
+    if (typeof channel === "object" && !auth) {
+      auth = channel;
+      channel = "email";
+    }
+    channel = channel || "email";
+
     var t = String(text || "");
     var flags = [];
     var score = 0;
+
+    // Mailbox-provider quarantine notice. Collected first so the flag is
+    // available to every later decision, including the "clean sender" clamp.
+    var isQuarantined = false;
+    var quarantineEscalated = false;
+    for (var q = 0; q < QUARANTINE.length; q++) {
+      var qm = t.match(QUARANTINE[q].re);
+      if (!qm) continue;
+      flags.push({
+        span: qm[0],
+        reason: QUARANTINE[q].escalate
+          ? "Mailbox provider flagged this message as suspected phishing"
+          : "Sender is on the recipient's blocked-senders list, so Gmail routed this to Spam",
+        type: "quarantine"
+      });
+      isQuarantined = true;
+      if (QUARANTINE[q].escalate) quarantineEscalated = true;
+    }
+
+    var from = domainsOf(t, "from");
+    var replyTo = domainsOf(t, "reply-to");
+    var fromDomain = (auth && auth.fromDomain) ? auth.fromDomain.toLowerCase().replace(/^www\./, "") : (from[0] || "");
+
+    var isAuthDisqualified = false;
+    if (auth && typeof auth === "object") {
+      var signedBy = auth.signedBy ? auth.signedBy.toLowerCase().replace(/^www\./, "") : null;
+      var mailedBy = auth.mailedBy ? auth.mailedBy.toLowerCase().replace(/^www\./, "") : null;
+      var dmarc = auth.dmarc ? auth.dmarc.toLowerCase() : null;
+      var spf = auth.spf ? auth.spf.toLowerCase() : null;
+      var dkim = auth.dkim ? auth.dkim.toLowerCase() : null;
+
+      if (dmarc === "fail" || dkim === "fail" || spf === "fail") {
+        flags.push({
+          span: fromDomain || "Authentication Check",
+          reason: "Cryptographic sender authentication failed (DMARC/DKIM/SPF violation).",
+          type: "rule",
+          rule: "AUTH_CRYPTO_FAIL"
+        });
+        score += 85;
+        isAuthDisqualified = true;
+      }
+
+      var isBrand = isProtectedBrand(fromDomain);
+      if (isBrand && signedBy) {
+        var isDkimAligned = signedBy === fromDomain || signedBy.endsWith("." + fromDomain);
+        if (!isDkimAligned) {
+          flags.push({
+            span: fromDomain,
+            reason: "Sender claims '" + fromDomain + "', but message was digitally signed by unrelated domain '" + signedBy + "'.",
+            type: "rule",
+            rule: "AUTH_DKIM_ALIGNMENT_MISMATCH"
+          });
+          score += 80;
+          isAuthDisqualified = true;
+        }
+      }
+
+      if (isBrand && mailedBy) {
+        var isSpfAligned = mailedBy === fromDomain || mailedBy.endsWith("." + fromDomain) || /(amazonses\.com|sendgrid\.net|mailgun\.(org|net)|mandrillapp\.com|sparkpostmail\.com)$/i.test(mailedBy);
+        if (!isSpfAligned) {
+          flags.push({
+            span: fromDomain,
+            reason: "Mail envelope ('" + mailedBy + "') does not align with sender domain '" + fromDomain + "'.",
+            type: "rule",
+            rule: "AUTH_SPF_ENVELOPE_MISMATCH"
+          });
+          score += 50;
+        }
+      }
+
+      if (isBrand && !signedBy && !mailedBy && !dmarc && !dkim && !spf) {
+        flags.push({
+          span: fromDomain,
+          reason: "Email claims to be from institutional brand '" + fromDomain + "' but carries no cryptographic signature.",
+          type: "rule",
+          rule: "AUTH_BRAND_UNAUTHENTICATED"
+        });
+        score += 40;
+      }
+    }
 
     var fired = {};
     FAMILIES.forEach(function (fam) {
@@ -156,8 +292,6 @@
     });
 
     // Structural signals that depend on no brand list.
-    var from = domainsOf(t, "from");
-    var replyTo = domainsOf(t, "reply-to");
     if (replyTo.length && from.length) {
       var redirect = replyTo.filter(function (rt) {
         return !from.some(function (fd) { return rt === fd || rt.indexOf("." + fd) === 0; });
@@ -237,34 +371,47 @@
       score += 45;
     }
 
-    // A consumer mailbox is never an official sender. gmail.com belongs to
-    // Google, but a message sent from a personal mailbox is not from Google -
-    // treating it as one caps the score and hides the evidence.
+    // A consumer mailbox is never an official sender.
     var fromIsFree = from.some(function (d) { return FREE_MAIL.test(d); });
-    if (!fromIsFree && from.length && !flags.length) score = Math.min(score, 12);
+    if (!fromIsFree && from.length && !flags.length && !isAuthDisqualified && !isQuarantined) score = Math.min(score, 12);
 
-    // Bulk marketing, mirroring the server's rule: only demote to
-    // "promo_clutter" when the message carries NO threat evidence at all. The
-    // server gates this on the presence of non-promo flags rather than on a
-    // score threshold, so a phishing lure that happens to mention a discount
-    // cannot be relabelled as marketing. A phishing lure is never demoted.
+    // Bulk marketing check
     var promoCount = 0;
     for (var p = 0; p < PROMO.length; p++) {
       if (t.match(PROMO[p])) promoCount++;
     }
-    var hasThreatEvidence = flags.length > 0;
+    // A quarantine notice is the mailbox's verdict, not a scam pattern, so it
+    // must not count as threat evidence and block the promo classification.
+    var hasThreatEvidence = flags.some(function (f) { return f.type !== "quarantine"; });
     var isPromo = promoCount >= 2 && !hasThreatEvidence;
     if (isPromo) score = Math.max(45, score + promoCount * 12);
+
+    // Floored above the "clean sender" clamp so a quarantined message can never
+    // be reported as legitimate, and never forced to high_risk on its own.
+    if (isQuarantined) {
+      score = Math.max(score, quarantineEscalated ? 70 : 45);
+    }
+
+    if (isAuthDisqualified) {
+      score = Math.max(88, score);
+    }
 
     score = Math.max(0, Math.min(100, score));
 
     var verdict = "safe";
-    if (score >= 66) verdict = "high_risk";
+    if (isAuthDisqualified || score >= 66) verdict = "high_risk";
+    else if (isQuarantined && score < 66) verdict = "suspicious";
     else if (isPromo && score < 66) verdict = "promo_clutter";
     else if (score >= 35) verdict = "suspicious";
 
     var steps;
-    if (verdict === "high_risk") {
+    if (isAuthDisqualified) {
+      steps = [
+        "Do NOT click links or reply. This email was cryptographically proven to be sent by an unauthorized party.",
+        "Report the sender as phishing and block the domain.",
+        "Verify the account directly at the official brand URL, typed by hand."
+      ];
+    } else if (verdict === "high_risk") {
       steps = [
         "Do NOT click any links, open attachments, or enter passwords on this email.",
         "Report the sender as phishing and block the domain.",
@@ -275,6 +422,12 @@
         "Post-task promotional marketing clutter detected.",
         "Unsubscribe or mute the sender if you did not ask for this.",
         "No credentials or payment are needed - do not reply with personal details."
+      ];
+    } else if (verdict === "suspicious" && isQuarantined) {
+      steps = [
+        "Your mailbox already routed this to Spam; the sender is blocked or filtered.",
+        "Treat it as unwanted mail - do not treat it as legitimate.",
+        "No credentials or payment are needed. Delete it or unsubscribe."
       ];
     } else if (verdict === "suspicious") {
       steps = [
@@ -289,10 +442,20 @@
       score: score,
       verdict: verdict,
       flags: flags,
-      explanation: verdict === "safe"
+      auth: {
+        status: isAuthDisqualified ? "spoof" : (auth && auth.signedBy && (auth.signedBy === fromDomain || auth.signedBy.endsWith("." + fromDomain)) ? "verified" : "unverified"),
+        fromDomain: fromDomain || null,
+        signedBy: (auth && auth.signedBy) || null,
+        mailedBy: (auth && auth.mailedBy) || null
+      },
+      explanation: isQuarantined && verdict !== "high_risk"
+        ? "QUARANTINED BY YOUR MAIL PROVIDER: your mailbox routed this to Spam and told you why (blocked sender or spam filter). That is a filter decision, not confirmed phishing, but the message is unwanted - do not treat it as legitimate. This is a reduced offline check, not a full analysis."
+        : verdict === "safe"
         ? "Offline analysis found no strong scam indicators. This is a reduced check, not a full analysis."
         : verdict === "promo_clutter"
         ? "BULK MARKETING: offline analysis matched bulk-marketing patterns with no scam indicators. This is a reduced check, not a full analysis."
+        : isAuthDisqualified
+        ? "HIGH RISK: Cryptographic sender authentication failed or indicates brand spoofing."
         : "Offline analysis flagged " + flags.length + " indicator(s) while the main engine was unreachable.",
       next_steps: steps,
       privacy: {
@@ -302,6 +465,7 @@
       },
       engine: {
         rules: "offline-fallback-subset",
+        auth_status: isAuthDisqualified ? "spoof" : (auth && auth.signedBy ? "verified" : "unverified"),
         model_source: "offline_fallback_heuristic",
         explain_source: "offline_fallback",
         degraded: true,

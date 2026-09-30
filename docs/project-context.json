@@ -20,7 +20,7 @@
     },
     "commands": {
       "start": "node server.js",
-      "test_all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-false-positives.js && node server/test-model-signals.js && node server/test-scam-corpus.js && node server/test-context-manifest.js && node server/test-fallback-parity.js && node server/test-promo-verdict.js && node server/test-ui-static.js && node server/test-mascot-eyes.js && node server/test-extension-package.js && node server/test-shape-waves.js && node server/test-architecture.js && node test-ui-contract.js",
+      "test_all": "node server/test-phishing.js && node server/test-spec-rules.js && node server/test-spec-sanity.js && node server/test-auth-rules.js && node server/test-false-positives.js && node server/test-model-signals.js && node server/test-scam-corpus.js && node server/test-context-manifest.js && node server/test-fallback-parity.js && node server/test-promo-verdict.js && node server/test-ui-static.js && node server/test-mascot-eyes.js && node server/test-extension-package.js && node server/test-shape-waves.js && node server/test-architecture.js && node test-ui-contract.js",
       "test_corpus": "node server/test-scam-corpus.js"
     },
     "test_prerequisite": "test:all REQUIRES a running server (node server.js) because test-ui-contract.js makes real HTTP calls to http://127.0.0.1:3000. Without it that final suite fails with 'CONTRACT TEST FAILED: fetch failed' and the run exits 1."
@@ -152,6 +152,8 @@
         "linkedin",
         "usps",
         "fedex",
+        "dhl",
+        "ups",
         "facebook",
         "instagram",
         "twitter",
@@ -165,7 +167,9 @@
         "metamask",
         "iras",
         "visa",
-        "mastercard"
+        "mastercard",
+        "singpost",
+        "singaporepost"
       ],
       "officialBrandDomains": {
         "microsoft": [
@@ -224,11 +228,22 @@
           "ups.com"
         ],
         "dhl": [
-          "dhl.com"
+          "dhl.com",
+          "dhl.de"
         ],
         "singtel": [
           "singtel.com",
           "singtel.com.sg"
+        ],
+        "singpost": [
+          "singpost.com",
+          "singpost.gov.sg",
+          "singpost.com.sg"
+        ],
+        "singaporepost": [
+          "singpost.com",
+          "singpost.gov.sg",
+          "singpost.com.sg"
         ],
         "grab": [
           "grab.com",
@@ -404,7 +419,7 @@
           "name": "fake_subscription",
           "points": 18,
           "corroboration": true,
-          "patternCount": 9,
+          "patternCount": 10,
           "patterns": [
             "Fake cloud-storage exhaustion scare",
             "Storage upgrade upsell via unsolicited mail",
@@ -414,20 +429,22 @@
             "Unsolicited 'your rewards expire' bait",
             "Reward claim pushed from unsolicited mail",
             "Fake membership renewal record",
-            "Unsolicited cashback expiry lure"
+            "Unsolicited cashback expiry lure",
+            "Fake cloud storage service disruption / deletion threat"
           ]
         },
         {
           "name": "fake_security",
           "points": 20,
           "corroboration": true,
-          "patternCount": 5,
+          "patternCount": 6,
           "patterns": [
             "Mandatory 2FA enforcement notice",
             "2FA enrolment pushed from an email link",
             "Wallet-protection pretext",
             "Declined-payment bait",
-            "Fake dashboard unread message lure"
+            "Fake dashboard unread message lure",
+            "Fake security threat or subscription termination alert"
           ]
         },
         {
@@ -445,18 +462,27 @@
         },
         {
           "name": "health_claim",
-          "points": 15,
+          "points": 20,
           "corroboration": true,
-          "patternCount": 8,
+          "patternCount": 17,
           "patterns": [
             "Unverifiable medical 'protocol' claim",
             "Implausible medical outcome statistic",
-            "Artificial urgency to view a claim now",
+            "Artificial urgency to view a health claim/video",
             "Viral-marketing medical claim",
             "Consumer device claims a specific therapeutic outcome for a medical condition",
             "Targets a named medical complaint with an at-home product",
             "Deep discount plus money-back trial, the standard health-device advertorial close",
-            "Fabricated parasite or miracle cure claim for a chronic condition"
+            "Fabricated parasite or miracle cure claim for a chronic condition",
+            "Unsubstantiated prostate shrink / miracle cure claim",
+            "Direct-response male vitality advertorial",
+            "Miracle food / alternative protocol claim replacing medical treatment",
+            "Alternative male performance drink / natural mix advertorial",
+            "Fabricated anatomical growth / miracle medical trick",
+            "Sensationalist performance remedy / silhouette video claim",
+            "Unsubstantiated prostate juice / urinary miracle remedy claim",
+            "Conspiracy-based diabetes miracle cure / parasite claim",
+            "Fabricated 'banned lecture' / unverified neuropathy cure claim"
           ]
         },
         {
@@ -527,17 +553,17 @@
         }
       ],
       "patternTables": {
-        "urgency": 9,
+        "urgency": 10,
         "credential": 5,
         "promotionalClutter": 8,
         "suspiciousDomains": 6,
         "advanceFee": 14,
         "refundBait": 5,
         "deliveryFee": 8,
-        "fakeSubscription": 9,
-        "fakeSecurity": 5,
+        "fakeSubscription": 10,
+        "fakeSecurity": 6,
         "investment": 5,
-        "healthClaim": 8,
+        "healthClaim": 17,
         "personalData": 5,
         "contactStranger": 4,
         "inheritance": 7
@@ -668,8 +694,7 @@
     "Reads body text only - sender, subject, headers, SPF/DKIM and link hrefs are never inspected.",
     "Gmail private selectors (.a3s.aiL etc.) break on a Google redesign, and the extension then fails silently.",
     "English only; no attachment scanning and no HTML-phishing analysis (hidden text, form injection).",
-    "Brand list is 31 names but only 28 are matchable (MIN_BRAND_LEN=4 drops dhl and ups); typosquats of unlisted companies fall through to the generic rules.",
-    "extension/background.js is dead code - content-script.js deliberately avoids chrome.runtime messaging.",
+    "Typosquats of unlisted companies fall through to the generic rules; 3-letter carriers (dhl, ups) are matched via dedicated word-boundary carrier exceptions.",
     "test:all silently requires a running server.",
     "The archive test drift-checks only manifest.json and banner.js, not every entry."
   ],
@@ -744,10 +769,6 @@
     {
       "path": "extension/banner.js",
       "role": "Pipeline stage 9; Shadow DOM banner"
-    },
-    {
-      "path": "extension/background.js",
-      "role": "Service worker - currently DEAD CODE"
     },
     {
       "path": "js/redactor.js",

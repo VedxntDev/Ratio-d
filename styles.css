@@ -1643,6 +1643,103 @@ a.sticker:focus-visible { outline: 3px solid var(--color-primary); outline-offse
   font-weight: 800;
 }
 
+/* Headers & Authentication Drawer */
+.auth-drawer {
+  margin-top: 14px;
+  background: var(--color-bg);
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  box-shadow: 3px 3px 0 var(--color-ink);
+  padding: 12px 14px;
+}
+.auth-drawer-summary {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  user-select: none;
+}
+.auth-drawer-summary::-webkit-details-marker { display: none; }
+.auth-drawer-summary::after {
+  content: "▾";
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+.auth-drawer[open] .auth-drawer-summary::after {
+  transform: rotate(180deg);
+}
+.auth-drawer-content {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-ink);
+}
+.auth-field-row {
+  margin-bottom: 10px;
+}
+.auth-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.auth-field-col {
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 600px) {
+  .auth-field-grid { grid-template-columns: 1fr; }
+}
+.auth-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--color-ink);
+}
+.auth-input, .auth-raw-textarea {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border: var(--bw) solid var(--color-ink);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+.auth-input:focus-visible, .auth-raw-textarea:focus-visible {
+  outline: var(--bw) solid var(--color-primary);
+  outline-offset: 1px;
+}
+.auth-raw-textarea {
+  resize: vertical;
+  min-height: 52px;
+}
+
+/* Authentication Status Badges in Output Pane */
+.auth-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: var(--bw) solid var(--color-ink);
+  box-shadow: var(--shadow-hard-sm);
+  display: inline-block;
+  margin-bottom: 8px;
+  margin-left: 6px;
+  transform: rotate(-1deg);
+}
+.auth-badge-spoof { background-color: var(--color-primary); color: #fff; }
+.auth-badge-verified { background-color: var(--color-badge-alt); color: #121212; }
+.auth-badge-unverified { background-color: var(--color-surface); color: var(--color-text-muted); }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
