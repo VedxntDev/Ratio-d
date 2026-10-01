@@ -574,7 +574,7 @@ We welcome community contributions! Please adhere to our code style standards:
 
 <div align="center">
 
-**Built for the Cybersecurity & Defense Track at ASYNC'26 by [Vedant](https://github.com/VedxntDev) ,Vasu & Utkarsh**
+**Built for the Cybersecurity & Defense Track at ASYNC'26 by [Vedant Singh Baghel](https://github.com/VedxntDev) ,Vasu Arora & Utkarsh Upadhyaa**
 
 *Ratio'd is open-source software released under the [MIT License](./LICENSE).*
 
