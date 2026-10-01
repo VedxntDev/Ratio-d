@@ -198,7 +198,7 @@ flowchart TD
         
         CLASSIFY["Payload Type Classification<br/>• Detects URL vs. UPI Payment vs. Crypto Address"]
         
-        CLASSIFY --> HEURISTICS["Heuristic Risk & Spoof Analysis<br/>• Homoglyph / Typosquatting Check (Levenshtein <= 2)<br/>• High-Risk TLD (.xyz, .top, .icu, .buzz)<br/>• Credential Harvesting Path (/login, /verify, /account)<br/>• Raw IP Address Host & Punycode Tricks"]
+        CLASSIFY --> HEURISTICS["Heuristic Risk & Spoof Analysis<br/>• Homoglyph / Typosquatting Check (Levenshtein ≤ 2)<br/>• High-Risk TLD (.xyz, .top, .icu, .buzz)<br/>• Credential Harvesting Path (/login, /verify, /account)<br/>• Raw IP Address Host & Punycode Tricks"]
         
         HEURISTICS --> CALIBRATE["Scoring Floor Calibration<br/>• Brand Impersonation Floor: Min 90 / 100 (MALICIOUS)<br/>• Raw IP Host Floor: Min 75 / 100 (HIGH RISK)<br/>• Credential Path on Impersonating Host: 100 / 100"]
     end
@@ -228,7 +228,7 @@ sequenceDiagram
 
     User->>CS: Opens Email Thread or Pastes Message
     CS->>Redactor: Pass Raw Message Text (Body, Subject, Headers)
-    Note over Redactor: Local Pattern Matching:<br/>• Phone Numbers: (\+?\d{1,3})?...<br/>• Email Addresses: [\w._%+-]+@...<br/>• 4-8 Digit OTP/PINs: (OTP|code|PIN)...
+    Note over Redactor: Local Pattern Matching:<br/>• Phone Numbers: E.164 International & Domestic<br/>• Email Addresses: Scrub Personal Addresses<br/>• Authentication Codes: 4-8 Digit OTP / PINs
     Redactor-->>CS: Return Masked Text ([PHONE_1], [EMAIL_1]) + Counts
     Note over CS: PRIVACY GUARANTEE:<br/>PII dies in browser memory.<br/>Raw names, phones & OTPs NEVER touch network!
     CS->>Server: Send POST /analyze { sanitizedText, auth }
