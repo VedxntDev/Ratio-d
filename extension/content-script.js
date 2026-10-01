@@ -82,36 +82,44 @@ const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v3";
 const memVerdictCache = {};
 
 /**
+ * Normalise a thread ID into a clean canonical string.
+ * Strips prefixes like 'thread-f:', 'thread-a:', 'thread-', ':', or leading '#'
+ * so that Gmail's permId ('thread-f:1788192039') and legacy ID ('1788192039') map to the same key.
+ */
+function normalizeThreadId(id) {
+  if (!id) return "";
+  return String(id)
+    .replace(/^#/, "")
+    .replace(/^thread-[a-z]:/i, "")
+    .replace(/^thread-/, "")
+    .replace(/^:\w+/, "")
+    .trim()
+    .toLowerCase();
+}
+
+/**
  * Normalise a subject into a stable cache key.
- *
- * This function is the entire reason the badge and the banner used to disagree.
- * The banner saves its verdict under the OPEN-MESSAGE header subject
- * (`h2.hP`) while the inbox row looks it up under the LIST-ROW subject
- * (`span.bog`). Gmail truncates those two to different lengths and appends an
- * ellipsis, so the keys never matched, `cachedVerdict` was always null, and
- * every Spam row fell through to a hardcoded badge - showing a red RISK pill
- * beside a green SAFE banner for the same message.
- *
- * Gmail's own ellipsis is stripped and the remainder is truncated to a fixed
- * width, so both sides derive the same key from the same visible prefix.
- *
- * The width is 40 rather than "as much as possible" on purpose. Gmail truncates
- * the row subject at roughly 50-70 visible characters depending on viewport, so
- * a longer key would stop being a shared prefix on a narrow window and the keys
- * would diverge again. 40 sits comfortably inside that range while staying long
- * enough to keep unrelated subjects apart.
+ * Strips Ratio'd badges, bracketed tags ([External]), thread prefixes (Re:, Fwd:),
+ * and trailing ellipses (...) so open-message header and inbox list-row derive identical keys.
  */
 function normalizeSubjectKey(value) {
-  return String(value == null ? "" : value)
-    .replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "") // Ratio'd badge text
-    .replace(/^\[[^\]]+\]\s*/g, "")                                     // Other bracketed tags like [External]
-    .replace(/^(?:re|fwd|fw):\s*/i, "")                                 // Email thread prefixes
-    .replace(/[\u2026\u0085]/g, "...")                                  // … -> ...
-    .replace(/\.{2,}\s*$/g, "")                                         // trailing ellipsis
+  if (value == null) return "";
+  let str = String(value)
+    .replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "");
+
+  while (/^\[[^\]]+\]\s*/.test(str)) {
+    str = str.replace(/^\[[^\]]+\]\s*/, "");
+  }
+
+  str = str
+    .replace(/^(?:re|fwd|fw|aw|sv):\s*/gi, "")
+    .replace(/[\u2026\u0085]/g, "...")
+    .replace(/\.{2,}\s*$/g, "")
     .replace(/\s+/g, " ")
     .trim()
-    .toLowerCase()
-    .slice(0, 40);
+    .toLowerCase();
+
+  return str;
 }
 
 function getVerdictCache() {
@@ -130,28 +138,48 @@ function saveVerdictToCache(key, data) {
     const entry = {
       verdict: data.verdict,
       score: data.score !== undefined ? data.score : 0,
-      flags: (data.flags || []).slice()
+      flags: (data.flags || []).slice(),
+      authoritative: true
     };
     const cache = getVerdictCache();
 
     for (const k of keys) {
       if (!k) continue;
-      const cleanKey = normalizeSubjectKey(k);
-      if (cleanKey) {
-        memVerdictCache[cleanKey] = entry;
-        cache[cleanKey] = entry;
-      }
       const rawKey = String(k).trim().toLowerCase();
-      if (rawKey && rawKey !== cleanKey) {
+      if (rawKey) {
         memVerdictCache[rawKey] = entry;
         cache[rawKey] = entry;
       }
+      
+      const normId = normalizeThreadId(k);
+      if (normId && normId !== rawKey) {
+        memVerdictCache[normId] = entry;
+        cache[normId] = entry;
+      }
+
+      const cleanSubj = normalizeSubjectKey(k);
+      if (cleanSubj) {
+        memVerdictCache[cleanSubj] = entry;
+        cache[cleanSubj] = entry;
+        
+        // Save multi-length prefix slices (40 & 25 chars) to match Gmail list row truncation
+        const slice40 = cleanSubj.slice(0, 40);
+        if (slice40 && slice40 !== cleanSubj) {
+          memVerdictCache[slice40] = entry;
+          cache[slice40] = entry;
+        }
+        const slice25 = cleanSubj.slice(0, 25);
+        if (slice25 && slice25 !== slice40) {
+          memVerdictCache[slice25] = entry;
+          cache[slice25] = entry;
+        }
+      }
     }
 
-    // Cap cache to 300 items
+    // Cap cache to 500 items
     const allKeys = Object.keys(cache);
-    if (allKeys.length > 300) {
-      for (let i = 0; i < allKeys.length - 250; i++) {
+    if (allKeys.length > 500) {
+      for (let i = 0; i < allKeys.length - 400; i++) {
         delete cache[allKeys[i]];
       }
     }
@@ -171,46 +199,80 @@ function getCachedVerdict(key) {
       if (memVerdictCache[rawKey]) return memVerdictCache[rawKey];
       if (cache[rawKey]) return cache[rawKey];
     }
-    const cleanKey = normalizeSubjectKey(k);
-    if (cleanKey) {
-      if (memVerdictCache[cleanKey]) return memVerdictCache[cleanKey];
-      if (cache[cleanKey]) return cache[cleanKey];
+    
+    const normId = normalizeThreadId(k);
+    if (normId) {
+      if (memVerdictCache[normId]) return memVerdictCache[normId];
+      if (cache[normId]) return cache[normId];
+    }
+
+    const cleanSubj = normalizeSubjectKey(k);
+    if (cleanSubj) {
+      if (memVerdictCache[cleanSubj]) return memVerdictCache[cleanSubj];
+      if (cache[cleanSubj]) return cache[cleanSubj];
+
+      const slice40 = cleanSubj.slice(0, 40);
+      if (slice40) {
+        if (memVerdictCache[slice40]) return memVerdictCache[slice40];
+        if (cache[slice40]) return cache[slice40];
+      }
+
+      const slice25 = cleanSubj.slice(0, 25);
+      if (slice25) {
+        if (memVerdictCache[slice25]) return memVerdictCache[slice25];
+        if (cache[slice25]) return cache[slice25];
+      }
     }
   }
   return null;
 }
 
 function extractCleanRowSubject(row) {
+  if (!row) return "";
   const subjectElem = row.querySelector("span.bog, .bog, .y6, span.bqe");
   if (!subjectElem) return "";
-  const pill = subjectElem.querySelector(".ratiod-inbox-pill");
-  if (pill) {
-    const clone = subjectElem.cloneNode(true);
-    clone.querySelectorAll(".ratiod-inbox-pill").forEach(p => p.remove());
-    return clone.innerText.trim();
-  }
-  return subjectElem.innerText.trim();
+
+  const clone = subjectElem.cloneNode(true);
+  clone.querySelectorAll(".ratiod-inbox-pill, [data-verdict]").forEach(p => p.remove());
+
+  let text = clone.innerText || clone.textContent || "";
+  text = text.replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "").trim();
+  return text;
 }
 
 function getRowIdentifiers(row) {
   const ids = [];
   const legacyId = row.getAttribute("data-legacy-thread-id");
-  if (legacyId) ids.push(legacyId);
+  if (legacyId) {
+    ids.push(legacyId);
+    ids.push(normalizeThreadId(legacyId));
+  }
   const threadId = row.getAttribute("data-thread-id");
-  if (threadId) ids.push(threadId);
+  if (threadId) {
+    ids.push(threadId);
+    ids.push(normalizeThreadId(threadId));
+  }
   const rowId = row.getAttribute("id");
-  if (rowId) ids.push(rowId);
+  if (rowId) {
+    ids.push(rowId);
+    ids.push(normalizeThreadId(rowId));
+  }
   const link = row.querySelector("a[href*='#']");
   if (link) {
     const href = link.getAttribute("href") || "";
     const hash = href.includes("#") ? href.split("#")[1] : href;
     if (hash) {
       ids.push(hash);
+      const normHash = normalizeThreadId(hash);
+      if (normHash) ids.push(normHash);
       const lastPart = hash.split("/").pop();
-      if (lastPart && lastPart !== hash) ids.push(lastPart);
+      if (lastPart && lastPart !== hash) {
+        ids.push(lastPart);
+        ids.push(normalizeThreadId(lastPart));
+      }
     }
   }
-  return ids;
+  return [...new Set(ids.filter(Boolean))];
 }
 
 function updateBadgeElement(badge, verdict, score, flags) {
@@ -265,6 +327,7 @@ function updateBadgeElement(badge, verdict, score, flags) {
     white-space: nowrap;
     flex-shrink: 0;
     z-index: 5;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   `;
 }
 
@@ -417,13 +480,16 @@ function scanAndAnalyzeGmail() {
     // 2. Persist authoritative verdict to cache across all subject & thread identifiers
     const keysToSave = [];
     if (subject) keysToSave.push(subject);
+    if (senderAddress) keysToSave.push(`${senderAddress}|${normalizeSubjectKey(subject)}`);
 
-    const threadElem = document.querySelector("[data-thread-perm-id], [data-legacy-thread-id]");
+    const threadElem = document.querySelector("[data-thread-perm-id], [data-legacy-thread-id], [data-legacy-message-id]");
     if (threadElem) {
       const permId = threadElem.getAttribute("data-thread-perm-id");
       if (permId) keysToSave.push(permId);
       const legId = threadElem.getAttribute("data-legacy-thread-id");
       if (legId) keysToSave.push(legId);
+      const msgId = threadElem.getAttribute("data-legacy-message-id");
+      if (msgId) keysToSave.push(msgId);
     }
 
     if (window.location.hash) {
@@ -447,8 +513,8 @@ function scanAndAnalyzeGmail() {
       }
     }
 
-    // 4. Immediately refresh visible inbox badges to eliminate any mismatch
-    scanInboxRows(true);
+    // 4. Trigger multi-pass staggered scan to update inbox list view instantly
+    triggerStaggeredScan(true);
   };
 
   // 1. Client-Side Local PII Redaction
@@ -532,10 +598,11 @@ function scanInboxRows(forceUpdate = false) {
     const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
 
     // Check if authoritative deep-analysis result exists in cache!
-    // Try thread identifiers first, then clean subject and normalized key.
+    // Try thread identifiers first, clean subject, sender|subject tuple, and normalized key.
     const rowIds = getRowIdentifiers(row);
     const cacheKey = normalizeSubjectKey(subject);
-    const lookupKeys = [...rowIds, subject, cacheKey].filter(Boolean);
+    const tupleKey = sender ? `${sender.toLowerCase().trim()}|${cacheKey}` : "";
+    const lookupKeys = [...rowIds, subject, tupleKey, cacheKey].filter(Boolean);
     const cachedVerdict = getCachedVerdict(lookupKeys);
 
     // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
@@ -657,29 +724,34 @@ function scanInboxRows(forceUpdate = false) {
 }
 
 // ---------------------------------------------------------------------------
-// High-Performance Debounced Scheduler
-// Replaces aggressive unthrottled MutationObserver execution with
-// requestIdleCallback / requestAnimationFrame debouncing to guarantee 0 FPS lag.
+// High-Performance Debounced Scheduler & Multi-Pass Staggered Scheduler
 // ---------------------------------------------------------------------------
 
 let debounceTimer = null;
 
-function scheduleScan(delay = 140) {
+function scheduleScan(delay = 140, forceUpdate = false) {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     if (window.requestIdleCallback) {
       window.requestIdleCallback(() => {
-        executeScanPass();
+        executeScanPass(forceUpdate);
       }, { timeout: 250 });
     } else {
       window.requestAnimationFrame(() => {
-        executeScanPass();
+        executeScanPass(forceUpdate);
       });
     }
   }, delay);
 }
 
-function executeScanPass() {
+function triggerStaggeredScan(forceUpdate = true) {
+  scheduleScan(20, forceUpdate);
+  scheduleScan(120, forceUpdate);
+  scheduleScan(350, forceUpdate);
+  scheduleScan(800, forceUpdate);
+}
+
+function executeScanPass(forceUpdate = false) {
   if (document.hidden) return;
   const isEmailOpen = !!document.querySelector(
     ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
@@ -687,7 +759,7 @@ function executeScanPass() {
   if (isEmailOpen) {
     scanAndAnalyzeGmail();
   }
-  scanInboxRows();
+  scanInboxRows(forceUpdate);
 }
 
 // Observe Gmail DOM mutation with smart debounce to prevent UI thread lock
@@ -714,9 +786,16 @@ observer.observe(document.body, {
   subtree: true
 });
 
-// React instantly to Gmail SPA view transitions without continuous polling
-window.addEventListener("hashchange", () => scheduleScan(30), { passive: true });
-window.addEventListener("popstate", () => scheduleScan(30), { passive: true });
+// React instantly to Gmail SPA view transitions without 5-second delays
+window.addEventListener("hashchange", () => triggerStaggeredScan(true), { passive: true });
+window.addEventListener("popstate", () => triggerStaggeredScan(true), { passive: true });
+
+// Listen for back button / view navigation clicks to force instant multi-pass scan
+window.addEventListener("click", (e) => {
+  if (e.target && e.target.closest && e.target.closest(".ar6, .T-I-J3, [aria-label*='Back' i], [data-tooltip*='Back' i]")) {
+    triggerStaggeredScan(true);
+  }
+}, { passive: true });
 
 // Low-overhead passive background heartbeat (every 5 seconds, only when tab is active)
 setInterval(() => {
@@ -726,5 +805,6 @@ setInterval(() => {
 }, 5000);
 
 // Initial scan
-scheduleScan(100);
+triggerStaggeredScan(true);
+
 
