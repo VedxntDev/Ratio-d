@@ -373,7 +373,7 @@ Open **`http://localhost:3000`** in your web browser to interact with the Web Co
 
 ### 3.3 Chrome Extension Installation
 
-> **Note**: Until Chrome Web Store review is complete, use the 5-step manual setup:
+> **Note**: Our extension is currently live and anyone can download if from chrome web store head to [Ratio'd on Chrome Web Store](https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb) , but Google takes a LOT of time to review the updated package before it gets published , So to use the latest version of Ratio'd extension follow the 5-step manual setup:
 
 1. Download **`ratiod-extension.zip`** from the repository root or build it locally using `node tools/build-zips.js`.
 2. Extract the `.zip` archive to a folder.
