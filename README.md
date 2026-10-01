@@ -547,7 +547,7 @@ npm run test:all
 
 Security and privacy are the core invariants of Ratio'd. If you discover a potential vulnerability or security flaw, please report it privately:
 
-- **Email**: Send vulnerability reports directly to `vedantbaghel.dev@gmail.com`.
+- **Email**: Send vulnerability reports directly to `vedantsbaghel.2626@gmail.com`.
 - **GitHub Security Advisories**: Submit a private report via the [Security Advisories](../../security/advisories) tab on GitHub.
 - **Response Commitment**: We acknowledge all security reports within 24 hours and issue patch updates within 72 hours.
 
