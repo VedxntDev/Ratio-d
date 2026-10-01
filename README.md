@@ -1,6 +1,6 @@
 # Ratio'd — Scam Risk Analyzer & Defense System
 
-**Cybersecurity & Defense Track · Developed for ASYNC'26 Hackathon by [Vedant](https://github.com/VedxntDev) & Vasu**
+**Cybersecurity & Defense Track · Developed for ASYNC'26 Hackathon by [Vedant](https://github.com/VedxntDev) & Vasu & Utkarsh**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Manifest V3](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-brightgreen)](https://developer.chrome.com/docs/extensions/mv3/intro/)
@@ -573,7 +573,7 @@ We welcome community contributions! Please adhere to our code style standards:
 
 <div align="center">
 
-**Built for the Cybersecurity & Defense Track at ASYNC'26 by [Vedant](https://github.com/VedxntDev) & Vasu.**
+**Built for the Cybersecurity & Defense Track at ASYNC'26 by [Vedant](https://github.com/VedxntDev) ,Vasu & Utkarsh**
 
 *Ratio'd is open-source software released under the [MIT License](./LICENSE).*
 
