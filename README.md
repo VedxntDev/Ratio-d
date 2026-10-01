@@ -349,10 +349,11 @@ Final Threat Score = Clamp(Raw Score, 0, 100)
 ## 3. Installation & Configuration
 
 ### 3.1 Prerequisites & Tech Stack
-- **Node.js**: `v18.0.0` or higher (Supports native ES6 / CommonJS HTTP execution).
-- **Browser**: Google Chrome v100+ (or any Chromium browser supporting Manifest V3 Extensions).
+- **Node.js**: `>= 20.x` recommended (minimum `>= 18.0.0`, native ES6 / CommonJS HTTP execution).
+- **Python**: `>= 3.11` (Optional: required only for Laya ML model retraining & `.joblib` export script).
+- **Browser**: Google Chrome v100+ (or any Chromium-based browser supporting Manifest V3 Extensions).
 - **Runtime Dependencies**: **0 external npm dependencies** (`"dependencies": {}` in `package.json`).
-- **Hardware Bounds**: Runs on standard consumer hardware; requires **0 GPU resources** and **no external database**.
+- **Hardware Bounds**: Runs on standard consumer CPU hardware; requires **0 GPU resources** and **no external database**.
 
 ---
 
