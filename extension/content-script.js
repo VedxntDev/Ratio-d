@@ -268,19 +268,19 @@ function updateBadgeElement(badge, verdict, score, flags) {
   let textColor = "#121212";
 
   if (verdict === "high_risk") {
-    labelText = `[ 🔴 RISK ${score} ]`;
+    labelText = `🔴`;
     bgColor = "#EA3E2B";
     textColor = "#FFFFFF";
   } else if (verdict === "suspicious") {
-    labelText = `[ 🟠 SUSP ${score} ]`;
+    labelText = `🟠`;
     bgColor = "#E8720C";
     textColor = "#FFFFFF";
   } else if (verdict === "promo_clutter") {
-    labelText = `[ 🟡 PROMO ]`;
+    labelText = `🟡`;
     bgColor = "#FFD23F";
     textColor = "#121212";
   } else {
-    labelText = `[ 🟢 SAFE ]`;
+    labelText = `🟢`;
     bgColor = "#9BE86D";
     textColor = "#121212";
   }
@@ -293,18 +293,17 @@ function updateBadgeElement(badge, verdict, score, flags) {
     display: inline-block;
     vertical-align: middle;
     font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     line-height: 14px;
-    letter-spacing: 0.02em;
-    padding: 1px 6px;
+    padding: 1px 4px;
     margin-right: 6px;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1.5px solid #121212;
     background-color: ${bgColor};
     color: ${textColor};
     cursor: help;
-    box-shadow: 1.5px 1.5px 0px #121212;
+    box-shadow: 1px 1px 0px #121212;
     user-select: none;
     white-space: nowrap;
     flex-shrink: 0;
