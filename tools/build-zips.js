@@ -165,3 +165,22 @@ if (root.some((f) => JUNK.test(f))) {
   process.exit(1);
 }
 console.log("manifest.json is at the archive root; no junk files present.");
+
+// Sync to Desktop extension folders if present on user machine
+try {
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const desktopFolder = path.join(home, "Desktop", "ratiod-extension-folder");
+  const desktopExt = path.join(home, "Desktop", "ratiod-extension");
+
+  const syncDir = (srcDir, destDir) => {
+    if (fs.existsSync(destDir)) {
+      fs.cpSync(srcDir, destDir, { recursive: true });
+    }
+  };
+
+  syncDir(path.join(ROOT, "extension"), desktopFolder);
+  syncDir(path.join(ROOT, "extension"), desktopExt);
+  if (fs.existsSync(path.join(home, "Desktop", "ratiod-extension.zip"))) {
+    fs.copyFileSync(EXT_ZIP, path.join(home, "Desktop", "ratiod-extension.zip"));
+  }
+} catch (e) {}
