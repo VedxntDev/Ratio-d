@@ -103,24 +103,17 @@ function normalizeThreadId(id) {
  * and trailing ellipses (...) so open-message header and inbox list-row derive identical keys.
  */
 function normalizeSubjectKey(value) {
-  if (value == null) return "";
-  let str = String(value)
+  return String(value == null ? "" : value)
     .replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "")
-    .replace(/^(?:🔴|🟠|🟡|🟢)\s*/g, "");
-
-  while (/^\[[^\]]+\]\s*/.test(str)) {
-    str = str.replace(/^\[[^\]]+\]\s*/, "");
-  }
-
-  str = str
+    .replace(/^(?:🔴|🟠|🟡|🟢)\s*/g, "")
+    .replace(/^\[[^\]]+\]\s*/g, "")
     .replace(/^(?:re|fwd|fw|aw|sv):\s*/gi, "")
     .replace(/[\u2026\u0085]/g, "...")
     .replace(/\.{2,}\s*$/g, "")
     .replace(/\s+/g, " ")
     .trim()
-    .toLowerCase();
-
-  return str;
+    .toLowerCase()
+    .slice(0, 40);
 }
 
 function getVerdictCache() {
@@ -158,22 +151,10 @@ function saveVerdictToCache(key, data) {
         cache[normId] = entry;
       }
 
-      const cleanSubj = normalizeSubjectKey(k);
-      if (cleanSubj) {
-        memVerdictCache[cleanSubj] = entry;
-        cache[cleanSubj] = entry;
-        
-        // Save multi-length prefix slices (40 & 25 chars) to match Gmail list row truncation
-        const slice40 = cleanSubj.slice(0, 40);
-        if (slice40 && slice40 !== cleanSubj) {
-          memVerdictCache[slice40] = entry;
-          cache[slice40] = entry;
-        }
-        const slice25 = cleanSubj.slice(0, 25);
-        if (slice25 && slice25 !== slice40) {
-          memVerdictCache[slice25] = entry;
-          cache[slice25] = entry;
-        }
+      const cleanKey = normalizeSubjectKey(k);
+      if (cleanKey) {
+        memVerdictCache[cleanKey] = entry;
+        cache[cleanKey] = entry;
       }
     }
 
@@ -287,19 +268,19 @@ function updateBadgeElement(badge, verdict, score, flags) {
   let textColor = "#121212";
 
   if (verdict === "high_risk") {
-    labelText = `🔴`;
+    labelText = `[ 🔴 RISK ${score} ]`;
     bgColor = "#EA3E2B";
     textColor = "#FFFFFF";
   } else if (verdict === "suspicious") {
-    labelText = `🟠`;
+    labelText = `[ 🟠 SUSP ${score} ]`;
     bgColor = "#E8720C";
     textColor = "#FFFFFF";
   } else if (verdict === "promo_clutter") {
-    labelText = `🟡`;
+    labelText = `[ 🟡 PROMO ]`;
     bgColor = "#FFD23F";
     textColor = "#121212";
   } else {
-    labelText = `🟢`;
+    labelText = `[ 🟢 SAFE ]`;
     bgColor = "#9BE86D";
     textColor = "#121212";
   }
@@ -309,22 +290,21 @@ function updateBadgeElement(badge, verdict, score, flags) {
   badge.title = `Ratio'd Risk: ${score}/100 (${verdict})\n${flagSummary || 'Clean preview'}`;
 
   badge.style.cssText = `
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
     vertical-align: middle;
     font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     line-height: 14px;
-    padding: 1px 4px;
+    letter-spacing: 0.02em;
+    padding: 1px 6px;
     margin-right: 6px;
-    border-radius: 6px;
+    border-radius: 4px;
     border: 1.5px solid #121212;
     background-color: ${bgColor};
     color: ${textColor};
     cursor: help;
-    box-shadow: 1px 1px 0px #121212;
+    box-shadow: 1.5px 1.5px 0px #121212;
     user-select: none;
     white-space: nowrap;
     flex-shrink: 0;
