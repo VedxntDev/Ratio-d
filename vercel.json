@@ -10,6 +10,8 @@
     { "src": "^/(server|docs|extension)([./].*)?$", "status": 404 },
     { "src": "^/(package|vercel)\\.json$", "status": 404 },
     { "src": "^/\\.[^/]+$", "status": 404 },
+    { "src": "^/$", "dest": "/index.html" },
+    { "src": "^/privacy$", "dest": "/privacy.html" },
     { "src": "^/ratiod-(extension|full-project)\\.zip$", "check": true },
     { "handle": "filesystem" },
     {

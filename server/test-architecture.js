@@ -319,10 +319,11 @@ check("chart promises zero persistence only where the code does it",
       routes.some(r => r.src === "^/api/" + ep + "$" && r.dest === "/api"));
   }
 
-  // No rewrite may point somewhere the function does not serve.
+  // No rewrite may point somewhere the function does not serve or invalid file.
   const dests = [...new Set(routes.filter(r => r.dest).map(r => r.dest))];
-  check("every rewrite targets the single /api function",
-    dests.every(d => d === "/api"), dests.join(", "));
+  const ALLOWED_DESTS = new Set(["/api", "/index.html", "/privacy.html"]);
+  check("every rewrite targets a valid function or entrypoint",
+    dests.every(d => ALLOWED_DESTS.has(d)), dests.join(", "));
 
   // The archives must stay reachable: a rewrite with `check` proves the file
   // exists before the header route continues past the filesystem handler.
