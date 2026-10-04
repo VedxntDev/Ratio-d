@@ -1,14 +1,17 @@
 {
   "version": 2,
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "{index.html,privacy.html,styles.css,favicon.ico,robots.txt,assets/**,js/**,ratiod-*.zip}"
-    }
-  },
   "routes": [
     { "src": "^/(server|docs|extension)([./].*)?$", "status": 404 },
     { "src": "^/(package|vercel)\\.json$", "status": 404 },
     { "src": "^/\\.[^/]+$", "status": 404 },
+    { "src": "^/analyze$", "dest": "/api" },
+    { "src": "^/api/analyze$", "dest": "/api" },
+    { "src": "^/analyze-qr$", "dest": "/api" },
+    { "src": "^/api/analyze-qr$", "dest": "/api" },
+    { "src": "^/unmask$", "dest": "/api" },
+    { "src": "^/api/unmask$", "dest": "/api" },
+    { "src": "^/health$", "dest": "/api" },
+    { "src": "^/api/health$", "dest": "/api" },
     { "src": "^/$", "dest": "/index.html", "check": true },
     { "src": "^/privacy$", "dest": "/privacy.html", "check": true },
     { "src": "^/ratiod-(extension|full-project)\\.zip$", "check": true },
@@ -20,14 +23,6 @@
         "Content-Disposition": "attachment"
       },
       "continue": true
-    },
-    { "src": "^/analyze$", "dest": "/api" },
-    { "src": "^/api/analyze$", "dest": "/api" },
-    { "src": "^/analyze-qr$", "dest": "/api" },
-    { "src": "^/api/analyze-qr$", "dest": "/api" },
-    { "src": "^/unmask$", "dest": "/api" },
-    { "src": "^/api/unmask$", "dest": "/api" },
-    { "src": "^/health$", "dest": "/api" },
-    { "src": "^/api/health$", "dest": "/api" }
+    }
   ]
 }

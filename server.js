@@ -23,6 +23,7 @@ const path = require("path");
 const { handleAnalyze } = require("./server/routes/analyze");
 const { handleQr } = require("./server/routes/qr");
 const { traceRedirects } = require("./server/unmask/tracer");
+const { getCachedFile } = require("./server/static-cache");
 
 const PORT = process.env.PORT || 3000;
 const WEB_ROOT = __dirname;
@@ -144,7 +145,8 @@ async function handler(req, res) {
     return res.end();
   }
 
-  const parsedUrl = url.parse(req.url || "/", true);
+  const rawPath = (req.headers && (req.headers["x-matched-path"] || req.headers["x-forwarded-uri"])) || req.url || "/";
+  const parsedUrl = url.parse(rawPath, true);
   let pathname = parsedUrl.pathname || "/";
   if (pathname.length > 1) pathname = pathname.replace(/\/+$/, "");
 
@@ -239,6 +241,23 @@ async function handler(req, res) {
       res.writeHead(200, headers);
       if (req.method === "HEAD") return res.end();
       return res.end(data);
+    }
+
+    const cached = getCachedFile(pathname);
+    if (cached) {
+      const ext = path.extname(pathname) || ".html";
+      const headers = { "Content-Type": contentTypeFor(pathname) };
+
+      if (ext.toLowerCase() === ".zip") {
+        headers["Content-Disposition"] = `attachment; filename="${path.basename(pathname)}"`;
+      } else if (/\.(png|jpe?g|svg|webp|ico)$/i.test(pathname)) {
+        headers["Cache-Control"] = "public, max-age=3600";
+      }
+
+      headers["Content-Length"] = cached.length;
+      res.writeHead(200, headers);
+      if (req.method === "HEAD") return res.end();
+      return res.end(cached);
     }
   }
 
