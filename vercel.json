@@ -1,6 +1,11 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{index.html,privacy.html,styles.css,favicon.ico,robots.txt,assets/**,js/**,ratiod-*.zip}"
+    }
+  },
   "routes": [
     { "src": "^/(server|docs|extension)([./].*)?$", "status": 404 },
     { "src": "^/(package|vercel)\\.json$", "status": 404 },

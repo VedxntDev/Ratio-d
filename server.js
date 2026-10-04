@@ -84,8 +84,14 @@ function resolveWebFile(pathname) {
   if (!relative) return null;
   if (relative.split("/").includes("..")) return null;
 
-  const resolved = path.resolve(WEB_ROOT, relative);
-  if (resolved !== WEB_ROOT && !resolved.startsWith(WEB_ROOT + path.sep)) {
+  let resolved = path.resolve(WEB_ROOT, relative);
+  if (!fs.existsSync(resolved)) {
+    const parentResolved = path.resolve(path.join(WEB_ROOT, ".."), relative);
+    if (fs.existsSync(parentResolved)) {
+      resolved = parentResolved;
+    }
+  }
+  if (resolved !== WEB_ROOT && !resolved.startsWith(WEB_ROOT + path.sep) && !resolved.startsWith(path.resolve(WEB_ROOT, "..") + path.sep)) {
     return null;
   }
 
@@ -207,7 +213,7 @@ async function handler(req, res) {
 
   // 3. Static assets
   if (req.method === "GET" || req.method === "HEAD") {
-    if (pathname === "/") pathname = "/index.html";
+    if (pathname === "/" || pathname === "/api") pathname = "/index.html";
     if (pathname === "/privacy") pathname = "/privacy.html";
 
     // The console is a single page driven by hash anchors. Only fall back to
