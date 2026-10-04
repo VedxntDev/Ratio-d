@@ -1,7 +1,6 @@
 # Ratio'd — Scam Risk Analyzer & Defense System
 
-**Cybersecurity & Defense Track · Developed for ASYNC'26 Hackathon by [Vedant](https://github.com/VedxntDev) & Vasu & Utkarsh**
-**Team Id: Async050 and Team Name: Skill Issue**
+**Privacy-First Phishing & Fraud Detection Engine · Developed by [Vedant Singh Baghel](https://github.com/VedxntDev), Vasu Arora & Utkarsh Upadhyaa**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Manifest V3](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-brightgreen)](https://developer.chrome.com/docs/extensions/mv3/intro/)
@@ -14,17 +13,16 @@
 >
 > It redacts PII **client-side in browser memory** before network hops, scores messages using a calibrated **0–100 Risk Engine**, detects **Zero-Trust QR Code Phishing (Quishing)**, traces shortened URLs safely via **Safe Peek**, and delivers plain-English explanations with actionable recovery checklists.
 
-> 🌐 **Live Web Console**: [ratio-d.vercel.app](https://ratio-d.vercel.app/)
+> 🌐 **Live Web Console**: [ratiod.online](https://ratiod.online/)
 
 ---
 
-## 📑 Table of Contents (ASYNC’26 Standard Compliance)
+## 📑 Table of Contents
 1. [Context & Overview](#1-context--overview)
    - [1.1 Elevator Pitch & Value Proposition](#11-elevator-pitch--value-proposition)
    - [1.2 Target Audience & Risk Vectors](#12-target-audience--risk-vectors)
    - [1.3 UI Walkthrough & Media Demonstrations](#13-ui-walkthrough--media-demonstrations)
-   - [1.4 Hackathon Transparency & Timeline Disclosure](#14-hackathon-transparency--timeline-disclosure)
-   - [1.5 Comparative Analysis & Unique Selling Points (USPs)](#15-comparative-analysis--unique-selling-points-usps)
+   - [1.4 Comparative Analysis & Unique Selling Points (USPs)](#14-comparative-analysis--unique-selling-points-usps)
 2. [Architecture & System Design](#2-architecture--system-design)
    - [2.1 5-Stage System Pipeline (Diagram 1)](#diagram-1-5-stage-end-to-end-system-pipeline)
    - [2.2 Zero-Trust QR Quishing Engine (Diagram 2)](#diagram-2-zero-trust-qr-phishing-quishing-engine)
@@ -102,23 +100,7 @@ Generative AI has rendered traditional phishing advice ("look for typos or bad g
 
 ---
 
-### 1.4 Hackathon Transparency & Timeline Disclosure
-
-In full compliance with open-source hackathon rules, the table below clearly distinguishes between what existed **prior to September 30, 2026** and what was built **during the hackathon (September 30, 2026 onwards)**.
-
-| Component / Feature | Prior to Sept 30, 2026 (Foundational MVP) | Built During Hackathon (Sept 30, 2026 Onwards) |
-| :--- | :--- | :--- |
-| **QR Code Phishing (Quishing) Engine** | ❌ None (Email text only). | ✅ **Complete Zero-Trust Engine**: Built `server/rules/qr.js`, `server/routes/qr.js`, `js/qr.js`, `js/qr-ui.js`, `extension/qr-core.js`, `extension/qr-gmail.js`, vendored `jsQR.js`, and added a 46-case QR test suite (`server/test-qr.js`). |
-| **Dual Score Banner Architecture** | ❌ Single generic score in extension banner. | ✅ **Separate Mail vs. QR Security Scores**: Redesigned `extension/banner.js` & `extension/qr-gmail.js` to display Mail Security Score and QR Security Code Score separately in header badges and drawer sections with real-time `updateRatiodBannerQr()` event sync. |
-| **Zero-Execution Redirect Tracer ("Safe Peek")** | ❌ Basic text regex display. | ✅ **Safe Peek Engine**: Created `server/unmask/tracer.js` & `/unmask` API route to trace shortened link hop chains (`bit.ly`, `t.co`) using HEAD requests without code execution. Integrated 1-click `[ 🔍 Safe Peek ]` into Shadow DOM banner and Web Console. |
-| **Vercel Production Endpoint Parity** | ⚠️ Text endpoints routed in Vercel. | ✅ **Full Route Parity**: Added `/analyze-qr` and `/api/analyze-qr` rewrites to `vercel.json` ensuring 100% parity between local server (`:3000`) and live serverless production. |
-| **UI/UX Re-architecture** | ⚠️ Basic layout. | ✅ **Tactile Neo-Brutalist Redesign**: Re-engineered PII status bar (`.pii-status-bar`), tactile clear action (`.btn-clear-tactile`), live glowing status dots, interactive rotating accordion drawer (`.auth-drawer`), and version notice modal. |
-| **Automated Test Coverage** | ⚠️ 8 basic test cases. | ✅ **513 Automated Assertions across 14 Suites**: Added full scam corpora testing (`test-scam-corpus.js`), extension package drift check (`test-extension-package.js`), in-browser Shadow DOM verification (`verify-banner.js`), and QR zero-trust suite. |
-| **Archive Integrity Tools** | ❌ Hand-compressed zip files. | ✅ **Automated Archive Builder**: Built `tools/build-zips.js` & `tools/build-context.js` to eliminate stale zip archives and generate machine-readable manifests (`docs/project-context.json`). |
-
----
-
-### 1.5 Comparative Analysis & Unique Selling Points (USPs)
+### 1.4 Comparative Analysis & Unique Selling Points (USPs)
 
 #### 📊 Comparative Capability Matrix
 
@@ -575,18 +557,31 @@ We welcome community contributions! Please adhere to our code style standards:
 
 <div align="center">
 
-**Built for the Cybersecurity & Defense Track at ASYNC'26 by [Vedant Singh Baghel](https://github.com/VedxntDev) ,Vasu Arora & Utkarsh Upadhyaa**
+**Developed by [Vedant Singh Baghel](https://github.com/VedxntDev), Vasu Arora & Utkarsh Upadhyaa**
 
 *Ratio'd is open-source software released under the [MIT License](./LICENSE).*
 
-</div>
+[![Live Console](https://img.shields.io/badge/Console-ratiod.online-blue?style=for-the-badge)](https://ratiod.online)
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Watch_Ratio'd_in_Action-red?style=for-the-badge&logo=youtube)](https://youtu.be/2c8PnN1r3HU?si=7ngbALk_YRa1gCQM)
 
+</div>
 
 ---
 
-### 7. Ending Remarks
-   Ratio’d is a very well-suited scam analyser, from its website UI to the Chrome extension. We ensured a user-friendly experience, rather than a standalone console. We implemented it as a Chrome extension because we knew the only way to make people use Ratio’d was to simplify the experience. That’s why we purchased a Chrome extension developer licence. Some might think Ratio’d isn’t a new innovation, but frankly, scam analysis and detection haven’t been solved yet. Even a multi-trillion-dollar company like Google couldn’t solve it. Gmail claims it successfully detects 99.9% of emails, but frankly, just open your Gmail and I can bet in the first 10 emails, there’ll be at least one promotional, suspicious email incorrectly labelled as safe by Gmail. We don’t claim to be perfect; spam mail detection is a continuous process and can’t be 100% successful. We simply claim we’re better than Gmail for spam detection. That’s our moat. You don’t need to switch Gmail; we’ll work directly inside your Gmail. The only hassle you need to do is go to the Chrome Web Store and download Ratio’d. And when it comes to traditional spam detectors, we’re better than them. In this case, our MVP is Laya, which uses the latest ML to capture non-deterministic semantics, keyword density, and structural feature entropy. We’ve given equal weightage to the application and model layers. Lastly, whether Ratio’d wins or not, it’s here to stay. We’ll keep adding new features to Ratio’d. The next stage includes getting listed on Microsoft Edge and Brave extension stores, adding Outlook and Apple Mail access, developing a scam detection application for mobile phones, analysing images for scams, creating an organisation-specific layer, giving users access to their scam detection analytics, and developing a WhatsApp chatbot. Any suggestions for improving Ratio’d are greatly appreciated. 
+### 7. Product Vision & Roadmap
 
+Ratio’d is a production-grade scam analyzer spanning from its browser extension to its responsive web console. We implemented it as a Chrome extension to eliminate friction and meet users directly where threats land. Rather than requiring users to switch away from their workflow, Ratio'd operates in-situ inside Gmail with zero cloud storage.
 
-### Youtube demo video
-[Ratio'd Youtube Video](https://youtu.be/2c8PnN1r3HU?si=7ngbALk_YRa1gCQM)
+When it comes to fraud detection, modern threats rely on non-deterministic social engineering that rule-only or heuristic filters alone often miss. Ratio'd bridges this gap using a hybrid architecture: combining deterministic regex/Levenshtein filters with the Laya ML classifier, balancing computational efficiency with nuanced threat detection.
+
+Ratio'd is built for the long term and will continuously expand with new capabilities:
+- **Multi-Browser Expansion**: Listing on Microsoft Edge and Brave extension stores.
+- **Client Ecosystem**: Adding native desktop integration for Microsoft Outlook and Apple Mail.
+- **Mobile Defense**: Developing mobile applications to protect against SMS phishing and scam QR codes on smartphones.
+- **Enterprise Controls**: Building organization-specific policy layers and threat telemetry dashboards.
+- **Messaging Integration**: Developing secure bot integrations for WhatsApp and Telegram.
+
+---
+
+### 🎥 Video Demonstration
+Watch Ratio'd in action: **[Ratio'd YouTube Video](https://youtu.be/2c8PnN1r3HU?si=7ngbALk_YRa1gCQM)**
