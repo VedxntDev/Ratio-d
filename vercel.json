@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "cleanUrls": true,
   "functions": {
     "api/index.js": {
       "includeFiles": "{index.html,privacy.html,styles.css,favicon.ico,robots.txt,assets/**,js/**,ratiod-*.zip}"
@@ -10,8 +9,8 @@
     { "src": "^/(server|docs|extension)([./].*)?$", "status": 404 },
     { "src": "^/(package|vercel)\\.json$", "status": 404 },
     { "src": "^/\\.[^/]+$", "status": 404 },
-    { "src": "^/$", "dest": "/index.html" },
-    { "src": "^/privacy$", "dest": "/privacy.html" },
+    { "src": "^/$", "dest": "/index.html", "check": true },
+    { "src": "^/privacy$", "dest": "/privacy.html", "check": true },
     { "src": "^/ratiod-(extension|full-project)\\.zip$", "check": true },
     { "handle": "filesystem" },
     {
