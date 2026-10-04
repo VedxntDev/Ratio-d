@@ -204,10 +204,8 @@
     });
   }
 
-  /* Deferred so the notice does not fight the page's scroll-in animations on
-     first paint, and so the dialog never lands before the promo bar above it
-     has had its own dismissal checked. */
-  if (!dismissed) {
+  /* Auto-open disabled: notice is suppressed so visitors are not interrupted by a popup */
+  if (false && !dismissed) {
     window.setTimeout(open, 900);
   }
 })();
