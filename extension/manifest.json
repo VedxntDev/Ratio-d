@@ -18,11 +18,19 @@
     },
     "default_title": "Ratio'd Scam Risk Analyzer"
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ratiod@ratiod.online",
+      "strict_min_version": "109.0"
+    }
+  },
   "host_permissions": [
     "https://mail.google.com/*",
     "http://127.0.0.1:3000/*",
     "http://localhost:3000/*",
-    "https://ratio-d.vercel.app/*"
+    "https://ratio-d.vercel.app/*",
+    "https://ratiod.online/*",
+    "https://www.ratiod.online/*"
   ],
   "content_scripts": [
     {
