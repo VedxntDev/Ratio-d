@@ -21,7 +21,10 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "ratiod@ratiod.online",
-      "strict_min_version": "109.0"
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
   "host_permissions": [
