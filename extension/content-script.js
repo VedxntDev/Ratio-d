@@ -415,6 +415,42 @@ function extractGmailSender(container) {
   };
 }
 
+function recordAnalyticsScan(data, piiCount) {
+  try {
+    if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) return;
+    chrome.storage.local.get(["ratiod_stats"], (res) => {
+      const stats = res && res.ratiod_stats ? res.ratiod_stats : {
+        total: 0,
+        safe: 0,
+        promo: 0,
+        suspicious: 0,
+        high_risk: 0,
+        qr_scanned: 0,
+        pii_redacted: 0
+      };
+      stats.total = (stats.total || 0) + 1;
+      const v = String(data.verdict || "").toLowerCase();
+      if (v === "high_risk" || v === "malicious") {
+        stats.high_risk = (stats.high_risk || 0) + 1;
+      } else if (v === "suspicious") {
+        stats.suspicious = (stats.suspicious || 0) + 1;
+      } else if (v === "promo_clutter") {
+        stats.promo = (stats.promo || 0) + 1;
+      } else {
+        stats.safe = (stats.safe || 0) + 1;
+      }
+
+      if (data.qr && (data.qr.payload || data.qr.score !== undefined)) {
+        stats.qr_scanned = (stats.qr_scanned || 0) + 1;
+      }
+
+      stats.pii_redacted = (stats.pii_redacted || 0) + (piiCount || 0);
+
+      chrome.storage.local.set({ ratiod_stats: stats });
+    });
+  } catch (e) {}
+}
+
 function scanAndAnalyzeGmail() {
   const emailBodyElem = document.querySelector(
     ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
@@ -496,10 +532,19 @@ function scanAndAnalyzeGmail() {
 
     // 4. Trigger multi-pass staggered scan to update inbox list view instantly
     triggerStaggeredScan(true);
+
+    // 5. Update local analytics telemetry for extension popup
+    recordAnalyticsScan(data, piiRedactedCount);
   };
 
   // 1. Client-Side Local PII Redaction
   const redactedText = redactPiiLocally(fullTextToAnalyze);
+  const phonesMatch = fullTextToAnalyze.match(/(\+?\d{1,3}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}/g);
+  const emailsMatch = fullTextToAnalyze.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+  const otpMatch = fullTextToAnalyze.match(/\b(OTP|code|passcode|PIN)\b(?:\s+(?:is|was|:|-))?\s*:?\s*(\d{4,8})\b/gi);
+  const piiRedactedCount = (phonesMatch ? phonesMatch.length : 0) +
+                           (emailsMatch ? emailsMatch.length : 0) +
+                           (otpMatch ? otpMatch.length : 0);
 
   // 2. Extract Header Authentication Details (SPF/DKIM/From)
   const authDetails = extractGmailAuthDetails(emailBodyElem);

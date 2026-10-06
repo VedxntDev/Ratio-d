@@ -74,6 +74,7 @@ check("host_permissions include the live API",
 const referenced = [
   ...Object.values(manifest.icons || {}),
   ...(manifest.background ? [manifest.background.service_worker] : []),
+  ...(manifest.action?.default_popup ? [manifest.action.default_popup, "popup.js"] : []),
   ...(manifest.content_scripts || []).flatMap((cs) => cs.js || []),
 ];
 const missing = referenced.filter((f) => !listing.includes(f));
@@ -83,7 +84,7 @@ check(`all ${referenced.length} manifest-referenced files packaged`, missing.len
 // Required scripts must not be minified away or empty. banner.css is
 // deliberately NOT here: the banner injects its styles inline from banner.js,
 // so the file was dead weight in a published archive.
-["content-script.js", "banner.js"].forEach((f) => {
+["content-script.js", "banner.js", "popup.js"].forEach((f) => {
   check(`${f} packaged and non-empty`,
     listing.includes(f) &&
       fs.statSync(path.join(ROOT, "extension", f)).size > 100);

@@ -123,6 +123,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "extension", "manife
 const extEntries = [
   "extension/manifest.json",
   ...(manifest.background ? [path.join("extension", manifest.background.service_worker)] : []),
+  ...(manifest.action?.default_popup ? [path.join("extension", manifest.action.default_popup), path.join("extension", "popup.js")] : []),
   ...(manifest.content_scripts || []).flatMap((cs) => (cs.js || []).map((f) => path.join("extension", f))),
   ...(manifest.content_scripts || []).flatMap((cs) =>
     (cs.css || []).map((f) => path.join("extension", f))),

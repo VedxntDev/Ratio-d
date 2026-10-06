@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ratio'd Analytics</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F8F7F2;
+      color: #121212;
+      padding: 16px;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #121212;
+      margin-bottom: 14px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background-color: #EA3E2B;
+      border: 2px solid #121212;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-weight: 900;
+      font-size: 18px;
+      box-shadow: 2px 2px 0px #121212;
+    }
+
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: #6B7280;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pill {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 800;
+      background-color: #BBF7D0;
+      color: #14532D;
+      border: 1.5px solid #121212;
+      padding: 3px 6px;
+      border-radius: 6px;
+      box-shadow: 1px 1px 0px #121212;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #16A34A;
+    }
+
+    /* Hero Total Card */
+    .hero-card {
+      background-color: #FFFFFF;
+      border: 2px solid #121212;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 3px 3px 0px #121212;
+      margin-bottom: 12px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #6B7280;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .hero-number {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #121212;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .hero-sub {
+      font-size: 11px;
+      color: #4B5563;
+      font-weight: 500;
+    }
+
+    /* Progress Distribution Bar */
+    .bar-container {
+      height: 10px;
+      background-color: #E5E7EB;
+      border: 1.5px solid #121212;
+      border-radius: 6px;
+      display: flex;
+      overflow: hidden;
+      margin-top: 10px;
+      box-shadow: 1px 1px 0px #121212;
+    }
+
+    .bar-seg {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .bar-safe { background-color: #4ADE80; width: 0%; }
+    .bar-promo { background-color: #FACC15; width: 0%; }
+    .bar-suspicious { background-color: #FB923C; width: 0%; }
+    .bar-high_risk { background-color: #F87171; width: 0%; }
+
+    /* Category Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card {
+      border: 2px solid #121212;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 2px 2px 0px #121212;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stat-card.card-safe { background-color: #F0FDF4; }
+    .stat-card.card-promo { background-color: #FEF9C3; }
+    .stat-card.card-suspicious { background-color: #FFF7ED; }
+    .stat-card.card-high_risk { background-color: #FEF2F2; }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .card-emoji {
+      font-size: 14px;
+    }
+
+    .card-tag {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #121212;
+      background-color: #FFFFFF;
+    }
+
+    .card-value {
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .card-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+    }
+
+    .card-pct {
+      font-size: 10px;
+      font-weight: 600;
+      color: #6B7280;
+    }
+
+    /* Privacy Telemetry Card */
+    .telemetry-card {
+      background-color: #FFFFFF;
+      border: 2px solid #121212;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 2px 2px 0px #121212;
+      margin-bottom: 12px;
+      font-size: 11px;
+    }
+
+    .telemetry-title {
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      color: #4B5563;
+      font-weight: 500;
+      border-bottom: 1px dashed #E5E7EB;
+    }
+
+    .telemetry-row:last-child {
+      border-bottom: none;
+    }
+
+    .telemetry-val {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-weight: 800;
+      color: #121212;
+    }
+
+    /* Empty state notice */
+    .empty-notice {
+      display: none;
+      background-color: #EFF6FF;
+      border: 1.5px dashed #2563EB;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #1E40AF;
+      text-align: center;
+    }
+
+    /* Actions */
+    .actions-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid #121212;
+      background-color: #FFFFFF;
+      color: #121212;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #121212;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      text-align: center;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #121212;
+    }
+
+    .btn-primary {
+      background-color: #EA3E2B;
+      color: #FFFFFF;
+    }
+
+    .btn-secondary {
+      background-color: #FACC15;
+      color: #121212;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 2px solid #121212;
+      padding-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #6B7280;
+      font-weight: 600;
+    }
+
+    .footer a {
+      color: #121212;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+      color: #EA3E2B;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand-wrap">
+      <div class="brand-logo">R</div>
+      <div class="brand-text">
+        <h1>Ratio'd</h1>
+        <p>Threat Telemetry</p>
+      </div>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      <span>ACTIVE</span>
+    </div>
+  </header>
+
+  <!-- Empty state guide -->
+  <div class="empty-notice" id="empty-notice">
+    <strong>👋 Ready for Gmail!</strong> Open <a href="https://mail.google.com" target="_blank" style="color:#1E40AF;font-weight:800;">mail.google.com</a> and view any email to see live scan analytics update automatically.
+  </div>
+
+  <!-- Hero Metric Card -->
+  <section class="hero-card">
+    <div class="hero-label">Total Emails Processed</div>
+    <div class="hero-number" id="val-total">0</div>
+    <div class="hero-sub" id="hero-subtext">Air-gapped on-device scam & clutter analysis</div>
+
+    <div class="bar-container" title="Risk Distribution">
+      <div class="bar-seg bar-safe" id="bar-safe" title="Safe"></div>
+      <div class="bar-seg bar-promo" id="bar-promo" title="Promotional"></div>
+      <div class="bar-seg bar-suspicious" id="bar-suspicious" title="Suspicious"></div>
+      <div class="bar-seg bar-high_risk" id="bar-high_risk" title="Scam / Phishing"></div>
+    </div>
+  </section>
+
+  <!-- Category Breakdown Grid -->
+  <section class="stats-grid">
+    <!-- Safe -->
+    <div class="stat-card card-safe">
+      <div class="card-top">
+        <span class="card-emoji">🟢</span>
+        <span class="card-tag">SAFE</span>
+      </div>
+      <div class="card-value" id="val-safe">0</div>
+      <div class="card-name">Clean Emails</div>
+      <div class="card-pct" id="pct-safe">0%</div>
+    </div>
+
+    <!-- Promo -->
+    <div class="stat-card card-promo">
+      <div class="card-top">
+        <span class="card-emoji">🟡</span>
+        <span class="card-tag">PROMO</span>
+      </div>
+      <div class="card-value" id="val-promo">0</div>
+      <div class="card-name">Marketing / Blasts</div>
+      <div class="card-pct" id="pct-promo">0%</div>
+    </div>
+
+    <!-- Suspicious -->
+    <div class="stat-card card-suspicious">
+      <div class="card-top">
+        <span class="card-emoji">🟠</span>
+        <span class="card-tag">CAUTION</span>
+      </div>
+      <div class="card-value" id="val-suspicious">0</div>
+      <div class="card-name">Suspicious Signals</div>
+      <div class="card-pct" id="pct-suspicious">0%</div>
+    </div>
+
+    <!-- High Risk / Scam -->
+    <div class="stat-card card-high_risk">
+      <div class="card-top">
+        <span class="card-emoji">🔴</span>
+        <span class="card-tag">SCAM</span>
+      </div>
+      <div class="card-value" id="val-high_risk">0</div>
+      <div class="card-name">Phishing Blocked</div>
+      <div class="card-pct" id="pct-high_risk">0%</div>
+    </div>
+  </section>
+
+  <!-- Privacy & Threat Telemetry -->
+  <section class="telemetry-card">
+    <div class="telemetry-title">
+      <span>🛡️</span> On-Device Privacy Metrics
+    </div>
+    <div class="telemetry-row">
+      <span>Personal Data (PII) Redacted:</span>
+      <span class="telemetry-val" id="val-pii">0 items</span>
+    </div>
+    <div class="telemetry-row">
+      <span>Embedded QR Codes Scanned:</span>
+      <span class="telemetry-val" id="val-qr">0</span>
+    </div>
+    <div class="telemetry-row">
+      <span>Cloud Data Storage:</span>
+      <span class="telemetry-val" style="color:#16A34A;">0 bytes (Air-Gapped)</span>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <div class="actions-row">
+    <button class="btn btn-primary" id="btn-open-gmail" type="button">
+      ✉️ Open Gmail
+    </button>
+    <button class="btn btn-secondary" id="btn-demo-mode" type="button">
+      📊 Demo Stats
+    </button>
+    <button class="btn" id="btn-reset" type="button" title="Reset counters">
+      🔄 Reset
+    </button>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>Ratio'd by <a href="https://github.com/VedxntDev" target="_blank" rel="noopener noreferrer">Vedant</a></span>
+    <a href="https://ratiod.online" target="_blank" rel="noopener noreferrer">ratiod.online &rarr;</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
