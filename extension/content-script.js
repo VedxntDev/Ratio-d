@@ -257,6 +257,160 @@ function getRowIdentifiers(row) {
   return [...new Set(ids.filter(Boolean))];
 }
 
+function ensureInboxStyles() {
+  if (document.getElementById("ratiod-inbox-styles")) return;
+  const style = document.createElement("style");
+  style.id = "ratiod-inbox-styles";
+  style.textContent = `
+    /* Ratio'd Inbox Row Theming: Full-row background shades */
+
+    /* SAFE (Soft Green Tint) */
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #E8F8EE !important;
+    }
+    tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #F2FAF4 !important;
+    }
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
+      box-shadow: inset 4px 0 0 #22C55E !important;
+    }
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover,
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover > td,
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+      background-color: #D6F5DE !important;
+    }
+
+    /* PROMO CLUTTER (Soft Yellow Tint) */
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #FEF9C3 !important;
+    }
+    tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #FEFCE8 !important;
+    }
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
+      box-shadow: inset 4px 0 0 #EAB308 !important;
+    }
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover,
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover > td,
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+      background-color: #FEF08A !important;
+    }
+
+    /* SUSPICIOUS (Soft Orange Tint) */
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #FFEED9 !important;
+    }
+    tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #FFF7ED !important;
+    }
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
+      box-shadow: inset 4px 0 0 #F97316 !important;
+    }
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover,
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover > td,
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+      background-color: #FED7AA !important;
+    }
+
+    /* HIGH RISK / SCAM (Soft Red Tint) */
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #FEE2E2 !important;
+    }
+    tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
+    tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td {
+      background-color: #FEF2F2 !important;
+    }
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
+      box-shadow: inset 4px 0 0 #EF4444 !important;
+    }
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover,
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover > td,
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+      background-color: #FECACA !important;
+    }
+
+    /* Smooth transition */
+    tr.zA[data-ratiod-verdict] {
+      transition: background-color 0.15s ease !important;
+    }
+
+    /* Dark Mode Theme */
+    @media (prefers-color-scheme: dark) {
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td,
+      tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td {
+        background-color: rgba(34, 197, 94, 0.14) !important;
+      }
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover,
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover > td,
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+        background-color: rgba(34, 197, 94, 0.22) !important;
+      }
+
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td,
+      tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td {
+        background-color: rgba(234, 179, 8, 0.14) !important;
+      }
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover,
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover > td,
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+        background-color: rgba(234, 179, 8, 0.22) !important;
+      }
+
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td,
+      tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td {
+        background-color: rgba(249, 115, 22, 0.16) !important;
+      }
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover,
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover > td,
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+        background-color: rgba(249, 115, 22, 0.25) !important;
+      }
+
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td,
+      tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
+      tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td {
+        background-color: rgba(239, 68, 68, 0.18) !important;
+      }
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover,
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover > td,
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+        background-color: rgba(239, 68, 68, 0.28) !important;
+      }
+    }
+  `;
+  (document.head || document.documentElement).appendChild(style);
+}
+
 function updateBadgeElement(badge, verdict, score, flags) {
   badge.setAttribute("data-verdict", verdict);
   badge.setAttribute("data-score", String(score));
@@ -523,6 +677,7 @@ function scanAndAnalyzeGmail() {
     // 3. Immediately synchronize any active row in split view
     const activeRow = document.querySelector("tr.zA.aqw, tr.zA[aria-selected='true'], tr.zA.apv, tr.zA.btb");
     if (activeRow) {
+      activeRow.setAttribute("data-ratiod-verdict", data.verdict);
       const activeBadge = activeRow.querySelector(".ratiod-inbox-pill");
       if (activeBadge) {
         updateBadgeElement(activeBadge, data.verdict, data.score, data.flags);
@@ -602,6 +757,7 @@ function scanAndAnalyzeGmail() {
  */
 function scanInboxRows(forceUpdate = false) {
   if (!window.RatiodFallback) return;
+  ensureInboxStyles();
 
   const rows = document.querySelectorAll("tr.zA");
   if (!rows || rows.length === 0) return;
@@ -634,7 +790,7 @@ function scanInboxRows(forceUpdate = false) {
     // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
     const rowSignature = `${combinedText}|${cachedVerdict ? cachedVerdict.verdict + cachedVerdict.score : 'none'}`;
     const existingBadge = row.querySelector(".ratiod-inbox-pill");
-    if (!forceUpdate && existingBadge && row.getAttribute("data-ratiod-sig") === rowSignature) {
+    if (!forceUpdate && existingBadge && row.getAttribute("data-ratiod-sig") === rowSignature && row.getAttribute("data-ratiod-verdict")) {
       return;
     }
 
@@ -714,6 +870,7 @@ function scanInboxRows(forceUpdate = false) {
     }
 
     row.setAttribute("data-ratiod-sig", rowSignature);
+    row.setAttribute("data-ratiod-verdict", verdict);
 
     // Check if row already has a badge mounted
     if (existingBadge) {
@@ -829,6 +986,9 @@ setInterval(() => {
     scheduleScan(0);
   }
 }, 5000);
+
+// Ensure inbox styles are injected immediately
+ensureInboxStyles();
 
 // Initial scan
 triggerStaggeredScan(true);
