@@ -262,86 +262,53 @@ function ensureInboxStyles() {
   const style = document.createElement("style");
   style.id = "ratiod-inbox-styles";
   style.textContent = `
-    /* Ratio'd Inbox Row Theming: Full-row background shades */
+    /* Ratio'd Inbox Row Theming: Single clean background shade per row */
 
-    /* SAFE (Soft Green Tint) */
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td {
-      background-color: #E8F8EE !important;
-    }
-    tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td {
-      background-color: #F2FAF4 !important;
-    }
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
-      box-shadow: inset 4px 0 0 #22C55E !important;
-    }
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover,
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover > td,
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
-      background-color: #D6F5DE !important;
+    /* Reset all cells inside Ratio'd-themed rows to transparent to prevent double layers */
+    tr.zA[data-ratiod-verdict]:not(.aqw):not([aria-selected="true"]) > td {
+      background: transparent !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
     }
 
-    /* PROMO CLUTTER (Soft Yellow Tint) */
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td {
+    /* SAFE (Single Clean Green Tint) */
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) {
+      background-color: #EBF8EE !important;
+    }
+    tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover {
+      background-color: #DCFCE7 !important;
+    }
+
+    /* PROMO CLUTTER (Single Clean Yellow Tint) */
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) {
       background-color: #FEF9C3 !important;
     }
-    tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td {
-      background-color: #FEFCE8 !important;
-    }
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
-      box-shadow: inset 4px 0 0 #EAB308 !important;
-    }
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover,
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover > td,
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+    tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover {
       background-color: #FEF08A !important;
     }
 
-    /* SUSPICIOUS (Soft Orange Tint) */
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td {
-      background-color: #FFEED9 !important;
+    /* SUSPICIOUS (Single Clean Orange Tint) */
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) {
+      background-color: #FFF3E0 !important;
     }
-    tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td {
-      background-color: #FFF7ED !important;
-    }
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
-      box-shadow: inset 4px 0 0 #F97316 !important;
-    }
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover,
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover > td,
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
-      background-color: #FED7AA !important;
+    tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover {
+      background-color: #FFE0B2 !important;
     }
 
-    /* HIGH RISK / SCAM (Soft Red Tint) */
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td {
+    /* HIGH RISK / SCAM (Single Clean Red Tint) */
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) {
       background-color: #FEE2E2 !important;
     }
-    tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
-    tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td {
-      background-color: #FEF2F2 !important;
-    }
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td:first-child {
-      box-shadow: inset 4px 0 0 #EF4444 !important;
-    }
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover,
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover > td,
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+    tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover {
       background-color: #FECACA !important;
+    }
+
+    /* Transparent hover action bar */
+    tr.zA[data-ratiod-verdict]:not(.aqw):not([aria-selected="true"]):hover .bq9,
+    tr.zA[data-ratiod-verdict]:not(.aqw):not([aria-selected="true"]):hover .aqL,
+    tr.zA[data-ratiod-verdict]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
+      background: transparent !important;
+      background-color: transparent !important;
     }
 
     /* Smooth transition */
@@ -351,60 +318,32 @@ function ensureInboxStyles() {
 
     /* Dark Mode Theme */
     @media (prefers-color-scheme: dark) {
-      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td,
-      tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA.yO[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) > td {
-        background-color: rgba(34, 197, 94, 0.14) !important;
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) {
+        background-color: rgba(34, 197, 94, 0.15) !important;
       }
-      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover,
-      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover > td,
-      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
-        background-color: rgba(34, 197, 94, 0.22) !important;
+      tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover {
+        background-color: rgba(34, 197, 94, 0.25) !important;
       }
 
-      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td,
-      tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA.yO[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) > td {
-        background-color: rgba(234, 179, 8, 0.14) !important;
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) {
+        background-color: rgba(234, 179, 8, 0.15) !important;
       }
-      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover,
-      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover > td,
-      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
-        background-color: rgba(234, 179, 8, 0.22) !important;
+      tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover {
+        background-color: rgba(234, 179, 8, 0.25) !important;
       }
 
-      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td,
-      tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA.yO[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) > td {
-        background-color: rgba(249, 115, 22, 0.16) !important;
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) {
+        background-color: rgba(249, 115, 22, 0.18) !important;
       }
-      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover,
-      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover > td,
-      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
-        background-color: rgba(249, 115, 22, 0.25) !important;
+      tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover {
+        background-color: rgba(249, 115, 22, 0.28) !important;
       }
 
-      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td,
-      tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
-      tr.zA.yO[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) > td {
-        background-color: rgba(239, 68, 68, 0.18) !important;
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) {
+        background-color: rgba(239, 68, 68, 0.20) !important;
       }
-      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover,
-      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover > td,
-      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bq9,
-      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .aqL,
-      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover .bu4 {
-        background-color: rgba(239, 68, 68, 0.28) !important;
+      tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover {
+        background-color: rgba(239, 68, 68, 0.30) !important;
       }
     }
   `;
