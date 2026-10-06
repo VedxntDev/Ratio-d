@@ -59,6 +59,7 @@ const ALLOWED_ENTRIES = new Set([
   "favicon.ico",
   "ratiod-extension.zip",
   "ratiod-full-project.zip",
+  "google81d3d996fff3deac.html",
   "js",
   "assets"
 ]);

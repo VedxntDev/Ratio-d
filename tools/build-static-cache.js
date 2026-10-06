@@ -7,6 +7,7 @@ const OUT_FILE = path.join(ROOT, "server", "static-cache.js");
 const FILES_TO_CACHE = [
   "index.html",
   "privacy.html",
+  "google81d3d996fff3deac.html",
   "styles.css",
   "favicon.ico",
   "ratiod-extension.zip",
