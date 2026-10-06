@@ -133,24 +133,6 @@ function initPopup() {
     });
   }
 
-  // Demo stats toggle button
-  const btnDemo = document.getElementById("btn-demo-mode");
-  if (btnDemo) {
-    btnDemo.addEventListener("click", () => {
-      const demoStats = {
-        total: 42,
-        safe: 26,
-        promo: 12,
-        suspicious: 3,
-        high_risk: 1,
-        qr_scanned: 4,
-        pii_redacted: 19
-      };
-      setStorage(demoStats, () => {
-        renderStats(demoStats);
-      });
-    });
-  }
 
   // Reset counters button
   const btnReset = document.getElementById("btn-reset");
