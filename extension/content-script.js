@@ -78,7 +78,7 @@ function renderFallbackAnalysis(emailBodyElem, redactedText) {
 }
 
 // Shared verdict cache to eliminate any mismatch between open-email banner and inbox badge
-const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v3";
+const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v4";
 const memVerdictCache = {};
 
 /**
@@ -454,6 +454,79 @@ function extractGmailAuthDetails(messageContainer) {
   };
 }
 
+/**
+ * Comprehensive detection for Gmail Promotional / Marketing context.
+ * Evaluates:
+ * 1. Active tab or URL: Gmail "Promotions" tab selected (#inbox tab, #category/promotions, etc.)
+ * 2. Left sidebar: Promotions navigation selected
+ * 3. Gmail Category Chips: Open email has "Promotions" label chip (span.hN, .av, etc.)
+ * 4. Native Gmail Unsubscribe: Sender header has native "Unsubscribe" button / link
+ * 5. Message Body: Unsubscribe links or marketing opt-out
+ * 6. Marketing Keywords: Promotional keywords in subject, body, or snippet
+ */
+function isPromotionsContext(container = null, text = "") {
+  try {
+    // 1. URL hash check
+    if (window.location.hash && /category[/:%20]+promotions|label[/:%20]+promotions|#promotions/i.test(window.location.hash)) {
+      return true;
+    }
+
+    // 2. Active Tab in Gmail tabbed view
+    const activeTab = document.querySelector('[role="tab"][aria-selected="true"], .aKh[aria-selected="true"], [role="tab"].aKz[aria-selected="true"]');
+    if (activeTab) {
+      const tabText = (activeTab.textContent || activeTab.getAttribute("aria-label") || activeTab.getAttribute("data-tooltip") || "").toLowerCase();
+      if (tabText.includes("promotion")) {
+        return true;
+      }
+    }
+
+    const promoTab = document.querySelector('[role="tab"][aria-label*="Promotion" i], [role="tab"][data-tooltip*="Promotion" i]');
+    if (promoTab && (promoTab.getAttribute("aria-selected") === "true" || (promoTab.classList.contains("aKh") && promoTab.classList.contains("J-KU-KO")))) {
+      return true;
+    }
+
+    // Left navigation category selected
+    const activeNavPromo = document.querySelector('a[href*="promotions"][aria-current="page"], .nZ[data-tooltip*="Promotions" i], div[data-tooltip*="Promotions" i][aria-selected="true"]');
+    if (activeNavPromo) {
+      return true;
+    }
+
+    // 3. Category chips / label badges on the email or row
+    const targetRoot = container || document;
+    const categoryChips = targetRoot.querySelectorAll('.av, span.hN, div.ar.as, [data-tooltip*="Promotions" i], [aria-label*="Promotions" i], .at');
+    for (const chip of categoryChips) {
+      const chipText = (chip.textContent || chip.getAttribute("aria-label") || chip.getAttribute("data-tooltip") || "").toLowerCase();
+      if (chipText.includes("promotion")) {
+        return true;
+      }
+    }
+
+    // 4. Native Gmail Unsubscribe button in sender header
+    const nativeUnsub = document.querySelector('span.ca, .mU, [role="button"][aria-label*="Unsubscribe" i], a[href*="unsubscribe" i], button[aria-label*="Unsubscribe" i]');
+    if (nativeUnsub && (nativeUnsub.offsetParent !== null || nativeUnsub.offsetWidth > 0 || nativeUnsub.offsetHeight > 0)) {
+      return true;
+    }
+
+    // 5. Unsubscribe links in message body
+    if (container) {
+      const unsubLink = container.querySelector('a[href*="unsubscribe" i], a[href*="optout" i], a[href*="opt-out" i], a[href*="preferences" i]');
+      if (unsubLink) {
+        return true;
+      }
+    }
+
+    // 6. Marketing and promotional keywords in subject / body / snippet
+    if (text) {
+      const promoKeywords = /\b(unsubscribe|%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|promo|limited\s+time|webinar|announcing|newsletter|special\s+offer|rewards?\s*(points|expire)|free\s+gift|clearance|recommended\s+courses|courses|catalog|shop\s+now|view\s+in\s+browser)\b/i;
+      if (promoKeywords.test(text)) {
+        return true;
+      }
+    }
+  } catch (e) {}
+
+  return false;
+}
+
 function fetchWithTimeout(url, options, timeoutMs = 600) {
   if (typeof AbortController === "undefined") {
     return fetch(url, options);
@@ -583,11 +656,40 @@ function scanAndAnalyzeGmail() {
   lastAnalyzedHash = currentHash;
 
   const onAnalysisComplete = (data) => {
-    // 1. Inject in-email banner
+    // 1. Harmonize Promotional / Marketing emails so banner and inbox tags always match 100%
+    const isPromo = isPromotionsContext(emailBodyElem, fullTextToAnalyze);
+    const hasThreat = data.verdict === "high_risk" || data.verdict === "suspicious" ||
+      (data.flags && data.flags.some(f => f.type !== "promo" && f.type !== "quarantine"));
+
+    if (isPromo && !hasThreat) {
+      data.verdict = "promo_clutter";
+      data.score = Math.max(data.score || 0, 25);
+      if (!data.flags) data.flags = [];
+      const hasPromoFlag = data.flags.some(f => f.type === "promo" || /promotional|marketing/i.test(f.reason || ""));
+      if (!hasPromoFlag) {
+        data.flags.push({
+          span: "Promotions / Marketing",
+          reason: "Identified as promotional marketing, newsletter, or commercial email",
+          type: "promo"
+        });
+      }
+      if (!data.explanation || /safe|legitimate|clean|no threat/i.test(data.explanation)) {
+        data.explanation = "Promotional marketing or newsletter mail. Commercial content detected with no security threats.";
+      }
+      if (!data.next_steps || data.next_steps.length === 0) {
+        data.next_steps = [
+          "Promotional marketing or newsletter detected.",
+          "Use the One-Click Unsubscribe button below if you no longer wish to receive emails from this sender.",
+          "No credentials or payment required. Be mindful before making purchases."
+        ];
+      }
+    }
+
+    // 2. Inject in-email banner
     if (window.injectRatiodBanner) {
       window.injectRatiodBanner(emailBodyElem, data);
     }
-    // 2. Persist authoritative verdict to cache across all subject & thread identifiers
+    // 3. Persist authoritative verdict to cache across all subject & thread identifiers
     const keysToSave = [];
     if (subject) keysToSave.push(subject);
     if (senderAddress) keysToSave.push(`${senderAddress}|${normalizeSubjectKey(subject)}`);
@@ -705,8 +807,7 @@ function scanInboxRows(forceUpdate = false) {
                      (document.title && document.title.toLowerCase().includes("spam")) ||
                      !!document.querySelector('div[data-tooltip="Spam"][aria-selected="true"], a[href*="#spam"][aria-current="page"]');
 
-  const isPromotionsView = !!document.querySelector('[role="tab"][aria-selected="true"][aria-label*="Promotion"], [role="tab"][aria-selected="true"][data-tooltip*="Promotion"]') ||
-                           (window.location.hash && window.location.hash.includes("category/promotions"));
+  const isPromotionsView = isPromotionsContext(null, "");
 
   rows.forEach((row) => {
     const senderElem = row.querySelector(".yX, .bqe, .zF, span[email], td.yX");
@@ -742,6 +843,13 @@ function scanInboxRows(forceUpdate = false) {
       verdict = cachedVerdict.verdict;
       score = cachedVerdict.score;
       flags = cachedVerdict.flags || [];
+
+      // If previously cached as safe before this update, but currently in Promotions view or promo context, harmonize
+      const isPromoRow = isPromotionsView || isPromotionsContext(row, combinedText);
+      if (verdict === "safe" && isPromoRow) {
+        verdict = "promo_clutter";
+        score = Math.max(score, 25);
+      }
     } else if (isSpamView) {
       // Gmail quarantined this message.
       const redactedSpamRow = redactPiiLocally(combinedText || "Email Message");
@@ -801,8 +909,8 @@ function scanInboxRows(forceUpdate = false) {
       }
 
       // Promotions / Marketing awareness
-      const promoKeywords = /\b(unsubscribe|%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|promo|limited\s+time|webinar|announcing|newsletter|special\s+offer|rewards?\s*(points|expire)|free\s+gift|clearance)\b/i;
-      if (verdict === "safe" && (isPromotionsView || promoKeywords.test(combinedText))) {
+      const isPromoRow = isPromotionsView || isPromotionsContext(row, combinedText);
+      if (verdict === "safe" && isPromoRow) {
         verdict = "promo_clutter";
         score = Math.max(score, 25);
       }
@@ -912,9 +1020,9 @@ observer.observe(document.body, {
 window.addEventListener("hashchange", () => triggerStaggeredScan(true), { passive: true });
 window.addEventListener("popstate", () => triggerStaggeredScan(true), { passive: true });
 
-// Listen for back button / view navigation clicks to force instant multi-pass scan
+// Listen for back button / view navigation / tab clicks to force instant multi-pass scan
 window.addEventListener("click", (e) => {
-  if (e.target && e.target.closest && e.target.closest(".ar6, .T-I-J3, [aria-label*='Back' i], [data-tooltip*='Back' i]")) {
+  if (e.target && e.target.closest && e.target.closest(".ar6, .T-I-J3, [aria-label*='Back' i], [data-tooltip*='Back' i], [role='tab'], .aKh, .nZ, a[href*='promotions'], a[href*='inbox']")) {
     triggerStaggeredScan(true);
   }
 }, { passive: true });
