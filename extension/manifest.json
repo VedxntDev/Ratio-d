@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Ratio'd — Gmail Scam Risk Analyzer",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Privacy-first scam risk analyzer for Gmail. Redacts PII client-side and injects real-time threat analysis. Developed by Vedant.",
   "icons": {
     "16": "icons/icon16.png",
