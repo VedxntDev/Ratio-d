@@ -78,7 +78,7 @@
     { name: "contact_stranger", points: 15, patterns: [
       /contact\s+(me|us|him|her|them)\s+urgently|contact\s+\w+\s+urgently/i,
       /partnership\s+agreement|for\s+your\s+claim\s+and\s+more/i,
-      /respond\s+(back\s+)?to\s+this\s+email|reply\s+(back\s+)?to\s+this\s+email/i ] },
+      /(?:respond|reply)\s+(?:back\s+)?to\s+this\s+email\s+(?:to\s+(?:claim|receive|collect|release|proceed)|with\s+your\s+(?:full\s+name|banking|account|details|id|information|passport))/i ] },
     { name: "inheritance", points: 25, patterns: [
       /shared\s+your\s+surname|no\s+known\s+heirs?\b/i,
       /passed\s+away\s+(recently|abroad)?|stage\s+\d\s+cancer/i,

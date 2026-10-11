@@ -311,7 +311,7 @@ check("chart promises zero persistence only where the code does it",
   const routes = vercel.routes || [];
 
   // Endpoints the single serverless function is expected to serve.
-  const ENDPOINTS = ["analyze", "analyze-qr", "unmask", "health"];
+  const ENDPOINTS = ["analyze", "analyze-qr", "unmask", "health", "feedback"];
   for (const ep of ENDPOINTS) {
     check("server.js implements /" + ep, serverSrc.includes('"/' + ep + '"'));
     check("vercel.json routes bare /" + ep,

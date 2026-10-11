@@ -13,6 +13,8 @@
     { "src": "^/api/unmask$", "dest": "/api" },
     { "src": "^/health$", "dest": "/api" },
     { "src": "^/api/health$", "dest": "/api" },
+    { "src": "^/feedback$", "dest": "/api" },
+    { "src": "^/api/feedback$", "dest": "/api" },
     { "src": "^/$", "dest": "/index.html", "check": true },
     { "src": "^/privacy$", "dest": "/privacy.html", "check": true },
     { "src": "^/ratiod-(extension|full-project)\\.zip$", "check": true },

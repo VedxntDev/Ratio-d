@@ -597,8 +597,98 @@ function injectRatiodBanner(targetElement, data) {
     }
     .btn-highlight-spam {
       background-color: #EA3E2B !important;
+      font-weight: 800 !important;
+    }
+
+    .ratiod-feedback-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1.5px dashed #121212;
+    }
+
+    .ratiod-feedback-prompt {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #4B5563;
+      text-transform: uppercase;
+    }
+
+    .ratiod-feedback-chips {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .ratiod-chip-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1.5px solid #121212;
+      background: #FFFFFF;
+      color: #121212;
+      cursor: pointer;
+      box-shadow: 1px 1px 0px #121212;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+      text-transform: uppercase;
+    }
+
+    .ratiod-chip-btn:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 0px 0px 0px #121212;
+      background: #FFFBEB;
+    }
+
+    .ratiod-chip-btn.chip-active {
+      background: #121212;
+      color: #FFFFFF;
+    }
+
+    .ratiod-feedback-toast {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #ECFDF5;
+      border: 1.5px solid #059669;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #065F46;
+      box-shadow: 1px 1px 0px #059669;
+    }
+
+    .btn-highlight-safe {
+      background-color: #9BE86D !important;
+      color: #121212 !important;
+      font-weight: 800 !important;
+    }
+
+    .btn-highlight-unsafe {
+      background-color: #EA3E2B !important;
       color: #FFFFFF !important;
       font-weight: 800 !important;
+    }
+
+    .tag-user-safe {
+      background: #9BE86D !important;
+      color: #121212 !important;
+    }
+
+    .tag-user-unsafe {
+      background: #EA3E2B !important;
+      color: #FFFFFF !important;
+    }
+
+    .tag-user-promo {
+      background: #F5C242 !important;
+      color: #121212 !important;
     }
 
     .ratiod-drawer {
@@ -795,10 +885,23 @@ function injectRatiodBanner(targetElement, data) {
           </div>
         </div>
         <div class="ratiod-explanation"><span class="ratiod-explanation-label">Reason:</span> ${escapeHtml(explanation)}</div>
+        <div class="ratiod-feedback-strip" id="ratiod-feedback-strip">
+          <span class="ratiod-feedback-prompt">Wrong verdict? Help us learn:</span>
+          <div class="ratiod-feedback-chips">
+            <button class="ratiod-chip-btn ${verdict === 'safe' ? 'chip-active' : ''}" type="button" data-feedback="safe" title="Mark this email as safe">[ 🛡️ Safe ]</button>
+            <button class="ratiod-chip-btn ${verdict === 'suspicious' || verdict === 'high_risk' ? 'chip-active' : ''}" type="button" data-feedback="unsafe" title="Mark this email as unsafe / phishing">[ ⚠️ Unsafe ]</button>
+            <button class="ratiod-chip-btn ${verdict === 'promo_clutter' ? 'chip-active' : ''}" type="button" data-feedback="promo" title="Mark this email as promotional newsletter">[ 🏷️ Promo ]</button>
+          </div>
+        </div>
+        <div class="ratiod-feedback-toast" id="ratiod-feedback-toast" style="display:none;" role="status" aria-live="polite"></div>
       </div>
 
       <div class="ratiod-actions">
         <button class="ratiod-btn ratiod-btn-primary" id="toggle-drawer" type="button" aria-expanded="false" aria-controls="analysis-drawer">[ SEE DETAILS ]</button>
+        ${verdict === 'safe'
+          ? '<button class="ratiod-btn ratiod-btn-feedback btn-highlight-unsafe" id="btn-quick-feedback" data-feedback="unsafe" type="button" title="Mark this email as unsafe and submit feedback">[ ⚠️ MARK AS UNSAFE ]</button>'
+          : '<button class="ratiod-btn ratiod-btn-feedback btn-highlight-safe" id="btn-quick-feedback" data-feedback="safe" type="button" title="Mark this email as safe and submit feedback">[ 🛡️ MARK AS SAFE ]</button>'
+        }
         <button class="ratiod-btn ratiod-btn-unsub ${verdict === 'promo_clutter' ? 'btn-highlight-unsub' : ''}" id="btn-one-unsub" type="button">[ &#10024; UNSUBSCRIBE ]</button>
         <button class="ratiod-btn ratiod-btn-spam ${verdict === 'high_risk' ? 'btn-highlight-spam' : ''}" id="btn-move-spam" type="button">[ &#128683; REPORT SPAM ]</button>
       </div>
@@ -907,6 +1010,155 @@ function injectRatiodBanner(targetElement, data) {
       if (host.parentElement) host.parentElement.removeChild(host);
     });
   }
+
+  // User Feedback Overrides & Telemetry
+  function applyUserFeedback(feedbackType, originBtn) {
+    const toast = shadowRoot.getElementById("ratiod-feedback-toast");
+    const headerTag = shadowRoot.querySelector(".ratiod-tag");
+    const mailScoreVal = shadowRoot.querySelector(".ratiod-score-mail");
+    const explanationEl = shadowRoot.querySelector(".ratiod-explanation");
+    const feedbackChips = shadowRoot.querySelectorAll(".ratiod-chip-btn");
+    const quickFeedbackBtn = shadowRoot.getElementById("btn-quick-feedback");
+
+    feedbackChips.forEach(chip => {
+      if (chip.getAttribute("data-feedback") === feedbackType) {
+        chip.classList.add("chip-active");
+      } else {
+        chip.classList.remove("chip-active");
+      }
+    });
+
+    if (toast) {
+      toast.style.display = "block";
+      toast.textContent = `✓ Feedback saved: Marked as ${feedbackType.toUpperCase()}. Thanks for helping Ratio'd learn!`;
+    }
+
+    if (!prefersReducedMotion()) {
+      playUnsubscribeSparkleSound();
+      if (feedbackType === "safe" && originBtn) {
+        launchGlitterBurst(shadowRoot, originBtn);
+      }
+    }
+
+    if (headerTag) {
+      if (feedbackType === "safe") {
+        headerTag.className = "ratiod-tag tag-safe tag-user-safe";
+        headerTag.textContent = "[ 🛡️ USER OVERRIDE: SAFE ]";
+      } else if (feedbackType === "unsafe") {
+        headerTag.className = "ratiod-tag tag-high_risk tag-user-unsafe";
+        headerTag.textContent = "[ ⚠️ USER OVERRIDE: UNSAFE ]";
+      } else if (feedbackType === "promo") {
+        headerTag.className = "ratiod-tag tag-promo_clutter tag-user-promo";
+        headerTag.textContent = "[ 🏷️ USER OVERRIDE: PROMO ]";
+      }
+    }
+
+    if (container) {
+      container.className = "ratiod-container theme-" + (feedbackType === "promo" ? "promo_clutter" : (feedbackType === "unsafe" ? "high_risk" : "safe"));
+    }
+
+    if (mailScoreVal) {
+      const newScore = feedbackType === "safe" ? 0 : (feedbackType === "promo" ? 45 : 85);
+      const newLevelKey = feedbackType === "safe" ? "low" : (feedbackType === "promo" ? "promo" : "high");
+      const newLevelText = feedbackType === "safe" ? "LOW RISK" : (feedbackType === "promo" ? "PROMO / CLUTTER" : "HIGH RISK");
+      mailScoreVal.innerHTML = `<span class="score-type-badge">MAIL</span><span class="score-number">${newScore}</span><span class="score-denom">/100</span> <span class="score-level-badge level-${newLevelKey}">${newLevelText}</span>`;
+    }
+
+    if (explanationEl) {
+      const explType = feedbackType === "safe" ? "safe" : (feedbackType === "promo" ? "promotional newsletter" : "unsafe / phishing");
+      explanationEl.innerHTML = `<span class="ratiod-explanation-label">User Feedback:</span> Marked as ${explType} by user. Local override applied.`;
+    }
+
+    if (quickFeedbackBtn) {
+      if (feedbackType === "safe") {
+        quickFeedbackBtn.className = "ratiod-btn ratiod-btn-feedback btn-highlight-unsafe";
+        quickFeedbackBtn.setAttribute("data-feedback", "unsafe");
+        quickFeedbackBtn.textContent = "[ ⚠️ MARK AS UNSAFE ]";
+      } else {
+        quickFeedbackBtn.className = "ratiod-btn ratiod-btn-feedback btn-highlight-safe";
+        quickFeedbackBtn.setAttribute("data-feedback", "safe");
+        quickFeedbackBtn.textContent = "[ 🛡️ MARK AS SAFE ]";
+      }
+    }
+
+    // Persist override to chrome.storage.local
+    const mappedVerdict = feedbackType === "unsafe" ? "high_risk" : (feedbackType === "promo" ? "promo_clutter" : "safe");
+    const mappedScore = feedbackType === "unsafe" ? 85 : (feedbackType === "promo" ? 45 : 0);
+
+    const keysToOverride = [];
+    if (data.emailMeta && data.emailMeta.subject) keysToOverride.push(data.emailMeta.subject);
+    if (data.emailMeta && data.emailMeta.from) keysToOverride.push(data.emailMeta.from);
+    if (data.cacheKey) keysToOverride.push(data.cacheKey);
+    const hash = window.location.hash ? window.location.hash.replace(/^#/, "") : "";
+    if (hash) keysToOverride.push(hash);
+
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(["ratiod_user_overrides"], (res) => {
+          const overrides = (res && res.ratiod_user_overrides) || {};
+          const record = {
+            verdict: mappedVerdict,
+            score: mappedScore,
+            feedback: feedbackType,
+            timestamp: Date.now()
+          };
+          for (const k of keysToOverride) {
+            if (k) overrides[String(k).trim().toLowerCase()] = record;
+          }
+          chrome.storage.local.set({ ratiod_user_overrides: overrides });
+        });
+      }
+    } catch (e) {}
+
+    // Dispatch global event for content script to synchronize inbox list view pills
+    try {
+      window.dispatchEvent(new CustomEvent("ratiod:user-feedback", {
+        detail: {
+          verdict: mappedVerdict,
+          score: mappedScore,
+          feedback: feedbackType,
+          keys: keysToOverride
+        }
+      }));
+    } catch (e) {}
+
+    // Transmit feedback to backend API
+    const feedbackPayload = {
+      feedback: feedbackType,
+      originalVerdict: verdict,
+      originalScore: mailScore,
+      sender: (data.emailMeta && data.emailMeta.from) || null,
+      subject: (data.emailMeta && data.emailMeta.subject) || null,
+      flags: (flags || []).map(f => (f && f.reason) || String(f || "")),
+      timestamp: new Date().toISOString()
+    };
+
+    const endpoints = ["http://127.0.0.1:3000/feedback", "https://ratio-d.vercel.app/api/feedback", "https://www.ratiod.online/api/feedback"];
+    for (const ep of endpoints) {
+      try {
+        fetch(ep, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(feedbackPayload)
+        }).catch(() => {});
+      } catch (err) {}
+    }
+  }
+
+  const quickFeedbackBtn = shadowRoot.getElementById("btn-quick-feedback");
+  if (quickFeedbackBtn) {
+    quickFeedbackBtn.addEventListener("click", () => {
+      const fb = quickFeedbackBtn.getAttribute("data-feedback") || "safe";
+      applyUserFeedback(fb, quickFeedbackBtn);
+    });
+  }
+
+  shadowRoot.querySelectorAll(".ratiod-chip-btn").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const fb = chip.getAttribute("data-feedback") || "safe";
+      applyUserFeedback(fb, chip);
+    });
+  });
 
   function bindSafePeek(root) {
     root.querySelectorAll(".flag-peek-btn").forEach((btn) => {

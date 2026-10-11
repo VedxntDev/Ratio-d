@@ -22,6 +22,7 @@ const path = require("path");
 
 const { handleAnalyze } = require("./server/routes/analyze");
 const { handleQr } = require("./server/routes/qr");
+const { handleFeedback } = require("./server/routes/feedback");
 const { traceRedirects } = require("./server/unmask/tracer");
 const { getCachedFile } = require("./server/static-cache");
 
@@ -234,7 +235,12 @@ async function handler(req, res) {
     return;
   }
 
-  // 3. Static assets
+  // 3b. User feedback submission endpoint
+  if (req.method === "POST" && (pathname === "/feedback" || pathname === "/api/feedback")) {
+    return handleFeedback(req, res);
+  }
+
+  // 4. Static assets
   if (req.method === "GET" || req.method === "HEAD") {
     // Content negotiation: serve Markdown when requested
     const acceptHeader = (req.headers["accept"] || "").toLowerCase();

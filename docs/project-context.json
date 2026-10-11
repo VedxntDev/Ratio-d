@@ -169,7 +169,8 @@
         "visa",
         "mastercard",
         "singpost",
-        "singaporepost"
+        "singaporepost",
+        "shopify"
       ],
       "officialBrandDomains": {
         "microsoft": [
@@ -274,6 +275,14 @@
         "mastercard": [
           "mastercard.com",
           "mastercard.co"
+        ],
+        "shopify": [
+          "shopify.com",
+          "shopifyemail.com",
+          "myshopify.com"
+        ],
+        "spotify": [
+          "spotify.com"
         ]
       },
       "legitimateDomains": [
@@ -574,7 +583,7 @@
         "urgency": 10,
         "credential": 5,
         "promotionalClutter": 22,
-        "transactionalSafeguards": 19,
+        "transactionalSafeguards": 21,
         "suspiciousDomains": 6,
         "advanceFee": 14,
         "refundBait": 5,

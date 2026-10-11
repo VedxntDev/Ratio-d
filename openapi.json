@@ -211,6 +211,61 @@
           }
         }
       }
+    },
+    "/feedback": {
+      "post": {
+        "summary": "Submit user feedback on risk verdicts to train and calibrate detection",
+        "description": "Records user-confirmed classification overrides (safe, unsafe, promo, phishing) with scrubbed metadata for supervised calibration.",
+        "operationId": "submitFeedback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "feedback": {
+                    "type": "string",
+                    "enum": ["safe", "unsafe", "promo", "phishing", "suspicious"],
+                    "description": "User's corrected verdict for the email."
+                  },
+                  "originalVerdict": { "type": "string" },
+                  "originalScore": { "type": "number" },
+                  "sender": { "type": "string" },
+                  "subject": { "type": "string" },
+                  "flags": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "note": { "type": "string" }
+                },
+                "required": ["feedback"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback recorded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "id": { "type": "string" },
+                    "feedback": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid feedback type or malformed payload."
+          }
+        }
+      }
     }
   },
   "components": {

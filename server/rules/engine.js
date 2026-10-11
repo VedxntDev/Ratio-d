@@ -39,7 +39,8 @@ const KNOWN_BRANDS = [
   "visa",
   "mastercard",
   "singpost",
-  "singaporepost"
+  "singaporepost",
+  "shopify"
 ];
 
 /**
@@ -80,7 +81,9 @@ const OFFICIAL_BRAND_DOMAINS = {
   metamask: ["metamask.io", "consensys.io"],
   iras: ["iras.gov.sg"],
   visa: ["visa.com", "visa.co"],
-  mastercard: ["mastercard.com", "mastercard.co"]
+  mastercard: ["mastercard.com", "mastercard.co"],
+  shopify: ["shopify.com", "shopifyemail.com", "myshopify.com"],
+  spotify: ["spotify.com"]
 };
 
 /**
@@ -280,6 +283,8 @@ const TRANSACTIONAL_SAFEGUARD_PATTERNS = [
   { regex: /\b(?:out\s+for\s+delivery|delivered\s+by|handed\s+directly\s+to\s+resident)\b/i, reason: "Active parcel courier delivery notice" },
   { regex: /\btracking\s+(?:awb|number|id)[:\s#]*[a-z0-9]+/i, reason: "Courier parcel tracking AWB reference" },
   { regex: /\b(?:ride|trip|order)\s+(?:receipt|invoice)\b|\bdelivered\s+in\s+\d+\s+minutes\b/i, reason: "Transportation or on-demand delivery receipt" },
+  { regex: /\b(?:view\s+(?:your\s+)?order|thank\s+you\s+for\s+your\s+order|order\s+confirmation|order\s+#\s*[\w-]+)\b/i, reason: "E-commerce order confirmation and receipt" },
+  { regex: /@(?:[\w-]+\.)?shopifyemail\.com\b/i, reason: "Verified Shopify merchant transactional notification" },
   { regex: /\breturn\s+item\s+has\s+been\s+inspected\s+and\s+picked\s+up\b|\brefund\s+initiated\b/i, reason: "E-commerce product return pickup status" },
 
   // 3. Official Banking, Regulatory, Compliance & Salary
@@ -423,7 +428,7 @@ const ADVANCE_FEE_PATTERNS = [
   { regex: /compensa\w+\s+(fund|amount)\b/i, reason: "Unsolicited compensation fund claim" },
   { regex: /get\s+\d{1,3}\s*%\s+for\s+your\s+(cooperation|partnership)/i, reason: "Unsolicited revenue-share 'partnership' offer" },
   { regex: /lottery\s+winnings?|grant\s+sum\s+of|grant\s+of\s+[€$£]|compensation\s+payment|irrevocable\s+compensation/i, reason: "Unsolicited grant, lottery or compensation payout claim" },
-  { regex: /respond\s+(back\s+)?to\s+this\s+email|reply\s+(back\s+)?to\s+this\s+email\b/i, reason: "Claim released only by emailing back a stranger" },
+  { regex: /(?:respond|reply)\s+(?:back\s+)?to\s+this\s+email\s+(?:to\s+(?:claim|receive|collect|release|proceed)|with\s+your\s+(?:full\s+name|banking|account|details|id|information|passport))/i, reason: "Claim released only by emailing back a stranger" },
   { regex: /international\s+certified\s+bank\s+draft|finance\s+house|contact\s+agent\b/i, reason: "Named 'finance house' acting as a payout intermediary" },
   { regex: /(?:currency\s+of\s+)?\d[\d,.]*\s*(?:million|m)\b[^.]{0,40}(?:usd|sgd|eur|gbp|rm)|(?:usd|sgd|eur|gbp|rm)\s?\d[\d,.]*\s*(?:million|m)\b/i, reason: "Multi-million advance-fee amount" },
   { regex: /grant\s+(support\s+)?fund|disbursement\s+reference/i, reason: "Unsolicited grant or disbursement payout claim" }

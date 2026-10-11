@@ -95,6 +95,33 @@ paths:
       responses:
         '200':
           description: Engine status
+  /feedback:
+    post:
+      summary: Submit user feedback on risk verdicts
+      operationId: submitFeedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  type: string
+                  enum: [safe, unsafe, promo, phishing, suspicious]
+                originalVerdict:
+                  type: string
+                originalScore:
+                  type: number
+                sender:
+                  type: string
+                subject:
+                  type: string
+              required:
+                - feedback
+      responses:
+        '200':
+          description: Feedback recorded
 components:
   schemas:
     AnalysisResult:

@@ -675,52 +675,94 @@ function scanAndAnalyzeGmail() {
       }
     }
 
-    // 2. Inject in-email banner
-    if (window.injectRatiodBanner) {
-      window.injectRatiodBanner(emailBodyElem, data);
-    }
-    // 3. Persist authoritative verdict to cache across all subject & thread identifiers
-    const keysToSave = [];
-    if (subject) keysToSave.push(subject);
-    if (senderAddress) keysToSave.push(`${senderAddress}|${normalizeSubjectKey(subject)}`);
+    data.emailMeta = {
+      subject: subject,
+      from: senderHeader
+    };
+    data.cacheKey = subject || window.location.hash;
 
-    const threadElem = document.querySelector("[data-thread-perm-id], [data-legacy-thread-id], [data-legacy-message-id]");
-    if (threadElem) {
-      const permId = threadElem.getAttribute("data-thread-perm-id");
-      if (permId) keysToSave.push(permId);
-      const legId = threadElem.getAttribute("data-legacy-thread-id");
-      if (legId) keysToSave.push(legId);
-      const msgId = threadElem.getAttribute("data-legacy-message-id");
-      if (msgId) keysToSave.push(msgId);
-    }
-
-    if (window.location.hash) {
-      const hashKey = window.location.hash.replace(/^#/, "");
-      if (hashKey) {
-        keysToSave.push(hashKey);
-        const lastPart = hashKey.split("/").pop();
-        if (lastPart) keysToSave.push(lastPart);
+    const renderAndPersist = (finalData) => {
+      // 2. Inject in-email banner
+      if (window.injectRatiodBanner) {
+        window.injectRatiodBanner(emailBodyElem, finalData);
       }
-    }
+      // 3. Persist authoritative verdict to cache across all subject & thread identifiers
+      const keysToSave = [];
+      if (subject) keysToSave.push(subject);
+      if (senderAddress) keysToSave.push(`${senderAddress}|${normalizeSubjectKey(subject)}`);
 
-    saveVerdictToCache(keysToSave, data);
-
-    // 3. Immediately synchronize any active row in split view
-    const activeRow = document.querySelector("tr.zA.aqw, tr.zA[aria-selected='true'], tr.zA.apv, tr.zA.btb");
-    if (activeRow) {
-      activeRow.setAttribute("data-ratiod-verdict", data.verdict);
-      const activeBadge = activeRow.querySelector(".ratiod-inbox-pill");
-      if (activeBadge) {
-        updateBadgeElement(activeBadge, data.verdict, data.score, data.flags);
-        activeRow.setAttribute("data-ratiod-sig", `authoritative|${data.verdict}${data.score}`);
+      const threadElem = document.querySelector("[data-thread-perm-id], [data-legacy-thread-id], [data-legacy-message-id]");
+      if (threadElem) {
+        const permId = threadElem.getAttribute("data-thread-perm-id");
+        if (permId) keysToSave.push(permId);
+        const legId = threadElem.getAttribute("data-legacy-thread-id");
+        if (legId) keysToSave.push(legId);
+        const msgId = threadElem.getAttribute("data-legacy-message-id");
+        if (msgId) keysToSave.push(msgId);
       }
-    }
 
-    // 4. Trigger multi-pass staggered scan to update inbox list view instantly
-    triggerStaggeredScan(true);
+      if (window.location.hash) {
+        const hashKey = window.location.hash.replace(/^#/, "");
+        if (hashKey) {
+          keysToSave.push(hashKey);
+          const lastPart = hashKey.split("/").pop();
+          if (lastPart) keysToSave.push(lastPart);
+        }
+      }
 
-    // 5. Update local analytics telemetry for extension popup
-    recordAnalyticsScan(data, piiRedactedCount);
+      saveVerdictToCache(keysToSave, finalData);
+
+      // 3. Immediately synchronize any active row in split view
+      const activeRow = document.querySelector("tr.zA.aqw, tr.zA[aria-selected='true'], tr.zA.apv, tr.zA.btb");
+      if (activeRow) {
+        activeRow.setAttribute("data-ratiod-verdict", finalData.verdict);
+        const activeBadge = activeRow.querySelector(".ratiod-inbox-pill");
+        if (activeBadge) {
+          updateBadgeElement(activeBadge, finalData.verdict, finalData.score, finalData.flags);
+          activeRow.setAttribute("data-ratiod-sig", `authoritative|${finalData.verdict}${finalData.score}`);
+        }
+      }
+
+      // 4. Trigger multi-pass staggered scan to update inbox list view instantly
+      triggerStaggeredScan(true);
+
+      // 5. Update local analytics telemetry for extension popup
+      recordAnalyticsScan(finalData, piiRedactedCount);
+    };
+
+    // Check user overrides from chrome.storage.local before rendering
+    const overrideLookupKeys = [
+      subject ? subject.trim().toLowerCase() : "",
+      subject ? normalizeSubjectKey(subject) : "",
+      senderAddress ? `${senderAddress}|${normalizeSubjectKey(subject)}`.toLowerCase() : "",
+      window.location.hash ? window.location.hash.replace(/^#/, "").toLowerCase() : ""
+    ].filter(Boolean);
+
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(["ratiod_user_overrides"], (res) => {
+          const overrides = (res && res.ratiod_user_overrides) || {};
+          let matchedOverride = null;
+          for (const k of overrideLookupKeys) {
+            if (overrides[k]) {
+              matchedOverride = overrides[k];
+              break;
+            }
+          }
+          if (matchedOverride) {
+            data.verdict = matchedOverride.verdict;
+            data.score = matchedOverride.score;
+            data.mail_score = matchedOverride.score;
+            data.isUserOverride = true;
+            data.explanation = `User Override: You previously marked this email as ${matchedOverride.feedback || matchedOverride.verdict}.`;
+          }
+          renderAndPersist(data);
+        });
+        return;
+      }
+    } catch (e) {}
+
+    renderAndPersist(data);
   };
 
   // 1. Client-Side Local PII Redaction
@@ -1027,5 +1069,29 @@ ensureInboxStyles();
 
 // Initial scan
 triggerStaggeredScan(true);
+
+// Synchronize user feedback overrides across Gmail inbox list view
+window.addEventListener("ratiod:user-feedback", (e) => {
+  const detail = e.detail;
+  if (!detail) return;
+  const { verdict, score, keys } = detail;
+  const overrideData = {
+    verdict,
+    score,
+    flags: [],
+    authoritative: true
+  };
+  saveVerdictToCache(keys, overrideData);
+  const activeRow = document.querySelector("tr.zA.aqw, tr.zA[aria-selected='true'], tr.zA.apv, tr.zA.btb");
+  if (activeRow) {
+    activeRow.setAttribute("data-ratiod-verdict", verdict);
+    const activeBadge = activeRow.querySelector(".ratiod-inbox-pill");
+    if (activeBadge) {
+      updateBadgeElement(activeBadge, verdict, score, []);
+      activeRow.setAttribute("data-ratiod-sig", `authoritative|${verdict}${score}`);
+    }
+  }
+  triggerStaggeredScan(true);
+});
 
 
