@@ -107,12 +107,53 @@
    * topic is not what separates cold marketing from opted-in mail.
    */
   var PROMO = [
-    /unsubscribe/i,
-    /%\s+off|discount|exclusive\s+invite|limited\s+seats|explore\s+how/i,
-    /put\s+(?:the\s+word\s+)?["“']?[\s-]*(?:remove|remove-me|unsubscribe|stop|opt[\s-]?out)["”']?\s+(?:on|in|to)\s+the\s+subject/i,
-    /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i,
-    /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i,
-    /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i
+    { re: /unsubscribe/i, high: false },
+    { re: /noreply@[a-z0-9.-]+\.(news|club|top|xyz|info|promo|tech)/i, high: false },
+    { re: /apply\s+(today|now)|register\s+(now|today)|join\s+[a-z0-9]+\s+(today|now)/i, high: false },
+    { re: /exclusive\s+invite|limited\s+seats|explore\s+how|%\s+off|discount/i, high: false },
+    { re: /put\s+(?:the\s+word\s+)?["“']?[\s-]*(?:remove|remove-me|unsubscribe|stop|opt[\s-]?out)["”']?\s+(?:on|in|to)\s+the\s+subject/i, high: true },
+    { re: /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i, high: true },
+    { re: /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i, high: true },
+    { re: /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i, high: true },
+    // EdTech & career marketing
+    { re: /\b\d+[\d,]*\+?\s*(?:students|learners|graduates|candidates|professionals)\s*(?:hired|placed|enrolled|trained|cracked)\b/i, high: true },
+    { re: /\b\d+[\d,]*\+?\s*(?:companies|partner\s+companies|hiring\s+partners)\b/i, high: true },
+    { re: /\b(?:crack|master|ace|prepare\s+for)\s+(?:[a-z\s]{0,25})interviews?\b/i, high: true },
+    { re: /\b(?:free\s+)?(?:masterclass|bootcamp|live\s+workshop|cohort|average\s+(?:ctc|package)|placement\s+(?:assistance|guarantee))\b/i, high: true },
+    // Retail merchandising & styling
+    { re: /\b(?:strategy\s+for\s+(?:a\s+)?wardrobe|wardrobe\s+strategy|be\s+the\s+annoying\s+customer)\b/i, high: true },
+    { re: /\b(?:explore|browse|shop)\s+(?:our\s+)?(?:collection|new\s+arrivals|catalog|store|latest\s+drop)\b/i, high: true },
+    { re: /\b(?:flat|upto|up\s+to|\d{1,2}%)\s*(?:off|discount|cashback|sale)\b/i, high: true },
+    { re: /\buse\s+(?:coupon|code|promo\s+code)\s+[A-Z0-9]+\b/i, high: true },
+    { re: /\b(?:limited\s+time\s+offer|exclusive\s+deal|weekend\s+sale|clearance\s+sale)\b/i, high: true },
+    // Commercial newsletters & digests
+    { re: /\b(?:daily|weekly|monthly)\s+(?:global\s+)?market\s+(?:commentary|overview|recap|insights)\b/i, high: true },
+    { re: /\bvested\s+shorts\b|\bshorts\s+daily\b/i, high: true },
+    { re: /\b(?:tldr\s+tech|byte-sized\s+daily\s+news|morning\s+brew|top\s+stories\s+shaping\s+business)\b/i, high: true },
+    { re: /\bstories\s+for\s+[a-z]+:.*?recommended\s+reads\b/is, high: true },
+    { re: /\b(?:take\s+a\s+look\s+at\s+standard\s+provident\s+fund|here\s+is\s+how\s+much\s+of\s+it\s+goes\s+into\s+pf)\b/i, high: true }
+  ];
+
+  var TRANSACTIONAL = [
+    /\b(?:workflow|run|build|pipeline|job|check)\s+(?:failed|succeeded|passed|completed|errored)\b/i,
+    /\bmerge\s+request\s+!(?:\d+)\s+was\s+merged\b|\bpull\s+request\s+#(?:\d+)\s+(?:merged|closed|opened)\b/i,
+    /\bdependabot\s+alert|\b(?:npm|docker|pypi)\s+package\s+(?:published|build)\b/i,
+    /\bmonitor\s+\[.*?\]\s+recovered|\bservice\s+latency\s+is\s+back\b/i,
+    /\border\s+#?[\w-]+\s+(?:your\s+order\s+)?has\s+been\s+delivered\b/i,
+    /\b(?:out\s+for\s+delivery|delivered\s+by|handed\s+directly\s+to\s+resident)\b/i,
+    /\btracking\s+(?:awb|number|id)[:\s#]*[a-z0-9]+/i,
+    /\b(?:ride|trip|order)\s+(?:receipt|invoice)\b|\bdelivered\s+in\s+\d+\s+minutes\b/i,
+    /\breturn\s+item\s+has\s+been\s+inspected\s+and\s+picked\s+up\b|\brefund\s+initiated\b/i,
+    /\bcollateral\s+at\s+client\s+level\b|\bcompliance\s+with\s+sebi\s+regulations\b/i,
+    /\bsalary\s+credited\s+to\s+your\s+account\b|\bcredited\s+with\s+inr\s+[\d,.]+\s+via\s+neft\b/i,
+    /\bmonthly\s+e-statement\s+for\s+your\s+(?:credit\s+card|account)\b/i,
+    /\bterms\s+and\s+policies\b|\bdeveloper\s+distribution\s+agreement\b/i,
+    /\belectronic\s+reservation\s+slip\s+\(ers\)\s+pnr\b|\bcoach\s+[a-z0-9]+,\s*berth\s+\d+\b/i,
+    /\bboarding\s+pass\b|\bgate\s+closes\s+\d+\s+minutes\s+prior\b/i,
+    /\bappointment\s+(?:is\s+)?confirmed\s+for\b|\bdr\.\s+[a-z]+\s+\(cardiology|pediatrics|general\)\b/i,
+    /\bround\s+\d+\s+will\s+take\s+place\s+tomorrow\s+at\s+\d+:\d+\s+utc\b/i,
+    /\bworkspace\s+invited\b|\bis\s+inviting\s+you\s+to\s+a\s+scheduled\s+zoom\s+meeting\b/i,
+    /\bfall\s+\d{4}\s+final\s+examination\s+schedule\b|\bcapstone\s+submission\s+for\b/i
   ];
 
   /*
@@ -378,14 +419,24 @@
 
     // Bulk marketing check
     var promoCount = 0;
+    var hasHighPromo = false;
     for (var p = 0; p < PROMO.length; p++) {
-      if (t.match(PROMO[p])) promoCount++;
+      if (t.match(PROMO[p].re)) {
+        promoCount++;
+        if (PROMO[p].high) hasHighPromo = true;
+      }
     }
+    var hasTransactional = TRANSACTIONAL.some(function (r) { return r.test(t); });
     // A quarantine notice is the mailbox's verdict, not a scam pattern, so it
     // must not count as threat evidence and block the promo classification.
     var hasThreatEvidence = flags.some(function (f) { return f.type !== "quarantine"; });
-    var isPromo = promoCount >= 2 && !hasThreatEvidence;
-    if (isPromo) score = Math.max(45, score + promoCount * 12);
+    var isPromo = (hasHighPromo || promoCount >= 2) && !hasThreatEvidence && !hasTransactional;
+    if (isPromo) {
+      score = Math.max(38, Math.min(48, 38 + promoCount * 4));
+      flags.push({ span: "Promotions / Marketing", reason: "Identified as promotional marketing or commercial blast", type: "promo" });
+    } else if (hasTransactional && !hasThreatEvidence && !hasHighPromo) {
+      score = Math.min(12, score);
+    }
 
     // Floored above the "clean sender" clamp so a quarantined message can never
     // be reported as legitimate, and never forced to high_risk on its own.

@@ -573,7 +573,8 @@
       "patternTables": {
         "urgency": 10,
         "credential": 5,
-        "promotionalClutter": 8,
+        "promotionalClutter": 22,
+        "transactionalSafeguards": 19,
         "suspiciousDomains": 6,
         "advanceFee": 14,
         "refundBait": 5,
@@ -692,6 +693,24 @@
           "weight": 0.26,
           "category": "billing_bait",
           "reason": "Bogus order confirmation, invoice, or auto-renewal scare"
+        },
+        {
+          "name": "edtech_marketing_pitch",
+          "weight": 0.16,
+          "category": "promo_clutter",
+          "reason": "EdTech placement record brag or career interview prep pitch"
+        },
+        {
+          "name": "retail_promo_offer",
+          "weight": 0.16,
+          "category": "promo_clutter",
+          "reason": "Retail discount sale promotion, coupon code, or wardrobe merchandising"
+        },
+        {
+          "name": "content_digest_newsletter",
+          "weight": 0.12,
+          "category": "promo_clutter",
+          "reason": "Commercial market commentary or newsletter digest"
         }
       ]
     }

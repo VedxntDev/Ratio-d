@@ -45,8 +45,8 @@ const LEGIT_EMAILS = [
   // 3. Official Accounts, Policies & Education
   { id: "ACC-01", text: "From: noreply@google.com\nSubject: Quarterly reminder about Google Play terms and policies\nReview our Google Play Developer Distribution Agreement and terms updates." },
   { id: "ACC-02", text: "From: no-reply@accounts.google.com\nSubject: Security alert: New sign-in from your MacBook Air\nYour Google Account was accessed from macOS in New Delhi. If this was you, no action needed." },
-  { id: "ACC-03", text: "From: info@parikhjain.com\nSubject: 1,600+ Students Hired. 250+ Companies.\nHi Vedant, What does it actually take to crack product engineering interviews? Here is our summary." },
-  { id: "ACC-04", text: "From: newsletters@naukri.com\nSubject: ₹50,000 basic. Here is how much of it goes into PF\nHey, Take a look at standard Provident Fund contribution breakdowns for tech employees in India." },
+  { id: "ACC-03", text: "From: no-reply@github.com\nSubject: Pull request #89 was merged\nYour pull request 'feat: add VegaML telemetry' has been merged into main by Utkarsh." },
+  { id: "ACC-04", text: "From: aws-billing@amazon.com\nSubject: Amazon Web Services Invoice [89210481]\nYour monthly AWS billing statement for account 1284-9102-4819 is $0.00 USD. Free tier active." },
   { id: "ACC-05", text: "From: inspection@zerodha.com\nSubject: Segregation and Monitoring of Collateral at Client Level for 30/09/2026\nDear Client, in compliance with SEBI regulations, here is your daily fund allocation statement." },
   { id: "ACC-06", text: "From: alerts@hdfcbank.net\nSubject: Salary credited to your account ending 4819\nYour account has been credited with INR 85,000 via NEFT. Available balance: INR 1,42,800." },
   { id: "ACC-07", text: "From: statements@icicibank.com\nSubject: Monthly e-Statement for your Credit Card\nYour card statement for cycle Sep 2026 is attached. Minimum due: ₹0.00." },
@@ -67,16 +67,16 @@ const LEGIT_EMAILS = [
   { id: "ACAD-10", text: "From: notifications@postman.com\nSubject: Workspace invited: 'VegaML Testing Collections'\nVasu invited you to collaborate on Postman workspace." },
 
   // 5. Personal, Thought Leadership & Curated News
-  { id: "PERS-01", text: "From: rinske@rinskefris.com\nSubject: Be the annoying customer\nThe strategy for a wardrobe where every option is a confident choice." },
-  { id: "PERS-02", text: "From: digest@vested.co\nSubject: Samsung’s best chip quarter could be its phone’s worst\nVested Shorts daily global market commentary on semiconductor earnings." },
+  { id: "PERS-01", text: "From: alex@colleague.org\nSubject: Re: Meeting at 3pm tomorrow\nSounds great, see you at the coffee shop on 5th floor." },
+  { id: "PERS-02", text: "From: notifications@slack.com\nSubject: Vasu mentioned you in #ratiod-dev\n'Hey Vedant, could you push the latest commit when you get a chance?'" },
   { id: "PERS-03", text: "From: dan@aisignal.com\nSubject: AI Signal — Why Inference Latency is the New Benchmark\nExploring continuous Hamiltonian physical integration and edge optimization in 2026." },
   { id: "PERS-04", text: "From: alex@colleague.org\nSubject: Quick question regarding the VegaML equations\nHey Vedant, could you clarify whether gamma is set to 0.28 or 0.32 in the damping loop? Thanks, Alex." },
   { id: "PERS-05", text: "From: mom@family.com\nSubject: Re: Reaching home this weekend\nLet us know what time your flight lands so dad can pick you up from the airport." },
-  { id: "PERS-06", text: "From: newsletter@morningbrew.com\nSubject: Markets open in the green as inflation cools\nHere are the top stories shaping business, tech, and retail today." },
-  { id: "PERS-07", text: "From: hello@tldr.tech\nSubject: TLDR Tech: Byte-sized daily news for developers\nNew open-source tools, compiler optimizations, and robotics updates." },
+  { id: "PERS-06", text: "From: calendar-notification@google.com\nSubject: Accepted: Ratio'd Team Architecture Sync\nUtkarsh Upadhyaa accepted your invitation for tomorrow at 11:00 AM." },
+  { id: "PERS-07", text: "From: payouts@stripe.com\nSubject: Payout of $1,250.00 is on its way to your bank account\nStripe payout ID po_82910481 has been initiated via ACH direct deposit." },
   { id: "PERS-08", text: "From: support@figma.com\nSubject: New comments on 'Ratio-d Neo-Brutalist Design System'\nUtkarsh left 2 comments on the button hover state frames." },
-  { id: "PERS-09", text: "From: no-reply@medium.com\nSubject: Stories for Vedant: 'How to Build Real-Time Security Extensions'\nRecommended reads based on your reading history in cybersecurity and JavaScript." },
-  { id: "PERS-10", text: "From: customer.service@cult.fit\nSubject: Cultpass membership renewed\nYour unlimited fitness pass is active until October 2027. Book classes via the app." },
+  { id: "PERS-09", text: "From: alerts@sentry.io\nSubject: [ratiod] Issue resolved: TypeError in scanner\nIssue #148 was marked as resolved by release v1.3.4." },
+  { id: "PERS-10", text: "From: notifications@discord.com\nSubject: Discord security code: 849201\nYour Discord two-factor login code is 849201. Valid for 10 minutes." },
 
   // 6. Routine Operational Transactions
   { id: "TX-01", text: "From: billdesk@electricity.delhi.gov.in\nSubject: Electricity Bill for CA No. 100294819\nYour bill amount of ₹1,820 is due on 24 Oct. Pay online via BSES portal." },
@@ -147,9 +147,18 @@ for (let i = 31; i <= 60; i++) {
 }
 
 // -----------------------------------------------------------------------------
-// PART 3: 40 Promotional Marketing / Newsletter Emails
+// PART 3: 47+ Promotional Marketing / Newsletter Emails
 // -----------------------------------------------------------------------------
-const PROMO_EMAILS = [];
+const PROMO_EMAILS = [
+  // Real-World EdTech & Commercial Marketing Blasts
+  { id: "PROMO-PARIKH", text: "From: info@parikhjain.com\nSubject: 1,600+ Students Hired. 250+ Companies.\nHi Vedant, What does it actually take to crack product engineering interviews? Here is our summary." },
+  { id: "PROMO-RINSKE", text: "From: rinske@rinskefris.com\nSubject: Be the annoying customer\nThe strategy for a wardrobe where every option is a confident choice." },
+  { id: "PROMO-VESTED", text: "From: digest@vested.co\nSubject: Samsung’s best chip quarter could be its phone’s worst\nVested Shorts daily global market commentary on semiconductor earnings." },
+  { id: "PROMO-NAUKRI", text: "From: newsletters@naukri.com\nSubject: ₹50,000 basic. Here is how much of it goes into PF\nHey, Take a look at standard Provident Fund contribution breakdowns for tech employees in India." },
+  { id: "PROMO-BREW", text: "From: newsletter@morningbrew.com\nSubject: Markets open in the green as inflation cools\nHere are the top stories shaping business, tech, and retail today." },
+  { id: "PROMO-TLDR", text: "From: hello@tldr.tech\nSubject: TLDR Tech: Byte-sized daily news for developers\nNew open-source tools, compiler optimizations, and robotics updates." },
+  { id: "PROMO-MEDIUM", text: "From: no-reply@medium.com\nSubject: Stories for Vedant: 'How to Build Real-Time Security Extensions'\nRecommended reads based on your reading history in cybersecurity and JavaScript." }
+];
 for (let i = 1; i <= 40; i++) {
   PROMO_EMAILS.push({
     id: `PROMO-${i}`,
@@ -229,11 +238,12 @@ async function runAllTests() {
     const { ruleScore, flags, isPromoClutter } = evaluateRules(item.text, "email");
     const laya = await evaluateLayaModel(item.text, flags);
     const combined = combineScore(ruleScore, laya, "email", flags, isPromoClutter);
+    const fb = fallbackEngine.analyze(item.text);
 
-    // Assert that promo emails are classified as promo_clutter, NEVER escalated to high_risk phishing
-    const isPromo = combined.verdict === "promo_clutter" && combined.verdict !== "high_risk";
+    // Assert that promo emails are classified as promo_clutter across server and offline fallback
+    const isPromo = combined.verdict === "promo_clutter" && fb.verdict === "promo_clutter";
     if (isPromo) promoCount++;
-    report(`Promo Email ${item.id}`, isPromo, `Combined verdict: ${combined.verdict} (Score: ${combined.score})`);
+    report(`Promo Email ${item.id}`, isPromo, `Combined: ${combined.verdict} (${combined.score}), Fallback: ${fb.verdict} (${fb.score})`);
   }
 
   console.log(`  -> Completed: ${promoCount}/${PROMO_EMAILS.length} categorized cleanly as PROMOTIONAL (Zero false escalations)\n`);

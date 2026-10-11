@@ -78,7 +78,7 @@ function renderFallbackAnalysis(emailBodyElem, redactedText) {
 }
 
 // Shared verdict cache to eliminate any mismatch between open-email banner and inbox badge
-const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v5";
+const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v6";
 const memVerdictCache = {};
 
 /**

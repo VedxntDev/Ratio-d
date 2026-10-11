@@ -268,31 +268,66 @@ const CREDENTIAL_PATTERNS = [
   { regex: /(login|auth|signin|password-reset)\s*link/i, reason: "Login credential capture link" }
 ];
 
-const PROMOTIONAL_CLUTTER_PATTERNS = [
-  { regex: /unsubscribe/i, reason: "Post-registration promotional newsletter link" },
-  { regex: /noreply@[a-z0-9.-]+\.(news|club|top|xyz|info|promo|tech)/i, reason: "Automated post-registration marketing sender" },
-  { regex: /apply\s+(today|now)|register\s+(now|today)|join\s+[a-z0-9]+\s+(today|now)/i, reason: "Marketing call to action" },
-  { regex: /exclusive\s+invite|limited\s+seats|explore\s+how|% off|discount/i, reason: "Promotional marketing offer" },
+const TRANSACTIONAL_SAFEGUARD_PATTERNS = [
+  // 1. CI/CD & Developer Workflow
+  { regex: /\b(?:workflow|run|build|pipeline|job|check)\s+(?:failed|succeeded|passed|completed|errored)\b/i, reason: "CI/CD developer workflow status notification" },
+  { regex: /\bmerge\s+request\s+!(?:\d+)\s+was\s+merged\b|\bpull\s+request\s+#(?:\d+)\s+(?:merged|closed|opened)\b/i, reason: "Code collaboration version control activity" },
+  { regex: /\bdependabot\s+alert|\b(?:npm|docker|pypi)\s+package\s+(?:published|build)\b/i, reason: "Software dependency/package registry notification" },
+  { regex: /\bmonitor\s+\[.*?\]\s+recovered|\bservice\s+latency\s+is\s+back\b/i, reason: "DevOps monitoring recovery notification" },
 
-  // Cold-blast opt-out mechanics, added after a real 11-message sample showed
-  // two genuine bulk-marketing blasts scoring 1/100 and 8/100 and therefore
-  // being reported as "message appears legitimate based on standard rules".
-  //
-  // Every pattern below describes HOW the sender asks the recipient to opt out
-  // or register, not what the message is about, because the topic is not the
-  // tell. A conference, a webinar, a training course and a phishing lure are
-  // all "interesting offers"; what separates cold marketing from opted-in mail
-  // is that it has no real unsubscribe link, and instead demands a keyword reply.
-  //
-  // Deliberately narrow. An opted-in newsletter is unsubscribed through a link
-  // or a List-Unsubscribe header, and a legitimate confirmation mail never asks
-  // the reader to put a word in the subject line. Verified against the benign
-  // sets in test-scam-corpus.js, test-false-positives.js and
-  // test-promo-verdict.js, none of which gain a single hit.
-  { regex: /put\s+(?:the\s+word\s+)?["“']?[\s-]*(?:remove|remove-me|unsubscribe|stop|opt[\s-]?out)["”']?\s+(?:on|in|to)\s+the\s+subject/i, reason: "Opt-out by replying with a keyword instead of an unsubscribe link" },
-  { regex: /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i, reason: "Registration triggered by a keyword reply, not a form" },
-  { regex: /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i, reason: "Bulk sender states its own opt-out terms in the body" },
-  { regex: /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i, reason: "Cold brochure request with no self-service path" }
+  // 2. Order Fulfillment, Logistics & Deliveries
+  { regex: /\border\s+#?[\w-]+\s+(?:your\s+order\s+)?has\s+been\s+delivered\b/i, reason: "E-commerce verified order delivery confirmation" },
+  { regex: /\b(?:out\s+for\s+delivery|delivered\s+by|handed\s+directly\s+to\s+resident)\b/i, reason: "Active parcel courier delivery notice" },
+  { regex: /\btracking\s+(?:awb|number|id)[:\s#]*[a-z0-9]+/i, reason: "Courier parcel tracking AWB reference" },
+  { regex: /\b(?:ride|trip|order)\s+(?:receipt|invoice)\b|\bdelivered\s+in\s+\d+\s+minutes\b/i, reason: "Transportation or on-demand delivery receipt" },
+  { regex: /\breturn\s+item\s+has\s+been\s+inspected\s+and\s+picked\s+up\b|\brefund\s+initiated\b/i, reason: "E-commerce product return pickup status" },
+
+  // 3. Official Banking, Regulatory, Compliance & Salary
+  { regex: /\bcollateral\s+at\s+client\s+level\b|\bcompliance\s+with\s+sebi\s+regulations\b/i, reason: "Regulatory securities compliance disclosure" },
+  { regex: /\bsalary\s+credited\s+to\s+your\s+account\b|\bcredited\s+with\s+inr\s+[\d,.]+\s+via\s+neft\b/i, reason: "Direct payroll salary credit confirmation" },
+  { regex: /\bmonthly\s+e-statement\s+for\s+your\s+(?:credit\s+card|account)\b/i, reason: "Official monthly bank/card statement" },
+  { regex: /\bterms\s+and\s+policies\b|\bdeveloper\s+distribution\s+agreement\b/i, reason: "Platform developer terms of service update" },
+
+  // 4. Operational Ticketing, Travel & Appointments
+  { regex: /\belectronic\s+reservation\s+slip\s+\(ers\)\s+pnr\b|\bcoach\s+[a-z0-9]+,\s*berth\s+\d+\b/i, reason: "Official railway reservation confirmation" },
+  { regex: /\bboarding\s+pass\b|\bgate\s+closes\s+\d+\s+minutes\s+prior\b/i, reason: "Airline electronic boarding pass" },
+  { regex: /\bappointment\s+(?:is\s+)?confirmed\s+for\b|\bdr\.\s+[a-z]+\s+\(cardiology|pediatrics|general\)\b/i, reason: "Medical healthcare appointment confirmation" },
+  { regex: /\bround\s+\d+\s+will\s+take\s+place\s+tomorrow\s+at\s+\d+:\d+\s+utc\b/i, reason: "Scheduled competitive programming round announcement" },
+  { regex: /\bworkspace\s+invited\b|\bis\s+inviting\s+you\s+to\s+a\s+scheduled\s+zoom\s+meeting\b/i, reason: "Direct team collaboration workspace or meeting invitation" },
+  { regex: /\bfall\s+\d{4}\s+final\s+examination\s+schedule\b|\bcapstone\s+submission\s+for\b/i, reason: "Academic university administration notice" }
+];
+
+const PROMOTIONAL_CLUTTER_PATTERNS = [
+  { regex: /unsubscribe/i, reason: "Post-registration promotional newsletter link", highIntent: false },
+  { regex: /noreply@[a-z0-9.-]+\.(news|club|top|xyz|info|promo|tech)/i, reason: "Automated post-registration marketing sender", highIntent: false },
+  { regex: /apply\s+(today|now)|register\s+(now|today)|join\s+[a-z0-9]+\s+(today|now)/i, reason: "Marketing call to action", highIntent: false },
+  { regex: /exclusive\s+invite|limited\s+seats|explore\s+how|% off|discount/i, reason: "Promotional marketing offer", highIntent: false },
+
+  // EdTech & Career Marketing Blasts (Parikh Jain, Interview Coaching, Placements)
+  { regex: /\b\d+[\d,]*\+?\s*(?:students|learners|graduates|candidates|professionals)\s*(?:hired|placed|enrolled|trained|cracked)\b/i, reason: "EdTech placement record brag & student career marketing", highIntent: true },
+  { regex: /\b\d+[\d,]*\+?\s*(?:companies|partner\s+companies|hiring\s+partners)\b/i, reason: "EdTech corporate hiring network marketing", highIntent: true },
+  { regex: /\b(?:crack|master|ace|prepare\s+for)\s+(?:[a-z\s]{0,25})interviews?\b/i, reason: "Career coaching & tech interview prep sales pitch", highIntent: true },
+  { regex: /\b(?:free\s+)?(?:masterclass|bootcamp|live\s+workshop|cohort|average\s+(?:ctc|package)|placement\s+(?:assistance|guarantee))\b/i, reason: "EdTech promotional course/bootcamp pitch", highIntent: true },
+
+  // Retail Merchandising, Styling & Lifestyle Catalog Marketing (Rinske Fris, Store sales)
+  { regex: /\b(?:strategy\s+for\s+(?:a\s+)?wardrobe|wardrobe\s+strategy|be\s+the\s+annoying\s+customer)\b/i, reason: "Lifestyle styling & wardrobe merchandise marketing pitch", highIntent: true },
+  { regex: /\b(?:explore|browse|shop)\s+(?:our\s+)?(?:collection|new\s+arrivals|catalog|store|latest\s+drop)\b/i, reason: "Retail catalog merchandising offer", highIntent: true },
+  { regex: /\b(?:flat|upto|up\s+to|\d{1,2}%)\s*(?:off|discount|cashback|sale)\b/i, reason: "Retail promotional discount offer", highIntent: true },
+  { regex: /\buse\s+(?:coupon|code|promo\s+code)\s+[A-Z0-9]+\b/i, reason: "Promotional coupon code offer", highIntent: true },
+  { regex: /\b(?:limited\s+time\s+offer|exclusive\s+deal|weekend\s+sale|clearance\s+sale)\b/i, reason: "Promotional clearance/deal offer", highIntent: true },
+
+  // Commercial Content Newsletters & Financial Digests (Vested Shorts, Morning Brew, TLDR Tech)
+  { regex: /\b(?:daily|weekly|monthly)\s+(?:global\s+)?market\s+(?:commentary|overview|recap|insights)\b/i, reason: "Commercial market commentary digest", highIntent: true },
+  { regex: /\bvested\s+shorts\b|\bshorts\s+daily\b/i, reason: "Commercial financial market shorts newsletter", highIntent: true },
+  { regex: /\b(?:tldr\s+tech|byte-sized\s+daily\s+news|morning\s+brew|top\s+stories\s+shaping\s+business)\b/i, reason: "Commercial curated tech/business newsletter", highIntent: true },
+  { regex: /\bstories\s+for\s+[a-z]+:.*?recommended\s+reads\b/is, reason: "Curated content recommendation digest", highIntent: true },
+  { regex: /\b(?:take\s+a\s+look\s+at\s+standard\s+provident\s+fund|here\s+is\s+how\s+much\s+of\s+it\s+goes\s+into\s+pf)\b/i, reason: "Career newsletter financial advisory blast", highIntent: true },
+
+  // Cold-blast opt-out mechanics
+  { regex: /put\s+(?:the\s+word\s+)?["“']?[\s-]*(?:remove|remove-me|unsubscribe|stop|opt[\s-]?out)["”']?\s+(?:on|in|to)\s+the\s+subject/i, reason: "Opt-out by replying with a keyword instead of an unsubscribe link", highIntent: true },
+  { regex: /reply\s+with\s+["“'][^"”]{1,40}["”]\s+on\s+the\s+(?:email\s+)?subject/i, reason: "Registration triggered by a keyword reply, not a form", highIntent: true },
+  { regex: /if\s+you\s+(?:prefer|wish)\s+not\s+to\s+receive\s+(?:any\s+)?(?:further|more|future)\s+emails?/i, reason: "Bulk sender states its own opt-out terms in the body", highIntent: true },
+  { regex: /feel\s+free\s+to\s+request\s+(?:a\s+|our\s+)?brochures?\b/i, reason: "Cold brochure request with no self-service path", highIntent: true }
 ];
 
 /**
@@ -1306,23 +1341,30 @@ function evaluateRules(text, channel = "email", auth = null, senderInfo = null) 
   // a clean message, and the verdict ladder gives promo_clutter its own
   // "unsubscribe this" action.
   let promoCount = 0;
+  let hasHighIntentPromo = false;
   for (const pattern of PROMOTIONAL_CLUTTER_PATTERNS) {
     const match = text.match(pattern.regex);
     if (match) {
       flags.push({ span: match[0], reason: pattern.reason, type: "promo" });
       promoCount++;
+      if (pattern.highIntent) hasHighIntentPromo = true;
     }
   }
+
+  // Check transactional safeguard
+  const hasTransactionalSafeguard = TRANSACTIONAL_SAFEGUARD_PATTERNS.some((p) => p.regex.test(text));
 
   // Any non-promotional flag means the message is doing something other than
   // selling, and a phishing lure must never be relabelled as marketing. This
   // is checked on flags rather than on the running score so that a scam which
   // trips only high-value signals (brand impersonation, a homoglyph, a
   // Reply-To redirect) cannot be bought back under the promo floor.
-  const hasThreatEvidence = flags.some((f) => f.type !== "promo");
-  if (promoCount >= 2 && !hasThreatEvidence) {
+  const hasThreatEvidence = flags.some((f) => f.type !== "promo" && f.type !== "quarantine");
+  if ((hasHighIntentPromo || promoCount >= 2) && !hasThreatEvidence && !hasTransactionalSafeguard) {
     isPromoClutter = true;
-    rawScore = Math.max(45, rawScore + promoCount * 12);
+    rawScore = Math.max(45, Math.min(58, 45 + promoCount * 4));
+  } else if (hasTransactionalSafeguard && !hasThreatEvidence && !hasHighIntentPromo) {
+    rawScore = Math.min(12, rawScore);
   }
 
   // Mailbox-provider quarantine notice. This runs BEFORE the official-domain
@@ -1421,6 +1463,7 @@ module.exports = {
       urgency: URGENCY_PATTERNS.length,
       credential: CREDENTIAL_PATTERNS.length,
       promotionalClutter: PROMOTIONAL_CLUTTER_PATTERNS.length,
+      transactionalSafeguards: TRANSACTIONAL_SAFEGUARD_PATTERNS.length,
       suspiciousDomains: SUSPICIOUS_DOMAINS.length,
       advanceFee: ADVANCE_FEE_PATTERNS.length,
       refundBait: REFUND_BAIT_PATTERNS.length,

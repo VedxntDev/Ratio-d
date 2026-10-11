@@ -96,6 +96,11 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
     rawFinalScore = Math.max(rawFinalScore, 36);
   }
 
+  // If bulk promotional marketing clutter, ensure score is safely bounded in the clutter range [38, 48]
+  if (hasPromoClutter && !hasSevereAuthSpoof && !hasSevereDomainSpoof && !hasSevereRule) {
+    rawFinalScore = Math.max(38, Math.min(48, rawFinalScore));
+  }
+
   const score = Math.min(100, Math.max(0, rawFinalScore));
 
   let verdict = "safe";

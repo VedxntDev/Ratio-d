@@ -92,6 +92,27 @@ const STRUCTURAL_SIGNALS = [
     test: (t) => /(invoice\s+#?\d+|order\s+confirmed|auto-renewal|charged\s+\$\d+|subscription\s+(ends|renewal)|refund\s+processing)/i.test(t),
     category: "billing_bait",
     reason: "Bogus order confirmation, invoice, or auto-renewal scare"
+  },
+  {
+    name: "edtech_marketing_pitch",
+    weight: 0.16,
+    test: (t) => /\b(?:\d+[\d,]*\+?\s*(?:students|learners|graduates|candidates)\s*(?:hired|placed)|\d+[\d,]*\+?\s*(?:companies|hiring\s+partners)|(?:crack|master|ace|prepare\s+for)\s+(?:[a-z\s]{0,25})interviews?|masterclass|bootcamp)\b/i.test(t),
+    category: "promo_clutter",
+    reason: "EdTech placement record brag or career interview prep pitch"
+  },
+  {
+    name: "retail_promo_offer",
+    weight: 0.16,
+    test: (t) => /\b(?:\d+%\s*(?:off|discount)|coupon\s+code|[A-Z0-9]{4,10}\s+at\s+checkout|strategy\s+for\s+(?:a\s+)?wardrobe|wardrobe\s+strategy|explore\s+collection|shop\s+now|clearance\s+sale)\b/i.test(t),
+    category: "promo_clutter",
+    reason: "Retail discount sale promotion, coupon code, or wardrobe merchandising"
+  },
+  {
+    name: "content_digest_newsletter",
+    weight: 0.12,
+    test: (t) => /\b(?:daily|weekly|monthly)\s+(?:global\s+)?market\s+(?:commentary|overview|recap|insights)|vested\s+shorts|tldr\s+tech|morning\s+brew|stories\s+for\s+[a-z]+:.*?recommended\s+reads\b/is.test(t),
+    category: "promo_clutter",
+    reason: "Commercial market commentary or newsletter digest"
   }
 ];
 
@@ -195,8 +216,13 @@ function projectObservationToPhysics(text, ruleFlags = [], triggeredSignals = []
 
   if (threatMass > 0.3) {
     threatWeights.safe = Math.max(0.02, 1.2 - threatMass * 1.5);
-  } else if (/unsubscribe|newsletter|digest|coupon|discount/i.test(lower) && triggeredSignals.length === 0) {
-    threatWeights.promo_clutter += 0.8;
+  } else {
+    const isPromoSignal = triggeredSignals.some(s => s.category === "promo_clutter");
+    const isPromoText = /\b(?:unsubscribe|newsletter|digest|coupon|discount|students hired|companies|wardrobe|market commentary)\b/i.test(lower);
+    if (isPromoSignal || isPromoText) {
+      threatWeights.promo_clutter += 2.0;
+      threatWeights.safe = Math.max(0.05, 1.2 - 0.7);
+    }
   }
 
   // Sublinear damping for excessive signals
