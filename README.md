@@ -215,7 +215,7 @@ sequenceDiagram
     Redactor-->>CS: Return Masked Text ([PHONE_1], [EMAIL_1]) + Counts
     Note over CS: PRIVACY GUARANTEE:<br/>PII dies in browser memory.<br/>Raw names, phones & OTPs NEVER touch network!
     CS->>Server: Send POST /analyze { sanitizedText, auth }
-    Server->>Server: Execute Rule Engine & Laya Scorer
+    Server->>Server: Execute Rule Engine & VegaML Physics Scorer
     Server-->>CS: Return JSON Verdict { score: 85, verdict: "high_risk", flags }
     CS->>ShadowDOM: Mount Neo-Brutalist Shadow DOM Banner
     ShadowDOM-->>User: Display Risk Badges & Verbatim Flag Highlighting
@@ -256,17 +256,17 @@ flowchart TD
 
     subgraph DETECTION_CORE ["🧠 HYBRID THREAT ENGINE CORE"]
         RULE["📏 Heuristic Rule Engine<br/>(server/rules/engine.js)<br/>• 10 Signal Families<br/>• Homoglyphs / Levenshtein <= 2"]
-        LAYA["⚖️ Laya Signal Scorer<br/>(server/laya/client.js)<br/>• Structural Features"]
+        VEGAML["⚖️ VegaML Physics Engine<br/>(server/vegaml/client.js)<br/>• 64-D Hamiltonian Dynamics<br/>• Boltzmann Occupancies & Conformal Sets"]
         QR_RULES["📱 Zero-Trust QR Engine<br/>(server/rules/qr.js)<br/>• Brand Spoofing Floor (90)<br/>• IP Literal Floor (75)"]
-        COMBINER["🎛️ Score Combiner<br/>(0.70 Rules + 0.30 Laya)"]
+        COMBINER["🎛️ Score Combiner<br/>(0.70 Rules + 0.30 VegaML)"]
         GROUNDER["🔒 Grounded LLM Verifier<br/>(server/llm/)<br/>• Verbatim Flag Check"]
 
         API_GATEWAY -->|POST /analyze| RULE
-        API_GATEWAY -->|POST /analyze| LAYA
+        API_GATEWAY -->|POST /analyze| VEGAML
         API_GATEWAY -->|POST /analyze-qr| QR_RULES
 
         RULE --> COMBINER
-        LAYA --> COMBINER
+        VEGAML --> COMBINER
         COMBINER --> GROUNDER
     end
 
@@ -290,17 +290,21 @@ flowchart TD
 
     class EXT,CS,RED,QR_SCAN,WEB_APP clientFill
     class API_GATEWAY,LOG,TRACER serverFill
-    class RULE,LAYA,QR_RULES,COMBINER,GROUNDER engineFill
+    class RULE,VEGAML,QR_RULES,COMBINER,GROUNDER engineFill
     class BANNER,MAIL_BADGE,QR_BADGE,DRAWER renderFill
 ```
 
 ---
 
-### 2.5 Detection Engines, Laya & Scoring Mathematics
+### 2.5 Detection Engines, VegaML & Scoring Mathematics
 
 #### 1. Hybrid Scoring Formula
 ```
-Raw Score = (Rule Engine Score × 0.70) + (Laya Signal Probability × 100 × 0.30)
+Raw Score = (Rule Engine Score × 0.70) + (VegaML Calibrated Probability × 100 × 0.30)
+
+// Physics-guided safety guarantees:
+If VegaML abstains (unbound particle or high uncertainty): Raw Score = Rule Engine Score
+If VegaML 90% conformal set excludes "safe" (prob >= 0.50): Raw Score = Max(42, Raw Score)
 
 Final Threat Score = Clamp(Raw Score, 0, 100)
 ```

@@ -44,101 +44,16 @@ const HIGH_RISK_TOKENS = [
   "urgent", "verify", "suspended", "password", "ssn", "wire", "paypa1", "bit.ly", "login"
 ];
 
+const { evaluateVegaModel, TAXONOMY: VEGA_TAXONOMY } = require("../vegaml/client");
 const { predictTrainedModel, loadModel } = require("./inference");
 
 async function evaluateLayaModel(text, ruleFlags) {
-  if (!text || typeof text !== "string") {
-    return { label: "safe", probability: 0.05, source: loadModel() ? "laya_trained_v1" : "laya_stub_heuristic" };
-  }
-
-  // Use trained ML model if available
-  const trained = predictTrainedModel(text);
-  if (trained) {
-    if (ruleFlags && ruleFlags.length > 0 && trained.probability < 0.95) {
-      trained.probability = Math.min(0.99, parseFloat((trained.probability + Math.min(0.20, ruleFlags.length * 0.05)).toFixed(2)));
-      if (trained.probability >= 0.65) trained.label = "high_risk";
-      else if (trained.probability >= 0.35) trained.label = "suspicious";
-    }
-    return trained;
-  }
-
-  // Fallback to hand-weighted heuristic if trained model is unavailable
-  let threatSignal = 0;
-
-  if (ruleFlags && ruleFlags.length > 0) {
-    threatSignal += ruleFlags.length * 0.25;
-  }
-
-  const highRiskTokens = HIGH_RISK_TOKENS;
-  const lowerText = text.toLowerCase();
-  let tokenMatches = 0;
-  for (const token of highRiskTokens) {
-    if (lowerText.includes(token)) {
-      tokenMatches++;
-    }
-  }
-  threatSignal += tokenMatches * 0.15;
-
-  // Structural layer: named, weighted, and reported so the score is auditable
-  // rather than an unexplained number.
-  const signals = [];
-  for (const sig of STRUCTURAL_SIGNALS) {
-    try {
-      if (sig.test(text)) {
-        signals.push(sig.name);
-        threatSignal += sig.weight;
-      }
-    } catch (e) {
-      // A malformed pattern must never take the analyser down.
-    }
-  }
-
-  // Diminishing returns: a message that trips five structural signals is not
-  // five times as bad as one that trips a single signal.
-  if (signals.length > 2) {
-    threatSignal -= (signals.length - 2) * 0.06;
-  }
-
-  const probability = Math.min(0.99, Math.max(0.02, parseFloat(threatSignal.toFixed(2))));
-
-  let label = "safe";
-  if (probability >= 0.65) {
-    label = "high_risk";
-  } else if (probability >= 0.30) {
-    label = "suspicious";
-  }
-
-  return {
-    label,
-    probability,
-    source: "laya_stub_heuristic",
-    note: "Local typed-decision fallback model active (laya container offline).",
-    signals
-  };
+  return evaluateVegaModel(text, ruleFlags);
 }
 
 module.exports = {
   evaluateLayaModel,
+  evaluateVegaModel,
   STRUCTURAL_SIGNALS,
-
-  /**
-   * Machine-readable description of the scorer, for tooling that needs to
-   * enumerate what it looks for without parsing source. Derived from the same
-   * constants the scorer runs on, so it cannot drift.
-   */
-  TAXONOMY: {
-    version: 2,
-    kind: "hand_weighted_heuristic_not_trained",
-    source: "laya_stub_heuristic",
-    note: "Local typed-decision fallback model active (laya container offline).",
-    formula: "clamp(ruleFlags*0.25 + tokenMatches*0.15 + sum(structuralWeights), 0.02, 0.99)",
-    corroborationDamping: "signals beyond the second are damped by 0.06 each",
-    tokenList: HIGH_RISK_TOKENS,
-    labelThresholds: { high_risk: 0.65, suspicious: 0.3 },
-    structuralSignals: STRUCTURAL_SIGNALS.map((s) => ({
-      name: s.name,
-      weight: s.weight,
-      test: String(s.test),
-    })),
-  },
+  TAXONOMY: VEGA_TAXONOMY,
 };

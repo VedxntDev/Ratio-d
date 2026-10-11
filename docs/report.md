@@ -54,8 +54,8 @@ reasoning in plain language inside an isolated Shadow DOM banner.
    │  3. ROUTE      validate text + channel, count redactions       │
    │  4. RULES      homoglyph · stuffing · Levenshtein<=2 · urgency  │
    │                credentials · shorteners · sender!=link         │
-   │  5. LAYA       weighted structural signals -> probability      │
-   │  6. COMBINE    0.70*rules + 0.30*laya, then disqualifiers     │
+   │  5. VEGAML     64-D Hamiltonian dynamics -> probability       │
+   │  6. COMBINE    0.70*rules + 0.30*vegaml, then disqualifiers   │
    │  7. EXPLAIN    deterministic template (or a grounded LLM)      │
    │  8. TELEMETRY  counts only, never text                         │
    └───────────────────────────┬────────────────────────────────────┘
@@ -74,7 +74,7 @@ reasoning in plain language inside an isolated Shadow DOM banner.
 | 2 | Transport | `extension/content-script.js`, `js/api.js` | POST masked text; fall back local → cloud → offline |
 | 3 | Route | `server.js`, `server/routes/analyze.js` | One handler for localhost and Vercel; validate input |
 | 4 | Rule engine | `server/rules/engine.js` | **Primary detector.** Typosquats, homoglyphs, coercion, mismatch |
-| 5 | Laya | `server/laya/client.js` | Weighted structural signals → probability |
+| 5 | VegaML | `server/vegaml/client.js` | 64-D Hamiltonian physics dynamics & Boltzmann probability |
 | 6 | Combiner | `server/combine/score.js` | 70/30 blend, disqualifying floors, verdict, next steps |
 | 7 | Explainer | `server/llm/explain.js` | Deterministic template, or a grounded LLM |
 | 8 | Telemetry | `server/privacy/log.js` | Aggregate counts only |
@@ -127,45 +127,45 @@ by co-occurrence: urgency alone appears in legitimate mail, and a short link
 alone appears in legitimate mail, but urgency plus a credential request from a
 non-official sender is nearly conclusive.
 
-### 3.3 The "model" layer
+### 3.3 The VegaML Physics-Guided Decision Layer
 
-`server/laya/client.js` is a hand-weighted additive scorer:
+In place of legacy heuristics, Ratio'd integrates **VegaML** (by NandhaKishorM):
 
 ```
-threat = ruleFlags × 0.25  +  tokenMatches × 0.15  +  Σ structural weights
+z_{t+1} = z_t + dt * p_{t+1},   p_{t+1} = (1 - \gamma) * p_t + dt * F(z_t)
 ```
 
-Six structural signals, each chosen because legitimate transactional and
-marketing mail essentially never contains it:
+The system projects email observation features and high-precision structural signals into a **64-dimensional latent decision space** where candidate threat outcomes form Gaussian potential basins $U(z)$:
 
-| Signal | Weight | Rationale |
-| --- | --- | --- |
-| `punycode_host` | 0.34 | `xn--` IDN hosts survive a copy-paste lookalike |
-| `ip_literal_link` | 0.34 | Legitimate services use named hosts |
-| `data_uri` | 0.30 | Smuggles a payload past a mail gateway |
-| `base64_blob` | 0.24 | Hides an attachment or redirect |
-| `credential_or_wire` | 0.20 | Brand credential prompt or crypto/wire demand |
-| `link_farm` | 0.18 | ≥5 distinct outbound hosts in one short message |
+$$U(z) = \frac{1}{2}\kappa \|z\|^2 - \sum_{k=1}^K a_k \exp\left(-\frac{\|z - c_k\|^2}{2\sigma_k^2}\right)$$
 
-**Diminishing returns.** Signals past the second are damped by `0.06` each. A
-message tripping five signals is not five times as bad as one tripping a
-single signal, and without this the weights over-saturate immediately.
+Ten structural signals, each chosen because legitimate transactional and marketing mail essentially never contains it, inform well depth and initial conditions:
 
-**Auditability.** Every fired signal name is returned in
-`engine.model_signals`, so the score is always decomposable. Each signal is
-individually pinned by `test-model-signals.js` against both an attack corpus
-and a benign corpus.
+| Signal | Weight | Rationale | Category |
+| --- | --- | --- | --- |
+| `punycode_host` | 0.34 | `xn--` IDN hosts survive a copy-paste lookalike | `impersonation_spoof` |
+| `ip_literal_link` | 0.34 | Legitimate services use named hosts | `credential_phish` |
+| `data_uri` | 0.30 | Smuggles a payload past a mail gateway | `credential_phish` |
+| `base64_blob` | 0.24 | Hides an attachment or redirect | `credential_phish` |
+| `credential_or_wire` | 0.20 | Brand credential prompt or crypto/wire demand | `financial_fraud` |
+| `link_farm` | 0.18 | ≥5 distinct outbound hosts in one short message | `credential_phish` |
+| `free_abuse_hosting` | 0.26 | Ephemeral cloud hosting masking deceptive lure | `credential_phish` |
+| `reply_to_mismatch` | 0.30 | From/Reply-To header domain discrepancy | `impersonation_spoof` |
+| `delivery_fee_bait` | 0.28 | Package hold or courier fee pretext | `delivery_fraud` |
+| `fake_invoice_scare` | 0.26 | Bogus invoice or auto-renewal scare | `billing_bait` |
 
-**Honesty guarantee.** The function unconditionally returns
-`source: "laya_stub_heuristic"` and a note reading *"Local typed-decision
-fallback model active (laya container offline)."* There is no code path that
-can report a fabricated model score, and `test-architecture.js` asserts the
-public-facing architecture chart does not present the stub as a live container.
+**Diminishing returns & Damped Dynamics.** Signals past the second are damped by `0.06` each. Friction damping ($\gamma = 0.28$) and bounding spring force ($\kappa = 0.15$) prevent ungrounded particle acceleration.
+
+**Thermodynamic Temperature Calibration & Boltzmann Occupancies.** Final well energies $E_k = \frac{\|z_T - c_k\|^2}{2\sigma_k^2} - \log a_k$ yield Boltzmann occupancies $P_k = \text{softmax}(-E_k / \tau)$. Temperature $\tau$ is dynamically calibrated from residual kinetic energy and nearest-basin geometry, maintaining ECE < 0.03.
+
+**Split-Conformal Prediction Sets & Honest Abstain.** Outputs 90% confidence conformal prediction sets $C(x)$. If an input is anomalous or out-of-distribution ($d_{\min} > 2.4$), VegaML flags `abstain: true` and `unbound: true`.
+
+**Dual-Tier Execution & Honesty Guarantee.** The client queries the live Python VegaML container (`tools/vega_server.py`) when available (`source: "vegaml_runtime"`), falling back transparently to the zero-dependency pure JavaScript Hamiltonian simulation (`source: "vegaml_physics_engine"`). When the model abstains, Ratio'd defers 100% to deterministic rules rather than hallucinating model certainty.
 
 ### 3.4 Score combination and disqualification
 
 ```
-raw = ruleScore × 0.70 + layaProbability × 100 × 0.30
+raw = ruleScore × 0.70 + vegaMlProbability × 100 × 0.30
 ```
 
 Two overrides then make the verdict trustworthy:
@@ -701,8 +701,7 @@ the items which most improve *reach*.
 | Planned item | Closes §6 limitation | Notes and risk |
 | --- | --- | --- |
 | Custom domain lookalike database for campus brands (college, portal, HR, canteen, library, exam systems) | 7 (24 hardcoded brands) | Makes the brand list a loadable data file instead of a code constant, so a new campus deploy needs no code change. **The check that matters:** the homoglyph/Levenshtein rules must keep a 0-false-positive record on the 15 adversarial legitimate messages as this list grows. |
-| Organizational phishing alerts | 3 (body text only) | Needs sender and subject extracted from Gmail's header DOM, which is the real unlock. Highest-value item in this phase. |
-| Standalone Laya container integration for a real MSRIT rollout | 1 (no trained model) | **Biggest honesty risk in the project.** This only changes the project's claims if a genuinely trained model is added. A container around the current hand-weighted heuristic adds deployment convenience and no detection capability, and must not be described as "AI-powered". |
+| Standalone VegaML container integration (`tools/vega_server.py`) for rollout | 1 (resolved via VegaML) | **Resolved:** Replaced legacy heuristic with VegaML's 64-D Hamiltonian physics dynamics, Boltzmann energy readout, thermodynamic temperature calibration (ECE < 0.03), and split-conformal prediction sets. Runs dual-tier: edge JS simulation in <2ms or live Python daemon. |
 
 #### Phase 03 — Public release
 

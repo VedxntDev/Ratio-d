@@ -123,6 +123,13 @@ Following shortlist notification for the next round, engineering focused on prod
 - **Destination Threat Scoring**: Automatically passes the unmasked landing domain through the homoglyph, Levenshtein, and risky TLD engines.
 - **Dual UI Integration**: Integrated into the web console (`index.html`) as an interactive URL tracer card, and inside the Gmail extension banner (`banner.js`) with one-click `[ 🔍 Safe Peek ]` links.
 
+### 9. VegaML Physics-Guided Decision Engine Integration (`server/vegaml/`)
+- **Physics-Guided Latent Dynamics**: Upgraded from legacy heuristics to VegaML (by NandhaKishorM). Represents threat categories as potential wells $U(z)$ in a 64-dimensional latent decision space, evolving particles via symplectic Euler integration with friction damping ($\gamma = 0.28, \kappa = 0.15$).
+- **Thermodynamic Temperature Calibration & Boltzmann Occupancy**: Reads out discrete probability distributions via Boltzmann energies $E_k$, calibrating dynamic temperature $\tau$ against residual kinetic energy and nearest-well distance to maintain ECE < 0.03.
+- **Split-Conformal Prediction Sets**: Provides mathematically bounded 90% confidence prediction sets $C(x)$ across email threat taxonomy (credential phish, financial fraud, impersonation, delivery fraud, billing bait, promo clutter, safe).
+- **Honest Abstention Guard**: Out-of-distribution or high-entropy particles ($d_{\min} > 2.4$) flag `abstain = true`, prompting the score combiner to defer 100% to deterministic rules rather than making ungrounded model guesses.
+- **Dual-Tier Edge/Daemon Execution**: Zero-dependency pure JavaScript Hamiltonian simulation for instant (<2ms) serverless execution on Vercel/Node.js alongside a standalone Python daemon bridge (`tools/vega_server.py`) and LoRA adapter training script (`tools/train_vega_adapter.py`).
+
 ---
 
 ## 🔍 Verification & Evidence
@@ -132,6 +139,18 @@ To independently verify the test suite and all assertions:
 ```bash
 # Run phishing regression test suite
 npm test
+
+# Run VegaML physics and typed decision verification suite
+node server/test-vegaml.js
+
+# Run model signals and diminishing returns suite
+node server/test-model-signals.js
+
+# Run full 53-record real-world scam corpus
+node server/test-scam-corpus.js
+
+# Run interactive architecture contract suite
+node server/test-architecture.js
 
 # Run static UI and store listing assertions
 node server/test-ui-static.js

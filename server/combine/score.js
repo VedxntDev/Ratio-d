@@ -8,6 +8,22 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
 
   let rawFinalScore = Math.round((ruleScore * 0.70) + (layaScore * 0.30));
 
+  // VegaML Physics-Guided Guarantees:
+  // 1. If VegaML detects an unbound particle (out-of-distribution input beyond all potential basins),
+  // defer 100% to deterministic rule engine rather than injecting ungrounded model noise.
+  if (layaModel?.unbound) {
+    rawFinalScore = ruleScore;
+  }
+
+  // 2. Conformal set coverage guarantee: if 90% conformal prediction set excludes "safe",
+  // and model probability reflects threat, enforce suspicious floor to prevent benign misclassification.
+  if (layaModel?.conformal_set && Array.isArray(layaModel.conformal_set)) {
+    const excludesSafe = !layaModel.conformal_set.includes("safe");
+    if (excludesSafe && (layaModel.probability || 0) >= 0.50 && rawFinalScore < 40) {
+      rawFinalScore = Math.max(rawFinalScore, 42);
+    }
+  }
+
   // Whether this is bulk marketing rather than a threat.
   //
   // The rule engine already makes this call correctly, and it requires TWO OR
