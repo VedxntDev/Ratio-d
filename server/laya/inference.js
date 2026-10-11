@@ -126,15 +126,26 @@ function predictTrainedModel(text) {
     }
   }
 
-  // 5. Sigmoid activation
-  const prob = 1 / (1 + Math.exp(-z));
+  // 5. Prior calibration for real-world base rate:
+  // When an email exhibits ZERO structural signals, shift logit to account for low real-world base rate.
+  let calibratedZ = z;
+  if (signals.length === 0) {
+    calibratedZ -= 2.0;
+  }
+
+  // Sigmoid activation
+  const prob = 1 / (1 + Math.exp(-calibratedZ));
   const probability = Math.min(0.99, Math.max(0.02, parseFloat(prob.toFixed(2))));
 
   // 6. Label assignment
   let label = "safe";
-  if (probability >= 0.65) {
-    label = "high_risk";
-  } else if (probability >= 0.35) {
+  if (signals.length > 0 || probability >= 0.65) {
+    if (probability >= 0.65) {
+      label = "high_risk";
+    } else if (probability >= 0.35) {
+      label = "suspicious";
+    }
+  } else if (probability >= 0.50) {
     label = "suspicious";
   }
 

@@ -89,6 +89,13 @@ function combineScore(ruleScore, layaModel, channel = "email", flags = [], engin
     rawFinalScore = Math.max(75, rawFinalScore);
   }
 
+  // If rule engine flagged explicit non-promo threat signals with score >= 25,
+  // do not allow a statistical model prior to dilute the threat below suspicious.
+  const hasThreatFlags = flags.some(f => f.type !== "promo" && f.type !== "quarantine");
+  if (hasThreatFlags && ruleScore >= 25 && !hasPromoClutter && rawFinalScore < 35) {
+    rawFinalScore = Math.max(rawFinalScore, 36);
+  }
+
   const score = Math.min(100, Math.max(0, rawFinalScore));
 
   let verdict = "safe";

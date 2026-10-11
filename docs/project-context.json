@@ -191,6 +191,15 @@
         ],
         "amazon": [
           "amazon.com",
+          "amazon.in",
+          "amazon.co.uk",
+          "amazon.de",
+          "amazon.ca",
+          "amazon.fr",
+          "amazon.es",
+          "amazon.it",
+          "amazon.co.jp",
+          "amazon.com.au",
           "aws.amazon.com"
         ],
         "paypal": [
@@ -200,7 +209,8 @@
           "netflix.com"
         ],
         "bankofamerica": [
-          "bankofamerica.com"
+          "bankofamerica.com",
+          "bofa.com"
         ],
         "chase": [
           "chase.com"
@@ -330,7 +340,13 @@
         "airtable.com",
         "linear.app",
         "vercel.app",
-        "netlify.app"
+        "netlify.app",
+        "gitlab.com",
+        "codeforces.com",
+        "mamaearth.in",
+        "shiprocket.in",
+        "fastag.ihmcl.com",
+        "bookmyshow.com"
       ],
       "freeMailDomains": [
         "gmail.com",
@@ -437,13 +453,15 @@
           "name": "fake_security",
           "points": 20,
           "corroboration": true,
-          "patternCount": 6,
+          "patternCount": 8,
           "patterns": [
             "Mandatory 2FA enforcement notice",
             "2FA enrolment pushed from an email link",
             "Wallet-protection pretext",
             "Declined-payment bait",
             "Fake dashboard unread message lure",
+            "Quishing / QR code authentication trap",
+            "Authenticator/MFA configuration lure",
             "Fake security threat or subscription termination alert"
           ]
         },
@@ -561,7 +579,7 @@
         "refundBait": 5,
         "deliveryFee": 8,
         "fakeSubscription": 10,
-        "fakeSecurity": 6,
+        "fakeSecurity": 8,
         "investment": 5,
         "healthClaim": 17,
         "personalData": 5,

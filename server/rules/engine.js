@@ -56,10 +56,14 @@ const OFFICIAL_BRAND_DOMAINS = {
   microsoft: ["microsoft.com", "office.com", "live.com", "outlook.com", "microsoftonline.com", "accountprotection.microsoft.com"],
   google: ["google.com", "gmail.com", "accounts.google.com"],
   apple: ["apple.com", "icloud.com"],
-  amazon: ["amazon.com", "aws.amazon.com"],
+  amazon: [
+    "amazon.com", "amazon.in", "amazon.co.uk", "amazon.de", "amazon.ca",
+    "amazon.fr", "amazon.es", "amazon.it", "amazon.co.jp", "amazon.com.au",
+    "aws.amazon.com"
+  ],
   paypal: ["paypal.com"],
   netflix: ["netflix.com"],
-  bankofamerica: ["bankofamerica.com"],
+  bankofamerica: ["bankofamerica.com", "bofa.com"],
   chase: ["chase.com"],
   wellsfargo: ["wellsfargo.com"],
   stripe: ["stripe.com"],
@@ -177,7 +181,8 @@ const LEGITIMATE_DOMAINS = new Set([
   "samsung.com", "sony.com", "nike.com", "adidas.com", "walmart.com",
   "target.com", "bestbuy.com", "costco.com", "etsy.com", "ebay.com",
   "soundcloud.com", "bandcamp.com", "discogs.com", "medium.com", "substack.com",
-  "notion.so", "airtable.com", "linear.app", "vercel.app", "netlify.app"
+  "notion.so", "airtable.com", "linear.app", "vercel.app", "netlify.app",
+  "gitlab.com", "codeforces.com", "mamaearth.in", "shiprocket.in", "fastag.ihmcl.com", "bookmyshow.com"
 ]);
 
 /**
@@ -258,7 +263,7 @@ const URGENCY_PATTERNS = [
 const CREDENTIAL_PATTERNS = [
   { regex: /verify\s+your\s+(credentials|account|password|identity|access)/i, reason: "Credential verification demand" },
   { regex: /confirm\s+your\s+(identity|password|account|credentials|details|information)/i, reason: "Identity confirmation demand" },
-  { regex: /enter\s+your\s+(password|pin|ssn|passcode|code)/i, reason: "Sensitive credential harvesting request" },
+  { regex: /(?:enter|confirm|verify|provide)\s+(?:your\s+)?(?:debit\s+card\s+|credit\s+card\s+|account\s+)?(password|pin|ssn|passcode|code)/i, reason: "Sensitive credential harvesting request" },
   { regex: /provide\s+(your\s+)?(otp|one-time\s+password|verification\s+code)/i, reason: "Authentication OTP theft attempt" },
   { regex: /(login|auth|signin|password-reset)\s*link/i, reason: "Login credential capture link" }
 ];
@@ -427,6 +432,8 @@ const FAKE_SECURITY_PATTERNS = [
   { regex: /protect\s+your\s+wallet|keeping\s+your\s+digital\s+assets\s+safe/i, reason: "Wallet-protection pretext" },
   { regex: /we\s+tried\s+to\s+charge\s+your\s+account\s+but\s+the\s+transaction\s+was\s+declined/i, reason: "Declined-payment bait" },
   { regex: /(?:new|unread)\s+message\s+(?:waiting\s+for\s+you|on\s+your\s+dashboard)/i, reason: "Fake dashboard unread message lure" },
+  { regex: /scan\s+(?:the\s+)?(?:embedded\s+)?qr\s*code|qr\s*code\s+required\s+for\s+(?:multi-factor|mfa|2fa|authenticator|setup)/i, reason: "Quishing / QR code authentication trap" },
+  { regex: /update\s+your\s+authenticator|authenticator\s+setup|multi-factor\s+setup|mfa\s+setup/i, reason: "Authenticator/MFA configuration lure" },
   { regex: /cloud\s+antivirus\s+expired|threat\s+to\s+your\s+device|compromise\s+your\s+sim\s+card|renew\s+your\s+shield|unprotected\s+against\s+cyber\s+attacks|subscription\s+(?:termination\s+notice|will\s+be\s+closed|has\s+closed)/i, reason: "Fake security threat or subscription termination alert" }
 ];
 

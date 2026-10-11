@@ -466,12 +466,12 @@ function extractGmailAuthDetails(messageContainer) {
  */
 function isPromotionsContext(container = null, text = "") {
   try {
-    // 1. URL hash check
-    if (window.location.hash && /category[/:%20]+promotions|label[/:%20]+promotions|#promotions/i.test(window.location.hash)) {
+    // 1. URL hash check: user has explicitly navigated to Promotions view
+    if (window.location.hash && /category[/:%20]+promotions|label[/:%20]+promotions|#promotions\b/i.test(window.location.hash)) {
       return true;
     }
 
-    // 2. Active Tab in Gmail tabbed view
+    // 2. Active Tab in Gmail tabbed view (MUST have aria-selected="true")
     const activeTab = document.querySelector('[role="tab"][aria-selected="true"], .aKh[aria-selected="true"], [role="tab"].aKz[aria-selected="true"]');
     if (activeTab) {
       const tabText = (activeTab.textContent || activeTab.getAttribute("aria-label") || activeTab.getAttribute("data-tooltip") || "").toLowerCase();
@@ -480,45 +480,39 @@ function isPromotionsContext(container = null, text = "") {
       }
     }
 
-    const promoTab = document.querySelector('[role="tab"][aria-label*="Promotion" i], [role="tab"][data-tooltip*="Promotion" i]');
-    if (promoTab && (promoTab.getAttribute("aria-selected") === "true" || (promoTab.classList.contains("aKh") && promoTab.classList.contains("J-KU-KO")))) {
-      return true;
-    }
-
-    // Left navigation category selected
-    const activeNavPromo = document.querySelector('a[href*="promotions"][aria-current="page"], .nZ[data-tooltip*="Promotions" i], div[data-tooltip*="Promotions" i][aria-selected="true"]');
+    // 3. Left navigation category actively selected
+    const activeNavPromo = document.querySelector('a[href*="promotions"][aria-current="page"], .TO.nZ[aria-selected="true"], div[data-tooltip*="Promotions" i][aria-selected="true"]');
     if (activeNavPromo) {
       return true;
     }
 
-    // 3. Category chips / label badges on the email or row
-    const targetRoot = container || document;
-    const categoryChips = targetRoot.querySelectorAll('.av, span.hN, div.ar.as, [data-tooltip*="Promotions" i], [aria-label*="Promotions" i], .at');
+    // If container is null (checking page-level view only), stop here! Never scan the global document!
+    if (!container) {
+      return false;
+    }
+
+    // 4. Category chips / label badges scoped STRICTLY within this specific container
+    const categoryChips = container.querySelectorAll('.av, span.hN, div.ar.as, .at');
     for (const chip of categoryChips) {
-      const chipText = (chip.textContent || chip.getAttribute("aria-label") || chip.getAttribute("data-tooltip") || "").toLowerCase();
+      const chipText = (chip.textContent || chip.getAttribute("aria-label") || "").toLowerCase();
       if (chipText.includes("promotion")) {
         return true;
       }
     }
 
-    // 4. Native Gmail Unsubscribe button in sender header
-    const nativeUnsub = document.querySelector('span.ca, .mU, [role="button"][aria-label*="Unsubscribe" i], a[href*="unsubscribe" i], button[aria-label*="Unsubscribe" i]');
-    if (nativeUnsub && (nativeUnsub.offsetParent !== null || nativeUnsub.offsetWidth > 0 || nativeUnsub.offsetHeight > 0)) {
-      return true;
-    }
-
-    // 5. Unsubscribe links in message body
-    if (container) {
-      const unsubLink = container.querySelector('a[href*="unsubscribe" i], a[href*="optout" i], a[href*="opt-out" i], a[href*="preferences" i]');
-      if (unsubLink) {
+    // 5. Unsubscribe links in message body with active marketing offers
+    const unsubLink = container.querySelector('a[href*="unsubscribe" i], a[href*="optout" i], a[href*="opt-out" i], a[href*="preferences" i]');
+    if (unsubLink && text) {
+      if (/\b(%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|special\s+offer|limited\s+time|shop\s+now)\b/i.test(text)) {
         return true;
       }
     }
 
-    // 6. Marketing and promotional keywords in subject / body / snippet
+    // 6. Multiple marketing keywords in text (requires both unsubscribe + promotional offer)
     if (text) {
-      const promoKeywords = /\b(unsubscribe|%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|promo|limited\s+time|webinar|announcing|newsletter|special\s+offer|rewards?\s*(points|expire)|free\s+gift|clearance|recommended\s+courses|courses|catalog|shop\s+now|view\s+in\s+browser)\b/i;
-      if (promoKeywords.test(text)) {
+      const hasUnsub = /\bunsubscribe\b/i.test(text);
+      const hasPromo = /\b(%\s*off|discount|sale\b|deals?|coupon|clearance)\b/i.test(text);
+      if (hasUnsub && hasPromo) {
         return true;
       }
     }

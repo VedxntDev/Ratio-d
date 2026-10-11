@@ -103,7 +103,7 @@ function evaluateLocalPhysics(text, ruleFlags) {
 
   if (trained && typeof trained.probability === "number") {
     const perceptionThreat = trained.probability;
-    if (perceptionThreat > 0.40) {
+    if (perceptionThreat >= 0.60 && (ruleFlags.length > 0 || triggeredSignals.length > 0)) {
       threatWeights.credential_phish = (threatWeights.credential_phish || 0.1) + perceptionThreat * 1.5;
       threatWeights.safe = Math.max(0.01, (threatWeights.safe || 1.0) - perceptionThreat);
     }
@@ -129,7 +129,10 @@ function evaluateLocalPhysics(text, ruleFlags) {
   // Blend trained perception features with physics occupancies and structural signals
   let baseProbability = trained ? trained.probability : 0.05;
 
-  if (ruleFlags && ruleFlags.length > 0 && baseProbability < 0.95) {
+  // When an email has zero rule flags and zero structural signals, baseline must remain safely low
+  if ((!ruleFlags || ruleFlags.length === 0) && triggeredSignals.length === 0) {
+    baseProbability = Math.min(baseProbability, 0.15);
+  } else if (ruleFlags && ruleFlags.length > 0 && baseProbability < 0.95) {
     baseProbability = Math.min(0.99, parseFloat((baseProbability + Math.min(0.20, ruleFlags.length * 0.05)).toFixed(2)));
   }
 
@@ -151,7 +154,7 @@ function evaluateLocalPhysics(text, ruleFlags) {
   let label = "safe";
   if (probability >= 0.65) {
     label = "high_risk";
-  } else if (probability >= 0.35) {
+  } else if (probability >= 0.35 && (ruleFlags.length > 0 || triggeredSignals.length > 0 || probability >= 0.50)) {
     label = "suspicious";
   } else if (chosenCategory === "promo_clutter" && probability < 0.35) {
     label = "promo_clutter";

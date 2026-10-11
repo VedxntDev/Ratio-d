@@ -47,6 +47,7 @@
       /2fa\s+(will\s+be\s+|is\s+now\s+)?mandatory|enable\s+2fa\s+now/i,
       /mandatory\s+for\s+all\s+\w+\s+accounts|two-factor\s+authentication/i,
       /protect\s+your\s+wallet|transaction\s+was\s+declined/i,
+      /scan\s+(?:the\s+)?(?:embedded\s+)?qr\s*code|update\s+your\s+authenticator|qr\s*code\s+required/i,
       /cloud\s+antivirus\s+expired|threat\s+to\s+your\s+device|compromise\s+your\s+sim\s+card|renew\s+your\s+shield|unprotected\s+against\s+cyber\s+attacks|subscription\s+(?:termination\s+notice|will\s+be\s+closed|has\s+closed)/i ] },
     { name: "investment", points: 15, patterns: [
       /\$[A-Z]{2,6}\s+token|airdrop/i,
