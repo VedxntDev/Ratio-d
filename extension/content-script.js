@@ -464,55 +464,51 @@ function extractGmailAuthDetails(messageContainer) {
  * 5. Message Body: Unsubscribe links or marketing opt-out
  * 6. Marketing Keywords: Promotional keywords in subject, body, or snippet
  */
-function isPromotionsContext(container = null, text = "") {
+/**
+ * Detects whether the user is actively viewing Gmail's Promotions tab or section.
+ * Strictly verifies the active hash, tab, or navigation link.
+ * Never performs broad document queries or inspects unselected classes like .TO.nZ.
+ */
+function isPromotionsViewActive() {
   try {
-    // 1. URL hash check: user has explicitly navigated to Promotions view
-    if (window.location.hash && /category[/:%20]+promotions|label[/:%20]+promotions|#promotions\b/i.test(window.location.hash)) {
+    const hash = (window.location.hash || "").toLowerCase();
+    if (hash.includes("category/promotions") || hash.includes("label/promotions") || hash === "#promotions") {
       return true;
     }
 
-    // 2. Active Tab in Gmail tabbed view (MUST have aria-selected="true")
-    const activeTab = document.querySelector('[role="tab"][aria-selected="true"], .aKh[aria-selected="true"], [role="tab"].aKz[aria-selected="true"]');
+    const activeTab = document.querySelector('[role="tab"][aria-selected="true"]');
     if (activeTab) {
-      const tabText = (activeTab.textContent || activeTab.getAttribute("aria-label") || activeTab.getAttribute("data-tooltip") || "").toLowerCase();
+      const tabText = (activeTab.getAttribute("aria-label") || activeTab.textContent || activeTab.getAttribute("data-tooltip") || "").toLowerCase();
       if (tabText.includes("promotion")) {
         return true;
       }
     }
 
-    // 3. Left navigation category actively selected
-    const activeNavPromo = document.querySelector('a[href*="promotions"][aria-current="page"], .TO.nZ[aria-selected="true"], div[data-tooltip*="Promotions" i][aria-selected="true"]');
+    const activeNavPromo = document.querySelector('a[href*="category/promotions"][aria-current="page"], a[href*="category/promotions"][aria-selected="true"], div[data-tooltip="Promotions" i][aria-selected="true"]');
     if (activeNavPromo) {
       return true;
     }
+  } catch (e) {}
 
-    // If container is null (checking page-level view only), stop here! Never scan the global document!
-    if (!container) {
-      return false;
+  return false;
+}
+
+/**
+ * Checks whether an element or view is within promotional marketing context.
+ */
+function isPromotionsContext(container = null, text = "") {
+  try {
+    if (isPromotionsViewActive()) {
+      return true;
     }
 
-    // 4. Category chips / label badges scoped STRICTLY within this specific container
-    const categoryChips = container.querySelectorAll('.av, span.hN, div.ar.as, .at');
+    if (!container) return false;
+
+    // Inside open email container: check for explicit category label chips
+    const categoryChips = container.querySelectorAll('.av, span.hN, div.ar.as');
     for (const chip of categoryChips) {
-      const chipText = (chip.textContent || chip.getAttribute("aria-label") || "").toLowerCase();
-      if (chipText.includes("promotion")) {
-        return true;
-      }
-    }
-
-    // 5. Unsubscribe links in message body with active marketing offers
-    const unsubLink = container.querySelector('a[href*="unsubscribe" i], a[href*="optout" i], a[href*="opt-out" i], a[href*="preferences" i]');
-    if (unsubLink && text) {
-      if (/\b(%\s*off|discount|sale\b|exclusive\s+offer|deals?|coupon|special\s+offer|limited\s+time|shop\s+now)\b/i.test(text)) {
-        return true;
-      }
-    }
-
-    // 6. Multiple marketing keywords in text (requires both unsubscribe + promotional offer)
-    if (text) {
-      const hasUnsub = /\bunsubscribe\b/i.test(text);
-      const hasPromo = /\b(%\s*off|discount|sale\b|deals?|coupon|clearance)\b/i.test(text);
-      if (hasUnsub && hasPromo) {
+      const chipText = (chip.textContent || chip.getAttribute("aria-label") || "").trim().toLowerCase();
+      if (chipText === "promotions" || chipText === "promotion") {
         return true;
       }
     }
@@ -801,7 +797,7 @@ function scanInboxRows(forceUpdate = false) {
                      (document.title && document.title.toLowerCase().includes("spam")) ||
                      !!document.querySelector('div[data-tooltip="Spam"][aria-selected="true"], a[href*="#spam"][aria-current="page"]');
 
-  const isPromotionsView = isPromotionsContext(null, "");
+  const isPromotionsView = isPromotionsViewActive();
 
   rows.forEach((row) => {
     const senderElem = row.querySelector(".yX, .bqe, .zF, span[email], td.yX");
@@ -838,9 +834,8 @@ function scanInboxRows(forceUpdate = false) {
       score = cachedVerdict.score;
       flags = cachedVerdict.flags || [];
 
-      // If previously cached as safe before this update, but currently in Promotions view or promo context, harmonize
-      const isPromoRow = isPromotionsView || isPromotionsContext(row, combinedText);
-      if (verdict === "safe" && isPromoRow) {
+      // Only harmonize low-risk emails to promo clutter if user is browsing the Promotions tab
+      if (verdict === "safe" && isPromotionsView) {
         verdict = "promo_clutter";
         score = Math.max(score, 25);
       }
@@ -902,9 +897,8 @@ function scanInboxRows(forceUpdate = false) {
         }
       }
 
-      // Promotions / Marketing awareness
-      const isPromoRow = isPromotionsView || isPromotionsContext(row, combinedText);
-      if (verdict === "safe" && isPromoRow) {
+      // Promotions / Marketing awareness: only categorize as promo clutter if viewing Promotions tab
+      if (verdict === "safe" && isPromotionsView) {
         verdict = "promo_clutter";
         score = Math.max(score, 25);
       }
