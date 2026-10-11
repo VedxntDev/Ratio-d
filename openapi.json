@@ -1,0 +1,266 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Ratio'd Scam Risk Analyzer Engine API",
+    "version": "2.4.0",
+    "description": "Deterministic, homoglyph-aware, and Hamiltonian-physics-guided scam, phishing, promotion, and malicious URL detection engine.",
+    "contact": {
+      "name": "Vedant Baghel",
+      "email": "vedantsbaghel.2626@gmail.com",
+      "url": "https://www.ratiod.online/about"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://www.ratiod.online/terms"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://www.ratiod.online",
+      "description": "Production edge server"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/analyze": {
+      "post": {
+        "summary": "Analyze text, email, or URL for scam and phishing indicators",
+        "description": "Runs deterministic heuristics, multi-layer intent analysis, homoglyph detection, Levenshtein distance brand spoof checks, and VegaML Hamiltonian dynamics scoring.",
+        "operationId": "analyzeContent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Raw message text, body, or email content to inspect.",
+                    "example": "Your account has been suspended. Click here to verify your identity immediately: http://paypaI.com-account-update.xyz"
+                  },
+                  "emailMeta": {
+                    "type": "object",
+                    "description": "Optional email headers and envelope metadata.",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "example": "\"PayPal Security\" <alert@paypaI.com-account-update.xyz>"
+                      },
+                      "subject": {
+                        "type": "string",
+                        "example": "Urgent Action Required: Account Suspension"
+                      },
+                      "receivedHeader": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "Direct URL to inspect for spoofing, entropy, or redirection.",
+                    "example": "http://paypaI.com-account-update.xyz"
+                  }
+                },
+                "required": ["text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis result with risk verdict, confidence score, and explainable flags.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload or missing text field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyze-qr": {
+      "post": {
+        "summary": "Decode and analyze a QR code image for embedded phishing payloads",
+        "operationId": "analyzeQrCode",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "imageBase64": {
+                    "type": "string",
+                    "description": "Base64 data URI of the QR code image."
+                  }
+                },
+                "required": ["imageBase64"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "QR decoding and safety classification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "found": { "type": "boolean" },
+                    "data": { "type": "string" },
+                    "analysis": { "$ref": "#/components/schemas/AnalysisResult" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unmask": {
+      "post": {
+        "summary": "Safe Peek URL unmasker to trace redirect chains safely",
+        "operationId": "unmaskUrl",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "Shortened, obscured, or suspicious target URL.",
+                    "example": "https://bit.ly/3xyzExample"
+                  }
+                },
+                "required": ["url"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Traced redirect hops and final landing page destination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "originalUrl": { "type": "string" },
+                    "finalUrl": { "type": "string" },
+                    "hops": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "hopCount": { "type": "integer" },
+                    "isSafe": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Service health and runtime status check",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Engine status and runtime details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "online" },
+                    "system": { "type": "string" },
+                    "runtime": { "type": "string" },
+                    "engine": {
+                      "type": "object",
+                      "properties": {
+                        "rules": { "type": "string" },
+                        "model": { "type": "string" },
+                        "explain": { "type": "string" }
+                      }
+                    },
+                    "timestamp": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisResult": {
+        "type": "object",
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": ["SAFE", "SUSPICIOUS", "MALICIOUS", "PROMO"],
+            "description": "Final classification verdict of the content."
+          },
+          "score": {
+            "type": "number",
+            "description": "Overall risk score from 0 (completely safe) to 100 (critical threat)."
+          },
+          "confidence": {
+            "type": "number",
+            "description": "Confidence percentage between 0 and 100."
+          },
+          "flags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Granular rule triggers, homoglyph indicators, or threat tags."
+          },
+          "reasons": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Human and agent readable explanations of the verdict."
+          },
+          "emailCategory": {
+            "type": "string",
+            "enum": ["SECURITY_ALERT", "PROMO", "FINANCIAL_SCAM", "PHISHING", "BENIGN", "TRANSACTIONAL"],
+            "description": "Granular semantic intent classification."
+          },
+          "breakdown": {
+            "type": "object",
+            "description": "Detailed sub-scores for urgency, financial pressure, domain entropy, and semantic intent."
+          }
+        },
+        "required": ["verdict", "score", "confidence", "flags"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "details": { "type": "string" }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

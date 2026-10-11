@@ -3,55 +3,162 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ratio'd — Privacy Policy</title>
+  <meta name="theme-color" content="#FFD23F">
+  <meta name="description" content="Ratio'd Privacy Policy — Zero data collection, local browser-side PII redaction, air-gapped security, and Manifest V3 compliance.">
+  <title>Privacy Policy — Ratio'd</title>
+
   <link rel="icon" href="assets/favicon.ico" sizes="any">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="service-desc" type="application/json" href="/openapi.json">
+  <link rel="alternate" type="text/markdown" href="/privacy.md">
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Privacy Policy — Ratio'd",
+    "description": "Zero data collection, client-side PII scrubbing, and privacy guarantees for Ratio'd",
+    "publisher": {
+      "@type": "Person",
+      "name": "Vedant Baghel",
+      "email": "vedantsbaghel.2626@gmail.com"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      color: #121212;
-      background-color: #F8F7F2;
-      max-width: 800px;
-      margin: 40px auto;
+    .page-container {
+      max-width: 860px;
+      margin: 40px auto 80px auto;
       padding: 0 20px;
     }
-    h1, h2 { color: #121212; }
-    .badge {
-      background-color: #EA3E2B;
-      color: #FFFFFF;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 0.85rem;
-    }
-    .container {
+    .page-card {
       background: #FFFFFF;
+      border: 3px solid #121212;
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 6px 6px 0px #121212;
+    }
+    .page-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 16px 0 24px 0;
+      color: #121212;
+    }
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 32px 0 12px 0;
+      color: #121212;
+      border-bottom: 2px solid #EFE9DC;
+      padding-bottom: 6px;
+    }
+    .page-text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #333333;
+      margin-bottom: 16px;
+    }
+    .tag-badge {
+      display: inline-block;
+      background: #EA3E2B;
+      color: #FFFFFF;
       border: 2px solid #121212;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 4px 4px 0px #121212;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 2px 2px 0px #121212;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <span class="badge">AIR-GAPPED PRIVACY</span>
-    <h1>Ratio'd — Privacy Policy</h1>
-    <p><em>Effective Date: September 25, 2026</em></p>
 
-    <h2>1. Zero Data Collection & Local PII Redaction</h2>
-    <p>Ratio'd is built on a zero-knowledge, privacy-first architectural guarantee. All Personally Identifiable Information (PII)—including phone numbers, email addresses, and one-time verification passcodes (OTPs)—is redacted client-side directly inside browser memory before any telemetry or threat analysis occurs.</p>
+  <!-- Header Navigation -->
+  <header class="header" role="banner">
+    <div class="container nav-wrapper">
+      <a href="/" class="logo-group" aria-label="Ratio'd home">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <span class="brand-title">Ratio&rsquo;d</span>
+      </a>
 
-    <h2>2. No Data Persistence or Storage</h2>
-    <p>Ratio'd does not store, persist, sell, or share raw message text, email content, or personal communication logs. Zero user data is written to external cloud databases or log files.</p>
+      <nav aria-label="Main Navigation" role="navigation">
+        <ul class="nav-links">
+          <li><a href="/" class="nav-link">Home</a></li>
+          <li><a href="/#console" class="nav-link">Analyze</a></li>
+          <li><a href="/about" class="nav-link">About</a></li>
+          <li><a href="/contact" class="nav-link">Contact</a></li>
+          <li><a href="/terms" class="nav-link">Terms</a></li>
+          <li><a href="/privacy" class="nav-link active" aria-current="page">Privacy</a></li>
+          <li><a href="/llms.txt" class="nav-link">Agents (LLMs)</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
-    <h2>3. Manifest V3 Compliance</h2>
-    <p>Ratio'd operates strictly within Manifest V3 guidelines. No remote executable code is fetched or executed. All extension scripts run locally inside the installed extension bundle.</p>
+  <main id="main-content" role="main" class="page-container">
+    <article class="page-card">
+      <span class="tag-badge">AIR-GAPPED PRIVACY GUARANTEE</span>
+      <h1 class="page-title">Privacy Policy</h1>
+      <p class="page-text"><em>Effective Date: September 25, 2026</em></p>
 
-    <h2>4. Contact</h2>
-    <p>For questions regarding this privacy policy, contact: <strong>vedantsbaghel.2626@gmail.com</strong></p>
-  </div>
+      <section id="zero-data" aria-labelledby="heading-zero-data">
+        <h2 id="heading-zero-data" class="section-title">1. Zero Data Collection &amp; Local PII Redaction</h2>
+        <p class="page-text">
+          Ratio&rsquo;d is built upon a zero-knowledge architectural guarantee. All Personally Identifiable Information (PII)&mdash;including phone numbers, personal email addresses, credit card digits, and one-time verification passcodes (OTPs)&mdash;is redacted client-side directly inside browser memory before any telemetry or threat analysis occurs.
+        </p>
+      </section>
+
+      <section id="persistence" aria-labelledby="heading-persistence">
+        <h2 id="heading-persistence" class="section-title">2. No Data Persistence or Storage</h2>
+        <p class="page-text">
+          Ratio&rsquo;d does not store, persist, sell, or share raw message text, email content, or personal communication logs. Zero user data is written to external cloud databases, telemetry platforms, or persistent logs.
+        </p>
+      </section>
+
+      <section id="manifest-v3" aria-labelledby="heading-v3">
+        <h2 id="heading-v3" class="section-title">3. Manifest V3 Compliance</h2>
+        <p class="page-text">
+          Ratio&rsquo;d operates strictly within Manifest V3 guidelines. No remote executable code is fetched or executed. All extension scripts run locally inside the installed extension sandbox.
+        </p>
+      </section>
+
+      <section id="contact-info" aria-labelledby="heading-privacy-contact">
+        <h2 id="heading-privacy-contact" class="section-title">4. Contact &amp; Inquiries</h2>
+        <p class="page-text">
+          For questions regarding this privacy policy or to inspect our open-source privacy redactor code, contact maintainer Vedant Baghel at: <strong><a href="mailto:vedantsbaghel.2626@gmail.com">vedantsbaghel.2626@gmail.com</a></strong>.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <div>
+          <strong>Ratio&rsquo;d</strong> <span class="footer-muted">// Operated by Vedant Baghel &middot; Built for Scam &amp; Phishing Defense</span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/contact" class="nav-link">Contact</a>
+        <a href="/terms" class="nav-link">Terms</a>
+        <a href="/privacy" class="nav-link">Privacy</a>
+        <a href="/llms.txt" class="nav-link">LLMs.txt</a>
+        <a href="/openapi.json" class="nav-link">OpenAPI</a>
+      </div>
+      <div class="footer-muted">
+        <a class="footer-credit" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">View source on GitHub</a> &middot; MIT License &middot; &copy; 2026 Ratio&rsquo;d
+      </div>
+    </div>
+  </footer>
+
 </body>
 </html>

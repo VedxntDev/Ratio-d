@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#EA3E2B">
+  <meta name="robots" content="noindex, follow">
+  <meta name="description" content="404 — Page Not Found. The requested resource does not exist on Ratio'd.">
+  <title>404 Page Not Found — Ratio'd</title>
+
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .error-container {
+      max-width: 680px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+    .error-card {
+      background: #FFFFFF;
+      border: 3px solid #121212;
+      border-radius: 16px;
+      padding: 48px 32px;
+      box-shadow: 8px 8px 0px #121212;
+    }
+    .error-code {
+      font-family: var(--font-mono, monospace);
+      font-size: 5rem;
+      font-weight: 800;
+      color: #EA3E2B;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .error-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #121212;
+    }
+    .error-text {
+      font-size: 1.1rem;
+      color: #4A4741;
+      margin-bottom: 28px;
+    }
+    .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header class="header" role="banner">
+    <div class="container nav-wrapper">
+      <a href="/" class="logo-group" aria-label="Ratio'd home">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <span class="brand-title">Ratio&rsquo;d</span>
+      </a>
+
+      <nav aria-label="Main Navigation" role="navigation">
+        <ul class="nav-links">
+          <li><a href="/" class="nav-link">Home</a></li>
+          <li><a href="/#console" class="nav-link">Analyze</a></li>
+          <li><a href="/about" class="nav-link">About</a></li>
+          <li><a href="/contact" class="nav-link">Contact</a></li>
+          <li><a href="/terms" class="nav-link">Terms</a></li>
+          <li><a href="/privacy" class="nav-link">Privacy</a></li>
+          <li><a href="/llms.txt" class="nav-link">Agents (LLMs)</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" role="main" class="error-container">
+    <article class="error-card">
+      <div class="error-code" aria-hidden="true">404</div>
+      <h1 class="error-title">Page Not Found</h1>
+      <p class="error-text">
+        The page or resource you requested could not be found. If you are an automated agent or crawler, please consult our machine discovery files.
+      </p>
+
+      <div class="action-group">
+        <a href="/" class="btn btn-primary btn-lg tactile">Return to Home</a>
+        <a href="/#console" class="btn btn-secondary btn-lg tactile">Open Analyzer Console</a>
+        <a href="/llms.txt" class="btn btn-secondary btn-lg tactile">Agent Guide (llms.txt)</a>
+      </div>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <div>
+          <strong>Ratio&rsquo;d</strong> <span class="footer-muted">// Operated by Vedant Baghel &middot; Built for Scam &amp; Phishing Defense</span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/contact" class="nav-link">Contact</a>
+        <a href="/terms" class="nav-link">Terms</a>
+        <a href="/privacy" class="nav-link">Privacy</a>
+        <a href="/llms.txt" class="nav-link">LLMs.txt</a>
+        <a href="/openapi.json" class="nav-link">OpenAPI</a>
+      </div>
+      <div class="footer-muted">
+        <a class="footer-credit" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">View source on GitHub</a> &middot; MIT License &middot; &copy; 2026 Ratio&rsquo;d
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

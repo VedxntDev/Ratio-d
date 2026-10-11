@@ -1,0 +1,74 @@
+# Ratio'd — Scam Risk Analyzer & Defense System
+
+> Privacy-first scam triage engine for emails, SMS, and QR codes. Combines client-side zero-knowledge PII redaction, 64-dimensional Hamiltonian physics-guided VegaML classification, and deterministic cryptographic authentication verification (SPF/DKIM/DMARC) into a calibrated 0–100 risk score with recovery steps.
+
+## Quick Links
+- **Website**: https://www.ratiod.online/
+- **API Base**: https://www.ratiod.online/api
+- **OpenAPI 3.1 Specification**: https://www.ratiod.online/openapi.json
+- **Model Context Protocol (MCP)**: https://www.ratiod.online/.well-known/mcp.json
+- **Agent-to-Agent (A2A) Card**: https://www.ratiod.online/.well-known/agent.json
+- **Sitemap**: https://www.ratiod.online/sitemap.xml
+- **Full Guide**: https://www.ratiod.online/llms-full.txt
+- **GitHub Repository**: https://github.com/VedxntDev/Ratio-d
+
+## Core Capabilities for AI Agents
+Ratio'd provides programmatic endpoints and browser tools designed for autonomous agent consumption:
+1. **Email / SMS Scam Risk Analysis (`POST /analyze`)**: Evaluates raw or redacted text across homoglyphs, brand typosquatting, credential harvesting, delivery fee lures, and EdTech/retail promotional clutter.
+2. **QR Phishing Inspection (`POST /analyze-qr`)**: Decodes QR payloads, inspects embedded link destinations, detects spoofed schemes, and grades quishing threats.
+3. **Safe Peek URL Unmasking (`POST /unmask`)**: Follows HTTP redirect hops safely using server-side zero-execution HEAD requests without exposing client IP addresses or executing JavaScript.
+4. **Health & Physics Engine Telemetry (`GET /health`)**: Verifies engine availability, active VegaML physics parameters, and conformal coverage bounds.
+
+## API Usage for LLM Tools
+
+### 1. Analyze Email or SMS
+```http
+POST https://www.ratiod.online/api/analyze
+Content-Type: application/json
+
+{
+  "text": "From: security@m1crosoft-support.com\nSubject: Urgent: Verify credentials immediately\nAction required: login to http://login.m1crosoft-support.com to avoid account termination.",
+  "channel": "email"
+}
+```
+
+#### Response:
+```json
+{
+  "score": 97,
+  "verdict": "high_risk",
+  "flags": [
+    {
+      "span": "m1crosoft-support.com",
+      "reason": "Homoglyph/Typosquat domain impersonating brand MICROSOFT",
+      "type": "rule"
+    }
+  ],
+  "explanation": "HIGH RISK DETECTED: this EMAIL message combines homoglyph typosquatting and urgency pressure...",
+  "next_steps": [
+    "Do NOT click any links, open attachments, or enter passwords on this email.",
+    "Report sender address as phishing and block domain immediately."
+  ],
+  "privacy": {
+    "phones_masked": 0,
+    "emails_masked": 0,
+    "otp_masked": 0
+  },
+  "engine": {
+    "model_name": "vegaml",
+    "model_threat_category": "credential_phish"
+  }
+}
+```
+
+### 2. Verdict Scale
+- `🟢 safe` (Score: 0–15): Authentic personal correspondence, order deliveries, dev CI/CD notifications, regulatory statements.
+- `🟡 promo_clutter` (Score: 38–48): Bulk commercial marketing, EdTech placement funnels, retail sale discounts, newsletters.
+- `🟠 suspicious` (Score: 35–65): Anomalous time coercion, unverified senders, quarantined mail without explicit phish proof.
+- `🔴 high_risk` (Score: 66–100): Confirmed credential harvesting, homoglyphs, DKIM/SPF cryptographic failures, advance-fee fraud.
+
+## Operator & Maintainer
+- **Developer**: Vedant Baghel
+- **Contact**: vedantsbaghel.2626@gmail.com
+- **Repository**: https://github.com/VedxntDev/Ratio-d
+- **License**: MIT License

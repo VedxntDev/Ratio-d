@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FFD23F">
+  <meta name="description" content="Terms of Service &amp; Usage License for Ratio'd — Permitted use, agent access guidelines, and limitation of liability.">
+  <title>Terms of Service — Ratio'd</title>
+
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="service-desc" type="application/json" href="/openapi.json">
+  <link rel="alternate" type="text/markdown" href="/terms.md">
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Terms of Service — Ratio'd",
+    "description": "Terms of service and acceptable use policies for Ratio'd",
+    "publisher": {
+      "@type": "Person",
+      "name": "Vedant Baghel",
+      "email": "vedantsbaghel.2626@gmail.com"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-container {
+      max-width: 860px;
+      margin: 40px auto 80px auto;
+      padding: 0 20px;
+    }
+    .page-card {
+      background: #FFFFFF;
+      border: 3px solid #121212;
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 6px 6px 0px #121212;
+    }
+    .page-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 16px 0 24px 0;
+      color: #121212;
+    }
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 32px 0 12px 0;
+      color: #121212;
+      border-bottom: 2px solid #EFE9DC;
+      padding-bottom: 6px;
+    }
+    .page-text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #333333;
+      margin-bottom: 16px;
+    }
+    .tag-badge {
+      display: inline-block;
+      background: #9BE86D;
+      color: #121212;
+      border: 2px solid #121212;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 2px 2px 0px #121212;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header class="header" role="banner">
+    <div class="container nav-wrapper">
+      <a href="/" class="logo-group" aria-label="Ratio'd home">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <span class="brand-title">Ratio&rsquo;d</span>
+      </a>
+
+      <nav aria-label="Main Navigation" role="navigation">
+        <ul class="nav-links">
+          <li><a href="/" class="nav-link">Home</a></li>
+          <li><a href="/#console" class="nav-link">Analyze</a></li>
+          <li><a href="/about" class="nav-link">About</a></li>
+          <li><a href="/contact" class="nav-link">Contact</a></li>
+          <li><a href="/terms" class="nav-link active" aria-current="page">Terms</a></li>
+          <li><a href="/privacy" class="nav-link">Privacy</a></li>
+          <li><a href="/llms.txt" class="nav-link">Agents (LLMs)</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" role="main" class="page-container">
+    <article class="page-card">
+      <span class="tag-badge">LEGAL &amp; USAGE TERMS</span>
+      <h1 class="page-title">Terms of Service</h1>
+      <p class="page-text"><em>Effective Date: September 25, 2026</em></p>
+
+      <section id="terms-overview" aria-labelledby="heading-terms-overview">
+        <h2 id="heading-terms-overview" class="section-title">1. Acceptance of Terms</h2>
+        <p class="page-text">
+          By accessing or using the Ratio&rsquo;d web console, API endpoints (<code>/analyze</code>, <code>/unmask</code>, <code>/health</code>), browser extensions, or machine protocols, you agree to these Terms of Service. If you do not agree, do not access or use the services.
+        </p>
+      </section>
+
+      <section id="terms-agent-access" aria-labelledby="heading-agent-access">
+        <h2 id="heading-agent-access" class="section-title">2. Automated Agents and Crawler Access</h2>
+        <p class="page-text">
+          Autonomous AI agents, automated security scrapers, and large language model tooling are explicitly permitted and welcomed to query public endpoints in accordance with standard etiquette:
+        </p>
+        <ul class="page-text" style="padding-left: 24px;">
+          <li>Honor <code>robots.txt</code> and content negotiation headers.</li>
+          <li>Implement reasonable backoff and do not flood endpoints with redundant high-frequency requests.</li>
+          <li>Do not attempt denial-of-service or stress testing without prior authorization.</li>
+        </ul>
+      </section>
+
+      <section id="terms-intellectual-property" aria-labelledby="heading-ip">
+        <h2 id="heading-ip" class="section-title">3. Open Source License</h2>
+        <p class="page-text">
+          The core Ratio&rsquo;d codebase and extension are open source and distributed under the <strong>MIT License</strong>. You are free to inspect, modify, and redistribute the code subject to standard license attributions.
+        </p>
+      </section>
+
+      <section id="terms-disclaimer" aria-labelledby="heading-disclaimer">
+        <h2 id="heading-disclaimer" class="section-title">4. Disclaimer &amp; Limitation of Liability</h2>
+        <p class="page-text">
+          The services are provided &ldquo;as is&rdquo; without warranties of any kind. Ratio&rsquo;d and its maintainer, Vedant Baghel, make reasonable efforts to detect phishing and scam indicators using probabilistic models, heuristic rules, and VegaML dynamics. However, cyber threat actors continuously evolve techniques, and no automated tool can guarantee 100% elimination of security risks.
+        </p>
+        <p class="page-text">
+          Ratio&rsquo;d does not provide legal or financial advice. Critical transactions and credential verifications should always be confirmed through out-of-band authentic channels.
+        </p>
+      </section>
+
+      <section id="terms-contact" aria-labelledby="heading-terms-contact">
+        <h2 id="heading-terms-contact" class="section-title">5. Questions &amp; Inquiries</h2>
+        <p class="page-text">
+          For questions regarding these terms, contact Vedant Baghel at <a href="mailto:vedantsbaghel.2626@gmail.com">vedantsbaghel.2626@gmail.com</a>.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-mark" aria-hidden="true">R</span>
+        <div>
+          <strong>Ratio&rsquo;d</strong> <span class="footer-muted">// Operated by Vedant Baghel &middot; Built for Scam &amp; Phishing Defense</span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/contact" class="nav-link">Contact</a>
+        <a href="/terms" class="nav-link">Terms</a>
+        <a href="/privacy" class="nav-link">Privacy</a>
+        <a href="/llms.txt" class="nav-link">LLMs.txt</a>
+        <a href="/openapi.json" class="nav-link">OpenAPI</a>
+      </div>
+      <div class="footer-muted">
+        <a class="footer-credit" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">View source on GitHub</a> &middot; MIT License &middot; &copy; 2026 Ratio&rsquo;d
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

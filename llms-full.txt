@@ -1,0 +1,64 @@
+# Ratio'd — Comprehensive AI Agent Manual (llms-full.txt)
+
+## System Identity & Architecture
+Ratio'd (https://www.ratiod.online) is a cyber-defense triage platform for inspecting unsolicited or suspicious communications.
+
+### Core Architecture
+1. **Client-Side Redactor**: Strips Personally Identifiable Information (phone numbers, email addresses, OTP codes) directly in memory before transmission.
+2. **Deterministic Rules Engine**: Inspects 10 social engineering fraud families, Levenshtein distance typosquats on 32 matchable brands, mixed-script Cyrillic/Greek homoglyphs, and SPF/DKIM/DMARC envelope alignments.
+3. **VegaML Physics-Guided Classifier**: Simulates damped Hamiltonian mechanics in 64-dimensional space with Boltzmann occupancies, potential well basin depths, and split-conformal prediction sets.
+4. **Disqualifying Risk Combiner**: Prevents statistical model noise from diluting proven security threats, bounding fraud at >= 82 and safeguarding authentic transactional mail at <= 15.
+
+## Endpoints Specification
+
+### POST /analyze (or /api/analyze)
+- **Content-Type**: `application/json`
+- **Request Body**:
+  - `text` (string, required): Full email/SMS text, optionally including headers `From:` and `Subject:`.
+  - `channel` (string, optional): `"email"` | `"sms"` (defaults to `"email"`).
+  - `auth` (object, optional):
+    - `fromDomain` (string): Sender domain.
+    - `mailedBy` (string): SPF return-path domain.
+    - `signedBy` (string): DKIM signing domain.
+- **Response**:
+  - `score` (integer, 0-100): Calculated risk probability.
+  - `verdict` (string): `"safe"` | `"promo_clutter"` | `"suspicious"` | `"high_risk"`.
+  - `flags` (array): List of `{ span, reason, type }`.
+  - `explanation` (string): Grounded factual rationale.
+  - `next_steps` (array of strings): Prescriptive remediation checklist.
+  - `privacy` (object): Redaction statistics (`phones_masked`, `emails_masked`, `otp_masked`).
+  - `engine` (object): Execution metadata (physics metrics, conformal set, latency).
+
+### POST /analyze-qr (or /api/analyze-qr)
+- **Content-Type**: `application/json`
+- **Request Body**:
+  - `text` (string, optional): Extracted QR code URL payload.
+  - `image` (string, optional): Base64 data URL or raw image payload.
+- **Response**:
+  - `status` (integer): 200.
+  - `json`: Object containing `verdict`, `score`, `decoded_url`, and `security_flags`.
+
+### POST /unmask (or /api/unmask)
+- **Content-Type**: `application/json`
+- **Request Body**:
+  - `url` (string, required): Shortened or obscured URL to trace.
+- **Response**:
+  - `original_url` (string): Starting URL.
+  - `final_url` (string): Final destination landing URL.
+  - `hops` (array of strings): HTTP 301/302 redirect path.
+  - `is_safe` (boolean): Whether final host matches known abuse registries.
+
+### GET /health (or /api/health)
+- **Response**:
+  - `status`: `"online"`
+  - `system`: `"Ratio'd Scam Risk Analyzer Engine"`
+  - `runtime`: Environment identifier
+  - `timestamp`: Current ISO 8601 UTC timestamp
+
+## Machine Discovery Protocols
+- **Model Context Protocol (MCP)**: `https://www.ratiod.online/.well-known/mcp.json`
+- **Agent-to-Agent (A2A)**: `https://www.ratiod.online/.well-known/agent.json`
+- **OpenAPI 3.1**: `https://www.ratiod.online/openapi.json`
+- **Robots Policy**: `https://www.ratiod.online/robots.txt`
+- **XML Sitemap**: `https://www.ratiod.online/sitemap.xml`
+- **Markdown Mirror**: `https://www.ratiod.online/index.md`

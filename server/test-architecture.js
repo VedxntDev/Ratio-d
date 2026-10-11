@@ -166,7 +166,8 @@ check("reuses the existing section header components",
    the install card, the promo bar, the nav and the footer. */
 const hosts = [...html.matchAll(/https?:\/\/([\w.-]+)\//g)].map((m) => m[1]);
 const allowed = ["cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com",
-  "github.com", "mail.google.com", "ratio-d.vercel.app", "chromewebstore.google.com"];
+  "github.com", "mail.google.com", "ratio-d.vercel.app", "chromewebstore.google.com",
+  "www.ratiod.online", "ratiod.online", "schema.org"];
 const newHosts = [...new Set(hosts.filter((h) => !allowed.includes(h)))];
 check("no new external scripts or CDNs", newHosts.length === 0, newHosts.join(", ") || "none added");
 check("no import/require in the browser controller", !/\bimport\s|\brequire\(/.test(archJs));

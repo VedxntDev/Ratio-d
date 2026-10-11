@@ -6,7 +6,26 @@ const OUT_FILE = path.join(ROOT, "server", "static-cache.js");
 
 const FILES_TO_CACHE = [
   "index.html",
+  "about.html",
+  "contact.html",
+  "terms.html",
   "privacy.html",
+  "404.html",
+  "robots.txt",
+  "sitemap.xml",
+  "llms.txt",
+  "llms-full.txt",
+  "openapi.json",
+  "openapi.yaml",
+  "mcp.json",
+  "a2a.json",
+  ".well-known/mcp.json",
+  ".well-known/agent.json",
+  "index.md",
+  "about.md",
+  "contact.md",
+  "terms.md",
+  "privacy.md",
   "google81d3d996fff3deac.html",
   "styles.css",
   "favicon.ico",
@@ -56,8 +75,20 @@ if (cache["/index.html"]) {
   cache["/"] = cache["/index.html"];
   cache["/api"] = cache["/index.html"];
 }
+if (cache["/about.html"]) {
+  cache["/about"] = cache["/about.html"];
+}
+if (cache["/contact.html"]) {
+  cache["/contact"] = cache["/contact.html"];
+}
+if (cache["/terms.html"]) {
+  cache["/terms"] = cache["/terms.html"];
+}
 if (cache["/privacy.html"]) {
   cache["/privacy"] = cache["/privacy.html"];
+}
+if (cache["/404.html"]) {
+  cache["/404"] = cache["/404.html"];
 }
 
 const fileContent = `/**

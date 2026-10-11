@@ -41,6 +41,9 @@ const MIME_TYPES = {
   ".ico": "image/x-icon",
   ".txt": "text/plain; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
+  ".yaml": "text/yaml; charset=utf-8",
+  ".yml": "text/yaml; charset=utf-8",
   ".zip": "application/zip"
 };
 
@@ -51,9 +54,26 @@ const MIME_TYPES = {
  */
 const ALLOWED_ENTRIES = new Set([
   "index.html",
+  "about.html",
+  "contact.html",
+  "terms.html",
   "privacy.html",
+  "404.html",
   "styles.css",
   "robots.txt",
+  "sitemap.xml",
+  "llms.txt",
+  "llms-full.txt",
+  "openapi.json",
+  "openapi.yaml",
+  "mcp.json",
+  "a2a.json",
+  ".well-known",
+  "index.md",
+  "about.md",
+  "contact.md",
+  "terms.md",
+  "privacy.md",
   // Browsers probe /favicon.ico by default even when a <link rel="icon"> is
   // present, so the root copy must be servable or the tab shows a 404.
   "favicon.ico",
@@ -216,16 +236,31 @@ async function handler(req, res) {
 
   // 3. Static assets
   if (req.method === "GET" || req.method === "HEAD") {
-    if (pathname === "/" || pathname === "/api") pathname = "/index.html";
-    if (pathname === "/privacy") pathname = "/privacy.html";
+    // Content negotiation: serve Markdown when requested
+    const acceptHeader = (req.headers["accept"] || "").toLowerCase();
+    const wantsMarkdown = acceptHeader.includes("text/markdown") || acceptHeader.includes("text/x-markdown");
 
-    // The console is a single page driven by hash anchors. Only fall back to
-    // index.html for genuine top-level routes; never for dotfiles or paths
-    // that look like files, so /.git/config cannot be masked as a 200.
-    const segments = pathname.split("/").filter(Boolean);
-    const isTopLevelRoute =
-      segments.length === 1 && !segments[0].startsWith(".") && !segments[0].includes(".");
-    if (!path.extname(pathname) && isTopLevelRoute) pathname = "/index.html";
+    if (pathname === "/" || pathname === "/api") {
+      pathname = wantsMarkdown ? "/index.md" : "/index.html";
+    } else if (pathname === "/about") {
+      pathname = wantsMarkdown ? "/about.md" : "/about.html";
+    } else if (pathname === "/contact") {
+      pathname = wantsMarkdown ? "/contact.md" : "/contact.html";
+    } else if (pathname === "/terms") {
+      pathname = wantsMarkdown ? "/terms.md" : "/terms.html";
+    } else if (pathname === "/privacy") {
+      pathname = wantsMarkdown ? "/privacy.md" : "/privacy.html";
+    } else if (pathname === "/sitemap") {
+      pathname = "/sitemap.xml";
+    } else if (pathname === "/openapi") {
+      pathname = "/openapi.json";
+    } else if (pathname === "/mcp") {
+      pathname = "/mcp.json";
+    } else if (pathname === "/a2a") {
+      pathname = "/a2a.json";
+    } else if (pathname === "/404") {
+      pathname = "/404.html";
+    }
 
     const file = resolveWebFile(pathname);
     if (file) {
@@ -259,6 +294,18 @@ async function handler(req, res) {
       res.writeHead(200, headers);
       if (req.method === "HEAD") return res.end();
       return res.end(cached);
+    }
+
+    // Dedicated 404 response serving 404.html with HTTP status 404
+    const notFoundFile = resolveWebFile("/404.html");
+    if (notFoundFile) {
+      const data = fs.readFileSync(notFoundFile);
+      res.writeHead(404, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Length": data.length
+      });
+      if (req.method === "HEAD") return res.end();
+      return res.end(data);
     }
   }
 

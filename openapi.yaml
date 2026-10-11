@@ -1,0 +1,124 @@
+openapi: 3.1.0
+info:
+  title: Ratio'd Scam Risk Analyzer Engine API
+  version: 2.4.0
+  description: Deterministic, homoglyph-aware, and Hamiltonian-physics-guided scam, phishing, promotion, and malicious URL detection engine.
+  contact:
+    name: Vedant Baghel
+    email: vedantsbaghel.2626@gmail.com
+    url: https://www.ratiod.online/about
+  license:
+    name: MIT
+    url: https://www.ratiod.online/terms
+servers:
+  - url: https://www.ratiod.online
+    description: Production edge server
+  - url: http://localhost:3000
+    description: Local development server
+paths:
+  /analyze:
+    post:
+      summary: Analyze text, email, or URL for scam and phishing indicators
+      operationId: analyzeContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: Raw message text, body, or email content to inspect.
+                emailMeta:
+                  type: object
+                  properties:
+                    from:
+                      type: string
+                    subject:
+                      type: string
+                    receivedHeader:
+                      type: string
+                url:
+                  type: string
+              required:
+                - text
+      responses:
+        '200':
+          description: Analysis result with risk verdict and confidence score.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '400':
+          description: Invalid request payload.
+  /analyze-qr:
+    post:
+      summary: Decode and analyze a QR code image for embedded phishing payloads
+      operationId: analyzeQrCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imageBase64:
+                  type: string
+              required:
+                - imageBase64
+      responses:
+        '200':
+          description: QR decoding and safety classification
+  /unmask:
+    post:
+      summary: Safe Peek URL unmasker to trace redirect chains safely
+      operationId: unmaskUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+              required:
+                - url
+      responses:
+        '200':
+          description: Traced redirect hops and destination
+  /health:
+    get:
+      summary: Service health and runtime status check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Engine status
+components:
+  schemas:
+    AnalysisResult:
+      type: object
+      properties:
+        verdict:
+          type: string
+          enum: [SAFE, SUSPICIOUS, MALICIOUS, PROMO]
+        score:
+          type: number
+        confidence:
+          type: number
+        flags:
+          type: array
+          items:
+            type: string
+        reasons:
+          type: array
+          items:
+            type: string
+        emailCategory:
+          type: string
+      required:
+        - verdict
+        - score
+        - confidence
+        - flags

@@ -1,0 +1,46 @@
+# Robots.txt for Ratio'd (https://www.ratiod.online)
+# Defines crawler access, sitemap reference, and AI agent permissions.
+
+User-agent: *
+Allow: /
+Disallow: /server/
+Disallow: /docs/private/
+
+# AI Crawlers & Agents (Full Access to Public Analysis & Protocol Documentation)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: ActuityBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# Content Signals & AI Policies
+Content-Signal: ai-training=allow, search=allow, agents=allow
+X-Robots-Tag: all
+
+# Agent Protocols & Machine-Readable Declarations
+Sitemap: https://www.ratiod.online/sitemap.xml
+Link: <https://www.ratiod.online/llms.txt>; rel="ai-guide"
+Link: <https://www.ratiod.online/openapi.json>; rel="service-desc"
+Link: <https://www.ratiod.online/.well-known/mcp.json>; rel="mcp-server"
+Link: <https://www.ratiod.online/.well-known/agent.json>; rel="agent-card"

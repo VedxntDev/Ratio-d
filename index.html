@@ -25,6 +25,88 @@
   <meta name="twitter:description" content="Privacy-first scam risk analyzer for emails and SMS.">
   <meta name="twitter:image" content="assets/icon-512.png">
 
+  <!-- Machine Discovery & Agent Protocols -->
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="service-desc" type="application/json" href="/openapi.json">
+  <link rel="alternate" type="text/markdown" href="/index.md">
+  <link rel="ai-guide" href="/llms.txt">
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.ratiod.online/#organization",
+        "name": "Ratio'd",
+        "url": "https://www.ratiod.online",
+        "logo": "https://www.ratiod.online/assets/icon-512.png",
+        "founder": {
+          "@type": "Person",
+          "name": "Vedant Baghel",
+          "email": "vedantsbaghel.2626@gmail.com",
+          "url": "https://github.com/VedxntDev"
+        },
+        "sameAs": [
+          "https://github.com/VedxntDev/Ratio-d"
+        ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://www.ratiod.online/#software",
+        "name": "Ratio'd Scam Risk Analyzer Engine",
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "All",
+        "url": "https://www.ratiod.online",
+        "description": "Deterministic, homoglyph-aware, and Hamiltonian-physics-guided scam, phishing, promotion, and malicious URL detection engine.",
+        "author": {
+          "@id": "https://www.ratiod.online/#organization"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.ratiod.online/#website",
+        "url": "https://www.ratiod.online",
+        "name": "Ratio'd",
+        "publisher": {
+          "@id": "https://www.ratiod.online/#organization"
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- WebMCP In-Browser Agent Action Protocol -->
+  <script type="application/webmcp+json">
+  {
+    "name": "ratiod-inbrowser",
+    "description": "Ratio'd in-browser client actions for web agents",
+    "actions": [
+      {
+        "name": "analyze_message",
+        "description": "Scans message text for scam and phishing risk",
+        "form_selector": "#console",
+        "input_selector": "#telemetry-input",
+        "submit_selector": "#btn-analyze",
+        "output_selector": "#results-view"
+      },
+      {
+        "name": "trace_redirect",
+        "description": "Traces shortened or suspicious redirect URLs via Safe Peek",
+        "input_selector": "#safe-peek-url",
+        "submit_selector": "#btn-safe-peek",
+        "output_selector": "#safe-peek-output"
+      }
+    ]
+  }
+  </script>
+
   <!-- GSAP Library for Live Pipeline Animations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
@@ -51,6 +133,21 @@
           <li><a href="#features" class="nav-link">Features</a></li>
           <li><a href="#tiers" class="nav-link">Roadmap</a></li>
           <li><a href="privacy.html" class="nav-link">Privacy Policy</a></li>
+        </ul>
+      </nav>
+
+      <!-- Agent & Machine Discovery Navigation -->
+      <nav aria-label="Agent Navigation" class="sr-only">
+        <ul>
+          <li><a href="/about">About Ratio'd</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/terms">Terms of Service</a></li>
+          <li><a href="/privacy">Privacy Policy</a></li>
+          <li><a href="/llms.txt">LLM Guide</a></li>
+          <li><a href="/openapi.json">OpenAPI</a></li>
+          <li><a href="/.well-known/mcp.json">MCP Protocol</a></li>
+          <li><a href="/.well-known/agent.json">A2A Protocol</a></li>
+          <li><a href="/sitemap.xml">Sitemap</a></li>
         </ul>
       </nav>
     </div>
@@ -87,7 +184,7 @@
     </div>
   </div>
 
-  <main class="container" id="top">
+  <main class="container" id="main-content" role="main">
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -97,7 +194,7 @@
           <a class="sticker sticker-white sticker-tilt-right" href="https://github.com/VedxntDev" target="_blank" rel="noopener noreferrer">DEVELOPED BY VEDANT</a>
         </div>
 
-        <h1 class="hero-headline">
+        <h1 class="hero-headline" id="hero-title">
           Check the <span class="marker">message,</span><br>
           <span class="italic-accent">not your luck.</span>
         </h1>
@@ -110,7 +207,7 @@
           <a href="#console" class="btn btn-primary btn-lg tactile">Analyze a message
             <span class="btn-arrow" aria-hidden="true">→</span>
           </a>
-          <button class="btn btn-secondary btn-lg tactile" id="hero-preset-phishing" type="button">Load sample phish</button>
+          <button class="btn btn-secondary btn-lg tactile" id="hero-preset-phishing" type="button" aria-label="Load sample phishing email into analyzer">Load sample phish</button>
         </div>
 
         <div class="system-status-banner tactile">
@@ -157,7 +254,7 @@
     </section>
 
     <!-- Control Console Grid -->
-    <section id="console" class="console-grid">
+    <section id="console" class="console-grid" aria-labelledby="console-heading">
 
       <!-- Left Pane: Telemetry Input Terminal -->
       <div class="console-pane tactile">
@@ -165,7 +262,7 @@
           <div class="pane-dots" aria-hidden="true">
             <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-blue"></span>
           </div>
-          <h2 class="pane-title">Telemetry input</h2>
+          <h2 class="pane-title" id="console-heading">Telemetry input</h2>
           <span class="sticker sticker-yellow">PASTE ZONE</span>
         </div>
 
@@ -180,9 +277,9 @@
 
           <div class="preset-bar">
             <span class="preset-label">Try a sample:</span>
-            <button class="btn-preset" id="preset-phishing" type="button">Phishing email</button>
-            <button class="btn-preset" id="preset-sms" type="button">Urgent SMS</button>
-            <button class="btn-preset" id="preset-legit" type="button">Safe notice</button>
+            <button class="btn-preset" id="preset-phishing" type="button" aria-label="Load phishing email sample">Phishing email</button>
+            <button class="btn-preset" id="preset-sms" type="button" aria-label="Load urgent SMS sample">Urgent SMS</button>
+            <button class="btn-preset" id="preset-legit" type="button" aria-label="Load legitimate safe notice sample">Safe notice</button>
           </div>
 
           <div class="telemetry-input-group">
@@ -197,7 +294,7 @@
               <span class="pii-indicator-dot" id="pii-dot" aria-hidden="true"></span>
               <span id="privacy-counts" class="privacy-counts">✓ Real-time PII redaction active: No sensitive phone, email, or OTP patterns found.</span>
             </div>
-            <button class="btn-clear-tactile" id="btn-clear" type="button" title="Clear message text and reset analysis">
+            <button class="btn-clear-tactile" id="btn-clear" type="button" aria-label="Clear message text and reset analysis" title="Clear message text and reset analysis">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               Clear
             </button>
@@ -238,7 +335,7 @@
             </div>
           </details>
 
-          <button class="btn btn-primary btn-block btn-lg tactile" id="btn-analyze" type="button">
+          <button class="btn btn-primary btn-block btn-lg tactile" id="btn-analyze" type="button" aria-label="Run scam risk analysis">
             Run risk analysis
             <span class="kbd-hint" aria-hidden="true">CTRL + ENTER</span>
           </button>
@@ -262,7 +359,7 @@
             <p class="safe-peek-desc">Unmask shortened URLs (bit.ly, t.co) &amp; inspect redirect chains safely using zero-execution HEAD requests.</p>
             <div class="safe-peek-input-row">
               <input type="url" id="safe-peek-url" class="safe-peek-input" placeholder="Paste link (e.g. bit.ly/3x8... or suspicious URL)" />
-              <button class="btn btn-secondary btn-sm" id="btn-safe-peek" type="button">Trace link</button>
+              <button class="btn btn-secondary btn-sm" id="btn-safe-peek" type="button" aria-label="Trace redirected URL destination">Trace link</button>
             </div>
             <div id="safe-peek-output" class="safe-peek-output" style="display:none;"></div>
           </div>
@@ -277,7 +374,7 @@
             <div id="qr-drop">
               <p>Drop / paste a QR image, or</p>
               <input type="file" id="qr-file" accept="image/*">
-              <button type="button" id="qr-cam">Use camera</button>
+              <button type="button" id="qr-cam" aria-label="Scan QR code using camera">Use camera</button>
               <video id="qr-video" hidden playsinline muted></video>
             </div>
             <div id="qr-result" aria-live="polite"></div>
@@ -346,11 +443,11 @@
     </section>
 
     <!-- Extension Install -->
-    <section id="install" class="section install-section">
+    <section id="install" class="section install-section" aria-labelledby="install-title">
       <div class="container">
         <div class="section-head">
           <span class="section-header-tag">Get the extension</span>
-          <h2 class="section-title">Read every email <span class="marker marker-blue">before</span> you trust it</h2>
+          <h2 class="section-title" id="install-title">Read every email <span class="marker marker-blue">before</span> you trust it</h2>
           <p class="section-sub">One click from the Chrome Web Store puts a live risk verdict inside Gmail. The banner renders inside its own Shadow DOM, so Gmail styling can never break it.</p>
 
           <!-- Platform roadmap. The site otherwise reads as Gmail-only, and the
@@ -408,7 +505,7 @@
                 <div class="progress-track"><span class="progress-fill" id="progress-fill"></span></div>
                 <span class="progress-text" id="progress-text">0 of 5 done</span>
               </div>
-              <button class="btn-link" id="reset-steps" type="button">Reset</button>
+              <button class="btn-link" id="reset-steps" type="button" aria-label="Reset installation progress steps">Reset</button>
             </div>
 
             <p class="steps-intro">
@@ -458,7 +555,7 @@
                   <p>Copy the address below and paste it into your Chrome address bar.</p>
                   <div class="copy-row">
                     <code class="copy-code">chrome://extensions</code>
-                    <button class="btn btn-secondary btn-sm" data-copy="chrome://extensions" type="button">Copy</button>
+                    <button class="btn btn-secondary btn-sm" data-copy="chrome://extensions" type="button" aria-label="Copy chrome://extensions URL">Copy</button>
                   </div>
                   <p class="istep-note">Chrome blocks links to <code>chrome://</code> pages from any website, which is why this one needs a copy-paste.</p>
                 </div>
@@ -533,10 +630,10 @@
     </section>
 
     <!-- Architecture Flowchart Section -->
-    <section id="architecture" class="section">
+    <section id="architecture" class="section" aria-labelledby="arch-title">
       <div class="section-head">
         <span class="section-header-tag">Architecture</span>
-        <h2 class="section-title">Every stage of the <span class="marker marker-blue">pipeline</span></h2>
+        <h2 class="section-title" id="arch-title">Every stage of the <span class="marker marker-blue">pipeline</span></h2>
         <p class="section-sub">Ten stages from the Gmail tab to the verdict banner. Stages 1&ndash;3 and 10 run in your browser &mdash; your phone numbers, email addresses and OTP codes are masked <em>before</em> anything crosses the network boundary.</p>
       </div>
 
@@ -563,10 +660,10 @@
     </section>
 
     <!-- Pipeline Section -->
-    <section id="pipeline" class="section">
+    <section id="pipeline" class="section" aria-labelledby="pipeline-title">
       <div class="section-head">
         <span class="section-header-tag">Pipeline</span>
-        <h2 class="section-title">Live <span class="marker marker-blue">4-stage</span> verification</h2>
+        <h2 class="section-title" id="pipeline-title">Live <span class="marker marker-blue">4-stage</span> verification</h2>
         <p class="section-sub">A deterministic client-side inspection pipeline that runs before any external model is ever invoked.</p>
       </div>
 
@@ -602,10 +699,10 @@
     </section>
 
     <!-- Feature Grid -->
-    <section id="features" class="section">
+    <section id="features" class="section" aria-labelledby="features-title">
       <div class="section-head">
         <span class="section-header-tag">Features</span>
-        <h2 class="section-title">Built <span class="marker marker-pink">chunky</span>, built careful</h2>
+        <h2 class="section-title" id="features-title">Built <span class="marker marker-pink">chunky</span>, built careful</h2>
         <p class="section-sub">Everything that touches your message happens where you can see it.</p>
       </div>
 
@@ -640,10 +737,10 @@
     </section>
 
     <!-- Deployment Tiers Section -->
-    <section id="tiers" class="section">
+    <section id="tiers" class="section" aria-labelledby="tiers-title">
       <div class="section-head">
         <span class="section-header-tag">Roadmap</span>
-        <h2 class="section-title">Release <span class="marker marker-green">roadmap</span> & architecture</h2>
+        <h2 class="section-title" id="tiers-title">Release <span class="marker marker-green">roadmap</span> & architecture</h2>
       </div>
 
       <div class="tier-grid">
@@ -674,23 +771,26 @@
   </main>
 
   <!-- Footer -->
-  <footer class="footer">
+  <footer class="footer" role="contentinfo">
     <div class="container footer-inner">
       <div class="footer-brand">
         <span class="logo-mark" aria-hidden="true">R</span>
         <div>
-          <strong>Ratio&rsquo;d</strong> <span class="footer-muted">// <a class="footer-credit" href="https://github.com/VedxntDev" target="_blank" rel="noopener noreferrer">Developed by Vedant</a></span>
+          <strong>Ratio&rsquo;d</strong> <span class="footer-muted">// <a class="footer-credit" href="https://github.com/VedxntDev" target="_blank" rel="noopener noreferrer">Developed by Vedant</a> &middot; Operated by Vedant Baghel &middot; Built for Scam &amp; Phishing Defense</span>
         </div>
       </div>
       <div class="footer-links">
-        <a href="privacy.html" class="nav-link">Privacy</a>
+        <a href="/" class="nav-link">Home</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/contact" class="nav-link">Contact</a>
+        <a href="/terms" class="nav-link">Terms</a>
+        <a href="/privacy" class="nav-link">Privacy</a>
+        <a href="/llms.txt" class="nav-link">LLMs.txt</a>
+        <a href="/openapi.json" class="nav-link">OpenAPI</a>
         <a href="https://chromewebstore.google.com/detail/bmabonmnpikocpaaigiedckcccpmiepa?utm_source=item-share-cb" class="nav-link" target="_blank" rel="noopener noreferrer">Get Extension</a>
-        <a href="#pipeline" class="nav-link">How it works</a>
-        <a href="#architecture" class="nav-link">Architecture</a>
-        <a href="#console" class="nav-link">Analyze</a>
         <button type="button" class="nav-link nav-link-btn" id="promo-restore" hidden>Show extension promo</button>
       </div>
-      <div class="footer-muted"><a class="footer-credit" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">View source on GitHub</a> &middot; MIT License</div>
+      <div class="footer-muted"><a class="footer-credit" href="https://github.com/VedxntDev/Ratio-d" target="_blank" rel="noopener noreferrer">View source on GitHub</a> &middot; MIT License &middot; &copy; 2026 Ratio&rsquo;d</div>
     </div>
   </footer>
 

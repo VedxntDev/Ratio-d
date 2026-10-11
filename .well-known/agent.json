@@ -1,0 +1,42 @@
+{
+  "$schema": "https://a2a-protocol.org/schemas/v1/agent.json",
+  "id": "urn:agent:ratiod.online",
+  "name": "Ratio'd Scam Risk Analyzer Agent",
+  "description": "Autonomous cybersecurity and threat detection agent specializing in phishing, credential harvesting, brand spoofing, and promotional email classification.",
+  "version": "2.4.0",
+  "maintainer": {
+    "name": "Vedant Baghel",
+    "email": "vedantsbaghel.2626@gmail.com",
+    "url": "https://www.ratiod.online/about"
+  },
+  "protocols": [
+    {
+      "type": "http-rest",
+      "endpoint": "https://www.ratiod.online/analyze",
+      "documentation": "https://www.ratiod.online/openapi.json"
+    },
+    {
+      "type": "mcp",
+      "endpoint": "https://www.ratiod.online/.well-known/mcp.json"
+    },
+    {
+      "type": "webmcp",
+      "location": "https://www.ratiod.online/"
+    }
+  ],
+  "capabilities": [
+    "email-risk-scoring",
+    "homoglyph-detection",
+    "levenshtein-brand-spoof-detection",
+    "url-redirect-tracing",
+    "qr-code-payload-analysis",
+    "promotional-intent-classification"
+  ],
+  "links": {
+    "llms_guide": "https://www.ratiod.online/llms.txt",
+    "llms_full": "https://www.ratiod.online/llms-full.txt",
+    "sitemap": "https://www.ratiod.online/sitemap.xml",
+    "terms": "https://www.ratiod.online/terms",
+    "privacy": "https://www.ratiod.online/privacy"
+  }
+}

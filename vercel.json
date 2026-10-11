@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "routes": [
     { "src": "^/(server|docs|extension)([./].*)?$", "status": 404 },
     { "src": "^/(package|vercel)\\.json$", "status": 404 },

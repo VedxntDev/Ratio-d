@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "ratiod-scam-analyzer",
+  "title": "Ratio'd Scam Risk Analyzer MCP",
+  "version": "2.4.0",
+  "description": "Model Context Protocol (MCP) tool integration for real-time scam, phishing, homoglyph, and malicious URL detection.",
+  "vendor": {
+    "name": "Ratio'd / Vedant Baghel",
+    "url": "https://www.ratiod.online"
+  },
+  "endpoints": {
+    "http": "https://www.ratiod.online/analyze",
+    "unmask": "https://www.ratiod.online/unmask",
+    "health": "https://www.ratiod.online/health"
+  },
+  "tools": [
+    {
+      "name": "analyze_content",
+      "description": "Analyzes email text, messages, SMS, or URLs for phishing, brand impersonation, urgent financial manipulation, homoglyph spoofing, and promotional tags.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Raw body of the email or message to evaluate."
+          },
+          "emailMeta": {
+            "type": "object",
+            "description": "Envelope metadata including sender and subject.",
+            "properties": {
+              "from": { "type": "string" },
+              "subject": { "type": "string" }
+            }
+          },
+          "url": {
+            "type": "string",
+            "description": "Direct URL to inspect."
+          }
+        },
+        "required": ["text"]
+      }
+    },
+    {
+      "name": "unmask_url",
+      "description": "Traces HTTP redirect chains to uncover final landing domains and identify cloaked phishing URLs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Shortened or cloaked link to trace."
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "check_health",
+      "description": "Returns operational status and active detection layers of the Ratio'd engine.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}
