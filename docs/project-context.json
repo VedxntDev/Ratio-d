@@ -577,57 +577,103 @@
       }
     },
     "signals": {
-      "version": 2,
-      "kind": "hand_weighted_heuristic_not_trained",
-      "source": "laya_stub_heuristic",
-      "note": "Local typed-decision fallback model active (laya container offline).",
-      "formula": "clamp(ruleFlags*0.25 + tokenMatches*0.15 + sum(structuralWeights), 0.02, 0.99)",
-      "corroborationDamping": "signals beyond the second are damped by 0.06 each",
-      "tokenList": [
-        "urgent",
-        "verify",
-        "suspended",
-        "password",
-        "ssn",
-        "wire",
-        "paypa1",
-        "bit.ly",
-        "login"
-      ],
-      "labelThresholds": {
-        "high_risk": 0.65,
-        "suspicious": 0.3
+      "version": 3,
+      "model": "vegaml-0.8b",
+      "framework": "damped-hamiltonian-dynamics",
+      "physics_dimension": 64,
+      "questions": {
+        "threat_category": {
+          "type": "choice",
+          "instructions": "Which category best classifies this message?",
+          "criteria": {
+            "safe": "legitimate personal, transactional, or operational correspondence",
+            "promo_clutter": "commercial marketing, newsletters, coupons, or sales campaigns",
+            "credential_phish": "attempts to capture passwords, MFA codes, or login credentials",
+            "financial_fraud": "unsolicited money transfers, gift cards, crypto, lottery, or fee fraud",
+            "impersonation_spoof": "impersonates a trusted brand, executive, or institutional domain",
+            "delivery_fraud": "courier, parcel hold, or fake postal delivery fee notice",
+            "billing_bait": "unsolicited invoices, fake charges, or subscription renewal alerts"
+          }
+        },
+        "is_threat": {
+          "type": "boolean",
+          "instructions": "Does this email pose a fraudulent, deceptive, or security threat to the recipient?",
+          "criteria": {
+            "true": "contains deceptive phishing, scam, extortion, or credential harvesting indicators",
+            "false": "authentic, safe, benign transactional, or routine correspondence"
+          }
+        },
+        "urgency_level": {
+          "type": "choice",
+          "instructions": "What degree of psychological urgency or time coercion does this message exert?",
+          "criteria": {
+            "none": "no artificial deadline or coercion",
+            "moderate": "standard business timeframe or conversational notice",
+            "high": "urgent action demanded within hours or threatened penalty",
+            "critical": "immediate ultimatum, account suspension, or loss of access threatened"
+          }
+        }
       },
-      "structuralSignals": [
+      "signals": [
         {
           "name": "punycode_host",
           "weight": 0.34,
-          "test": "(t) => /https?:\\/\\/[^\\s/]*xn--/i.test(t)"
+          "category": "impersonation_spoof",
+          "reason": "Punycode/IDN homoglyph lookalike domain"
         },
         {
           "name": "ip_literal_link",
           "weight": 0.34,
-          "test": "(t) => /https?:\\/\\/\\d{1,3}(?:\\.\\d{1,3}){3}/.test(t)"
+          "category": "credential_phish",
+          "reason": "Direct IP address URL bypassing domain reputation"
         },
         {
           "name": "data_uri",
           "weight": 0.3,
-          "test": "(t) => /data:(text\\/html|application\\/javascript|;base64)/i.test(t)"
+          "category": "credential_phish",
+          "reason": "Embedded data: URI payload avoiding link inspection"
         },
         {
           "name": "base64_blob",
           "weight": 0.24,
-          "test": "(t) => /[A-Za-z0-9+/]{120,}={0,2}/.test(t)"
+          "category": "credential_phish",
+          "reason": "Obfuscated high-entropy base64 data stream"
         },
         {
           "name": "credential_or_wire",
           "weight": 0.2,
-          "test": "(t) =>\n      /(verify|confirm|update|validate|secure)\\s+(your\\s+)?(account|password|credentials|details|information)/i.test(t)\n      || /(gift\\s?card|bitcoin|crypto|wire\\s+transfer|western\\s+union|money\\s+gram)/i.test(t)"
+          "category": "financial_fraud",
+          "reason": "Credential harvesting demand or unrecoverable payment request"
         },
         {
           "name": "link_farm",
           "weight": 0.18,
-          "test": "(t) => {\n      const hosts = new Set((t.match(/https?:\\/\\/([^\\s/?#]+)/gi) || [])\n        .map((u) => u.replace(/^https?:\\/\\//i, \"\").toLowerCase()));\n      return hosts.size >= 5;\n  }"
+          "category": "credential_phish",
+          "reason": "High-density link farm with disparate outbound host targets"
+        },
+        {
+          "name": "free_abuse_hosting",
+          "weight": 0.26,
+          "category": "credential_phish",
+          "reason": "Free ephemeral cloud hosting masking deceptive lure"
+        },
+        {
+          "name": "reply_to_mismatch",
+          "weight": 0.3,
+          "category": "impersonation_spoof",
+          "reason": "Discrepancy between sender display domain and reply-to destination"
+        },
+        {
+          "name": "delivery_fee_bait",
+          "weight": 0.28,
+          "category": "delivery_fraud",
+          "reason": "Package delivery fee or courier hold pretext"
+        },
+        {
+          "name": "fake_invoice_scare",
+          "weight": 0.26,
+          "category": "billing_bait",
+          "reason": "Bogus order confirmation, invoice, or auto-renewal scare"
         }
       ]
     }

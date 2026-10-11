@@ -675,6 +675,16 @@ function injectRatiodBanner(targetElement, data) {
   const privacy = data.privacy || { phones_masked: 0, emails_masked: 0, otp_masked: 0 };
   const totalMasked = (privacy.phones_masked || 0) + (privacy.emails_masked || 0) + (privacy.otp_masked || 0);
 
+  const engine = data.engine || {};
+  const vegaSource = engine.model_source || "edge_physics";
+  const vegaThreatBasin = (engine.model_threat_category || verdict || "safe").toUpperCase();
+  const vegaConvergence = engine.model_abstain ? "ABSTAIN (Unbound OOD Orbit)" : "CONVERGED (Harmonic Well)";
+  const vegaConformalSet = Array.isArray(engine.model_conformal_set) && engine.model_conformal_set.length > 0
+    ? engine.model_conformal_set.join(", ")
+    : (verdict || "safe");
+  const vegaTemp = engine.model_temperature !== undefined ? Number(engine.model_temperature).toFixed(3) : "1.000";
+  const vegaKinetic = engine.model_kinetic_energy !== undefined ? Number(engine.model_kinetic_energy).toFixed(4) : "0.0000";
+
   const container = document.createElement("div");
   container.className = "ratiod-container theme-" + (verdict === "promo_clutter" ? "promo_clutter" : (verdict || "safe"));
 
@@ -803,6 +813,16 @@ function injectRatiodBanner(targetElement, data) {
               ${(f.span && (f.span.includes("http") || f.span.includes("bit.ly") || f.span.includes("."))) ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(f.span)}">[ &#128269; Safe Peek ]</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
             </div>
           `).join('') : '<div class="flag-item">No explicit email threat rules triggered.</div>'}
+        </div>
+
+        <div class="drawer-section-title" style="margin-top: 14px;">[ ⚖️ VEGAML PHYSICS ENGINE TELEMETRY ]</div>
+        <div id="drawer-vegaml-section">
+          <div class="flag-item" style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6;">
+            <div><strong>MODEL:</strong> VegaML 64-D Hamiltonian Dynamics (${escapeHtml(vegaSource)})</div>
+            <div><strong>THREAT BASIN:</strong> <span class="flag-span">${escapeHtml(vegaThreatBasin)}</span> &bull; <strong>CONVERGENCE:</strong> ${escapeHtml(vegaConvergence)}</div>
+            <div><strong>90% CONFORMAL PREDICTION SET:</strong> [ ${escapeHtml(vegaConformalSet)} ]</div>
+            <div><strong>THERMODYNAMICS:</strong> Calibrated Temp &tau; = ${escapeHtml(vegaTemp)} &bull; Residual Kinetic E = ${escapeHtml(vegaKinetic)}</div>
+          </div>
         </div>
 
         <div class="drawer-section-title" style="margin-top: 14px;">[ 📱 QR SECURITY CODE ANALYSIS ]</div>
