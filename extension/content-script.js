@@ -77,6 +77,83 @@ function renderFallbackAnalysis(emailBodyElem, redactedText) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Continuous Sender Learning & Real-Time Feedback Memory
+// ---------------------------------------------------------------------------
+let memSenderLearning = {};
+let memUserOverrides = {};
+if (typeof window !== "undefined") {
+  window.__ratiod_memSenderLearning = memSenderLearning;
+  window.__ratiod_memUserOverrides = memUserOverrides;
+}
+
+function syncContinuousLearningMemory() {
+  try {
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(["ratiod_sender_learning", "ratiod_user_overrides"], (res) => {
+        if (res) {
+          memSenderLearning = res.ratiod_sender_learning || {};
+          memUserOverrides = res.ratiod_user_overrides || {};
+        }
+      });
+    }
+  } catch (e) {}
+}
+syncContinuousLearningMemory();
+
+try {
+  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local") {
+        if (changes.ratiod_sender_learning) memSenderLearning = changes.ratiod_sender_learning.newValue || {};
+        if (changes.ratiod_user_overrides) memUserOverrides = changes.ratiod_user_overrides.newValue || {};
+        if (typeof triggerStaggeredScan === "function") triggerStaggeredScan(true);
+      }
+    });
+  }
+} catch (e) {}
+
+window.addEventListener("ratiod:user-feedback", (e) => {
+  const detail = (e && e.detail) || {};
+  if (detail.sender) {
+    const s = String(detail.sender).trim().toLowerCase();
+    memSenderLearning[s] = {
+      sender: s,
+      domain: detail.domain || "",
+      verdict: detail.verdict,
+      score: detail.score,
+      feedback: detail.feedback,
+      userExplicit: true,
+      updatedAt: Date.now()
+    };
+    memUserOverrides[s] = {
+      verdict: detail.verdict,
+      score: detail.score,
+      feedback: detail.feedback,
+      sender: s,
+      timestamp: Date.now()
+    };
+    memUserOverrides["sender:" + s] = memUserOverrides[s];
+  }
+  if (typeof triggerStaggeredScan === "function") triggerStaggeredScan(true);
+});
+
+function extractCleanEmail(raw) {
+  if (!raw || typeof raw !== "string") return "";
+  const s = raw.trim();
+  const angleMatch = s.match(/<([^>@]+@[^>@]+)>/);
+  if (angleMatch) return angleMatch[1].trim().toLowerCase();
+  const emailMatch = s.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  if (emailMatch) return emailMatch[1].trim().toLowerCase();
+  return "";
+}
+
+function extractEmailDomain(email) {
+  const clean = extractCleanEmail(email);
+  if (!clean || !clean.includes("@")) return "";
+  return clean.split("@")[1].toLowerCase().trim();
+}
+
 // Shared verdict cache to eliminate any mismatch between open-email banner and inbox badge
 const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v8";
 const memVerdictCache = {};
@@ -690,38 +767,59 @@ function scanAndAnalyzeGmail() {
   lastAnalyzedHash = currentHash;
 
   const onAnalysisComplete = (data) => {
-    // 1. Harmonize Promotional / Marketing emails so banner and inbox tags always match 100%
-    const isPromo = isPromotionsContext(emailBodyElem, fullTextToAnalyze);
-    const hasThreat = data.verdict === "high_risk" || data.verdict === "suspicious" ||
-      (data.flags && data.flags.some(f => f.type !== "promo" && f.type !== "quarantine"));
+    const cleanSender = extractCleanEmail(senderAddress || senderHeader);
+    const learnedRecord = cleanSender ? (
+      memSenderLearning[cleanSender.toLowerCase()] ||
+      memUserOverrides[cleanSender.toLowerCase()] ||
+      memUserOverrides["sender:" + cleanSender.toLowerCase()]
+    ) : null;
 
-    if (isPromo && !hasThreat) {
-      data.verdict = "promo_clutter";
-      data.score = Math.max(data.score || 0, 25);
-      if (!data.flags) data.flags = [];
-      const hasPromoFlag = data.flags.some(f => f.type === "promo" || /promotional|marketing/i.test(f.reason || ""));
-      if (!hasPromoFlag) {
-        data.flags.push({
-          span: "Promotions / Marketing",
-          reason: "Identified as promotional marketing, newsletter, or commercial email",
-          type: "promo"
-        });
-      }
-      if (!data.explanation || /safe|legitimate|clean|no threat/i.test(data.explanation)) {
-        data.explanation = "Promotional marketing or newsletter mail. Commercial content detected with no security threats.";
-      }
-      if (!data.next_steps || data.next_steps.length === 0) {
-        data.next_steps = [
-          "Promotional marketing or newsletter detected.",
-          "Use the One-Click Unsubscribe button below if you no longer wish to receive emails from this sender.",
-          "No credentials or payment required. Be mindful before making purchases."
-        ];
+    if (learnedRecord) {
+      data.verdict = learnedRecord.verdict;
+      data.score = learnedRecord.score !== undefined ? learnedRecord.score : (learnedRecord.verdict === "safe" ? 0 : 35);
+      data.mail_score = data.score;
+      data.isUserOverride = true;
+      data.explanation = `Sender learned as ${learnedRecord.feedback ? learnedRecord.feedback.toUpperCase() : learnedRecord.verdict.toUpperCase()}: Continuous feedback applied for ${cleanSender}. Any email from this sender is classified according to your preference.`;
+      data.flags = [{
+        span: cleanSender,
+        reason: `Sender continuously classified as ${learnedRecord.feedback || learnedRecord.verdict} based on your feedback`,
+        type: "user_learned"
+      }];
+    } else {
+      // 1. Harmonize Promotional / Marketing emails so banner and inbox tags always match 100%
+      const isPromo = isPromotionsContext(emailBodyElem, fullTextToAnalyze);
+      const hasThreat = data.verdict === "high_risk" || data.verdict === "suspicious" ||
+        (data.flags && data.flags.some(f => f.type !== "promo" && f.type !== "quarantine"));
+
+      if (isPromo && !hasThreat) {
+        data.verdict = "promo_clutter";
+        data.score = Math.max(data.score || 0, 25);
+        if (!data.flags) data.flags = [];
+        const hasPromoFlag = data.flags.some(f => f.type === "promo" || /promotional|marketing/i.test(f.reason || ""));
+        if (!hasPromoFlag) {
+          data.flags.push({
+            span: "Promotions / Marketing",
+            reason: "Identified as promotional marketing, newsletter, or commercial email",
+            type: "promo"
+          });
+        }
+        if (!data.explanation || /safe|legitimate|clean|no threat/i.test(data.explanation)) {
+          data.explanation = "Promotional marketing or newsletter mail. Commercial content detected with no security threats.";
+        }
+        if (!data.next_steps || data.next_steps.length === 0) {
+          data.next_steps = [
+            "Promotional marketing or newsletter detected.",
+            "Use the One-Click Unsubscribe button below if you no longer wish to receive emails from this sender.",
+            "No credentials or payment required. Be mindful before making purchases."
+          ];
+        }
       }
     }
 
     data.emailMeta = {
       subject: subject,
-      from: senderHeader
+      from: senderHeader,
+      senderAddress: cleanSender
     };
     data.cacheKey = subject || window.location.hash;
 
@@ -778,6 +876,8 @@ function scanAndAnalyzeGmail() {
 
     // Check user overrides from chrome.storage.local before rendering
     const overrideLookupKeys = [
+      cleanSender ? cleanSender.toLowerCase() : "",
+      cleanSender ? ("sender:" + cleanSender.toLowerCase()) : "",
       subject ? subject.trim().toLowerCase() : "",
       subject ? normalizeSubjectKey(subject) : "",
       senderAddress ? `${senderAddress}|${normalizeSubjectKey(subject)}`.toLowerCase() : "",
@@ -832,7 +932,7 @@ function scanAndAnalyzeGmail() {
     text: redactedText,
     channel: "email",
     auth: authPayload,
-    senderAddress: senderAddress || "",
+    senderAddress: extractCleanEmail(senderAddress || senderHeader) || senderAddress || "",
     senderName: senderName || ""
   };
 
@@ -913,14 +1013,34 @@ function scanInboxRows(forceUpdate = false) {
     let score = 0;
     let flags = [];
 
-    if (cachedVerdict) {
+    // Continuous Sender Learning & User Override (HIGHEST PRIORITY):
+    // If the user previously marked this sender as safe, promotional, or suspicious,
+    // every other email from this same sender inherits that verdict with 100% priority.
+    const cleanSenderEmail = extractCleanEmail(sender);
+    const learnedSenderRecord = cleanSenderEmail ? (
+      memSenderLearning[cleanSenderEmail] ||
+      memUserOverrides[cleanSenderEmail] ||
+      memUserOverrides["sender:" + cleanSenderEmail]
+    ) : null;
+
+    if (learnedSenderRecord) {
+      verdict = learnedSenderRecord.verdict;
+      score = learnedSenderRecord.score !== undefined ? learnedSenderRecord.score : (verdict === "safe" ? 0 : 35);
+      flags = [{
+        span: cleanSenderEmail,
+        reason: `Sender learned as ${learnedSenderRecord.feedback || verdict}: Continuous preference applied from your user feedback`,
+        type: "user_learned"
+      }];
+      // Continuous user preference for this sender takes ABSOLUTE PRECEDENCE:
+      // It completely bypasses isPromotionsView, isPromotionalText, and isSpamView!
+    } else if (cachedVerdict) {
       // 100% PARITY WITH BANNER: Authoritative result from in-depth open-email analysis
       verdict = cachedVerdict.verdict;
       score = cachedVerdict.score;
       flags = cachedVerdict.flags || [];
 
-      // Harmonize low-risk emails to promo clutter if user is browsing the Promotions tab or text is promo
-      if (verdict === "safe" && (isPromotionsView || isPromotionalText(combinedText))) {
+      // If cached verdict came from an explicit user override, preserve it unconditionally!
+      if (!cachedVerdict.isUserOverride && verdict === "safe" && (isPromotionsView || isPromotionalText(combinedText))) {
         verdict = "promo_clutter";
         score = Math.max(score, 38);
       }

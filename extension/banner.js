@@ -33,6 +33,22 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function extractCleanEmail(raw) {
+  if (!raw || typeof raw !== "string") return "";
+  const s = raw.trim();
+  const angleMatch = s.match(/<([^>@]+@[^>@]+)>/);
+  if (angleMatch) return angleMatch[1].trim().toLowerCase();
+  const emailMatch = s.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  if (emailMatch) return emailMatch[1].trim().toLowerCase();
+  return "";
+}
+
+function extractEmailDomain(email) {
+  const clean = extractCleanEmail(email);
+  if (!clean || !clean.includes("@")) return "";
+  return clean.split("@")[1].toLowerCase().trim();
+}
+
 function playUnsubscribeSparkleSound() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1163,7 +1179,15 @@ function injectRatiodBanner(targetElement, data) {
           ? 25
           : 85));
 
+    const rawSender = (data.emailMeta && (data.emailMeta.senderAddress || data.emailMeta.from)) || "";
+    const cleanSender = extractCleanEmail(rawSender);
+    const cleanDomain = extractEmailDomain(cleanSender);
+
     const keysToOverride = [];
+    if (cleanSender) {
+      keysToOverride.push(cleanSender);
+      keysToOverride.push("sender:" + cleanSender);
+    }
     if (data.emailMeta && data.emailMeta.subject) keysToOverride.push(data.emailMeta.subject);
     if (data.emailMeta && data.emailMeta.from) keysToOverride.push(data.emailMeta.from);
     if (data.cacheKey) keysToOverride.push(data.cacheKey);
@@ -1172,18 +1196,35 @@ function injectRatiodBanner(targetElement, data) {
 
     try {
       if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(["ratiod_user_overrides"], (res) => {
+        chrome.storage.local.get(["ratiod_user_overrides", "ratiod_sender_learning"], (res) => {
           const overrides = (res && res.ratiod_user_overrides) || {};
+          const senderLearning = (res && res.ratiod_sender_learning) || {};
           const record = {
             verdict: mappedVerdict,
             score: mappedScore,
             feedback: feedbackType,
+            sender: cleanSender || null,
+            domain: cleanDomain || null,
             timestamp: Date.now()
           };
           for (const k of keysToOverride) {
             if (k) overrides[String(k).trim().toLowerCase()] = record;
           }
-          chrome.storage.local.set({ ratiod_user_overrides: overrides });
+          if (cleanSender) {
+            senderLearning[cleanSender] = {
+              sender: cleanSender,
+              domain: cleanDomain,
+              verdict: mappedVerdict,
+              score: mappedScore,
+              feedback: feedbackType,
+              userExplicit: true,
+              updatedAt: Date.now()
+            };
+          }
+          chrome.storage.local.set({
+            ratiod_user_overrides: overrides,
+            ratiod_sender_learning: senderLearning
+          });
         });
       }
     } catch (e) {}
@@ -1195,6 +1236,8 @@ function injectRatiodBanner(targetElement, data) {
           verdict: mappedVerdict,
           score: mappedScore,
           feedback: feedbackType,
+          sender: cleanSender,
+          domain: cleanDomain,
           keys: keysToOverride
         }
       }));

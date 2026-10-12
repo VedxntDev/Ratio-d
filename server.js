@@ -22,7 +22,7 @@ const path = require("path");
 
 const { handleAnalyze } = require("./server/routes/analyze");
 const { handleQr } = require("./server/routes/qr");
-const { handleFeedback } = require("./server/routes/feedback");
+const { handleFeedback, handleGetLearnedSenders } = require("./server/routes/feedback");
 const { traceRedirects } = require("./server/unmask/tracer");
 const { getCachedFile } = require("./server/static-cache");
 
@@ -235,9 +235,12 @@ async function handler(req, res) {
     return;
   }
 
-  // 3b. User feedback submission endpoint
+  // 3b. User feedback submission & continuous learning weights endpoint
   if (req.method === "POST" && (pathname === "/feedback" || pathname === "/api/feedback")) {
     return handleFeedback(req, res);
+  }
+  if (req.method === "GET" && (pathname === "/feedback/learned" || pathname === "/api/feedback/learned")) {
+    return handleGetLearnedSenders(req, res);
   }
 
   // 4. Static assets

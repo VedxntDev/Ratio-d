@@ -7,6 +7,7 @@ const { evaluateLayaModel } = require("../laya/client");
 const { generateExplanation } = require("../llm/explain");
 const { combineScore } = require("../combine/score");
 const { logPrivacyTelemetry } = require("../privacy/log");
+const { getLearnedSender } = require("./feedback");
 
 function computePrivacyStatsFromText(text) {
   const phonesMatch = text.match(/\[PHONE_REDACTED\]|(\+?\d{1,3}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}/g);
@@ -66,28 +67,44 @@ async function handleAnalyze(reqBody) {
   const layaResult = await evaluateLayaModel(text, flags);
 
   // 4. Combine Scores & Build Next Steps
-  // isPromoClutter is forwarded deliberately: the engine already decided
-  // promo-clutter using a 2+ signal threshold and a low-score cap. Recomputing
-  // it here from "any promo flag" labelled ordinary newsletters as clutter.
   const { score, verdict, next_steps } = combineScore(ruleScore, layaResult, validChannel, flags, isPromoClutter, isAuthDisqualified);
 
+  // 4b. Continuous Learned Sender Preferences & Online Learning Arbitration
+  let finalScore = score;
+  let finalVerdict = verdict;
+  let learnedExplanation = null;
+
+  const canonicalSender = cleanSenderAddress || (senderInfo ? senderInfo.senderAddress : "");
+  const learnedSender = canonicalSender ? getLearnedSender(canonicalSender) : null;
+
+  if (learnedSender && !isAuthDisqualified) {
+    if (learnedSender.lastFeedback === "safe" || learnedSender.trustScore >= 0.8) {
+      finalVerdict = "safe";
+      finalScore = 0;
+      learnedExplanation = `Sender learned as SAFE: Continuous feedback recorded for ${learnedSender.sender}. Verified safe per user preference.`;
+    } else if (learnedSender.lastFeedback === "promo") {
+      finalVerdict = "promo_clutter";
+      finalScore = 25;
+      learnedExplanation = `Sender learned as PROMOTIONAL: Commercial marketing/newsletter per continuous learning for ${learnedSender.sender}.`;
+    } else if (learnedSender.lastFeedback === "unsafe" || learnedSender.lastFeedback === "phishing") {
+      finalVerdict = "high_risk";
+      finalScore = 85;
+      learnedExplanation = `Sender learned as UNSAFE: Previously flagged as phishing/threat for ${learnedSender.sender}.`;
+    }
+  }
+
   // 5. Generate Grounded Explanation.
-  // Deterministic by default; uses the LLM prompt only when a key is configured,
-  // and the returned source is reported verbatim so nothing is ever implied.
   const { explanation, source: explainSource, model: explainModel } =
-    await generateExplanation(verdict, flags, validChannel, text);
+    await generateExplanation(finalVerdict, flags, validChannel, text);
 
   // 6. Log Privacy Telemetry (Zero raw text persistence)
   logPrivacyTelemetry(validChannel, privacyStats);
 
-  // 7. Return Exact Contract (Part A.5) + transparent engine metadata.
-  // The engine block reports what ACTUALLY ran — including the explicit
-  // `laya_stub_heuristic` label, so no model score is ever implied to be real.
   return {
-    score,
-    verdict,
+    score: finalScore,
+    verdict: finalVerdict,
     flags,
-    explanation,
+    explanation: learnedExplanation || explanation,
     next_steps,
     privacy: privacyStats,
     auth: authSummary || null,

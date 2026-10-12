@@ -155,6 +155,35 @@ try {
   check("Genuine advance fee with reply demand triggers threat flag", scamEval.flags.some(f => f.reason.includes("Claim released only by emailing back a stranger")), "Flags: " + scamEval.flags.map(f => f.reason).join("; "));
   check("Genuine advance fee scores non-zero", scamEval.ruleScore >= 20, "Score: " + scamEval.ruleScore);
 
+  // 7. Test Continuous Sender Learning: User marks Parikh Jain promo email as safe
+  const { recordContinuousLearning, getLearnedSender } = require("./routes/feedback");
+  const { handleAnalyze } = require("./routes/analyze");
+
+  const learnedRecord = recordContinuousLearning(
+    "Parikh Jain <parikh@codingninjas.com>",
+    "safe",
+    "promo_clutter",
+    25
+  );
+
+  check("Continuous learning registers sender", !!learnedRecord);
+  check("Clean email normalized correctly", learnedRecord && learnedRecord.sender === "parikh@codingninjas.com");
+  check("Sender marked with safe verdict", learnedRecord && learnedRecord.lastVerdict === "safe");
+  check("Domain trust score tracked", learnedRecord && learnedRecord.trustScore >= 0.8);
+
+  // 8. Test that another email from this same sender is now automatically classified as SAFE
+  const secondParikhEmail = {
+    text: "From: Parikh Jain <parikh@codingninjas.com>\nSubject: Masterclass on Advanced System Design\n\nJoin our live masterclass this weekend.",
+    channel: "email",
+    senderAddress: "parikh@codingninjas.com",
+    senderName: "Parikh Jain"
+  };
+
+  const analysisResult = await handleAnalyze(secondParikhEmail);
+  check("Subsequent email from learned sender is SAFE", analysisResult.verdict === "safe", "Verdict: " + analysisResult.verdict);
+  check("Subsequent email from learned sender has score 0", analysisResult.score === 0, "Score: " + analysisResult.score);
+  check("Explanation notes learned sender continuous feedback", analysisResult.explanation.includes("Sender learned as SAFE"), "Explanation: " + analysisResult.explanation);
+
   console.log(failures === 0 ? "\nALL FEEDBACK TESTS PASSED" : `\n${failures} FEEDBACK TEST(S) FAILED`);
   process.exit(failures === 0 ? 0 : 1);
 })();
