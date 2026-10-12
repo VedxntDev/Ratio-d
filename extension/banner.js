@@ -691,6 +691,46 @@ function injectRatiodBanner(targetElement, data) {
       color: #121212 !important;
     }
 
+    .tag-user-suspicious {
+      background: #E8720C !important;
+      color: #FFFFFF !important;
+    }
+
+    .ratiod-header-action-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 2px solid #121212;
+      box-shadow: 2px 2px 0px #121212;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 4px;
+    }
+
+    .ratiod-header-action-btn:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #121212;
+    }
+
+    .ratiod-feedback-label-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .ratiod-feedback-sub {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11.5px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+
     .ratiod-drawer {
       display: none;
       margin-top: 16px;
@@ -860,6 +900,10 @@ function injectRatiodBanner(targetElement, data) {
       <div class="ratiod-badge-group">
         <img class="ratiod-logo" src="${escapeHtml(logoSrc)}" alt="" width="28" height="28">
         <span class="ratiod-tag tag-${escapeHtml(verdict)}">[ ${verdictEmoji} ${escapeHtml(displayVerdictLabel)} ]</span>
+        ${verdict !== 'safe'
+          ? `<button class="ratiod-header-action-btn btn-highlight-safe" id="btn-header-safe" data-feedback="safe" type="button" title="One-click: change tag to SAFE and submit feedback">[ 🛡️ MARK AS SAFE ]</button>`
+          : `<button class="ratiod-header-action-btn btn-highlight-unsafe" id="btn-header-unsafe" data-feedback="unsafe" type="button" title="One-click: change tag to UNSAFE and submit feedback">[ ⚠️ MARK AS UNSAFE ]</button>`
+        }
         ${authBadgeHtml}
         <span class="ratiod-score ratiod-score-mail" title="Mail Security Risk Score"><span class="score-type-badge">MAIL</span><span class="score-number">${escapeHtml(mailScore)}</span><span class="score-denom">/100</span> <span class="score-level-badge level-${escapeHtml(riskLevelKey)}">${escapeHtml(riskLevelText)}</span></span>
         <span class="ratiod-score ratiod-score-qr ${escapeHtml(qrChipClass)}" id="banner-qr-score" title="QR Security Code Risk Score"><span class="score-type-badge">QR CODE</span><span id="banner-qr-score-val">${escapeHtml(qrScoreText)}</span></span>
@@ -886,11 +930,15 @@ function injectRatiodBanner(targetElement, data) {
         </div>
         <div class="ratiod-explanation"><span class="ratiod-explanation-label">Reason:</span> ${escapeHtml(explanation)}</div>
         <div class="ratiod-feedback-strip" id="ratiod-feedback-strip">
-          <span class="ratiod-feedback-prompt">Wrong verdict? Help us learn:</span>
+          <div class="ratiod-feedback-label-box">
+            <span class="ratiod-feedback-prompt">Wrong verdict or tag?</span>
+            <span class="ratiod-feedback-sub">Click once to change tag &amp; send feedback:</span>
+          </div>
           <div class="ratiod-feedback-chips">
-            <button class="ratiod-chip-btn ${verdict === 'safe' ? 'chip-active' : ''}" type="button" data-feedback="safe" title="Mark this email as safe">[ 🛡️ Safe ]</button>
-            <button class="ratiod-chip-btn ${verdict === 'suspicious' || verdict === 'high_risk' ? 'chip-active' : ''}" type="button" data-feedback="unsafe" title="Mark this email as unsafe / phishing">[ ⚠️ Unsafe ]</button>
-            <button class="ratiod-chip-btn ${verdict === 'promo_clutter' ? 'chip-active' : ''}" type="button" data-feedback="promo" title="Mark this email as promotional newsletter">[ 🏷️ Promo ]</button>
+            <button class="ratiod-chip-btn ${verdict === 'safe' ? 'chip-active' : ''}" type="button" data-feedback="safe" title="One-click: Change tag to Safe and send feedback">[ 🛡️ MARK AS SAFE ]</button>
+            <button class="ratiod-chip-btn ${verdict === 'suspicious' ? 'chip-active' : ''}" type="button" data-feedback="suspicious" title="One-click: Change tag to Suspicious and send feedback">[ 🟠 SUSPICIOUS ]</button>
+            <button class="ratiod-chip-btn ${verdict === 'promo_clutter' ? 'chip-active' : ''}" type="button" data-feedback="promo" title="One-click: Change tag to Promotional and send feedback">[ 🟡 PROMO ]</button>
+            <button class="ratiod-chip-btn ${verdict === 'high_risk' ? 'chip-active' : ''}" type="button" data-feedback="unsafe" title="One-click: Change tag to Unsafe / Phishing and send feedback">[ 🔴 UNSAFE ]</button>
           </div>
         </div>
         <div class="ratiod-feedback-toast" id="ratiod-feedback-toast" style="display:none;" role="status" aria-live="polite"></div>
@@ -1044,29 +1092,47 @@ function injectRatiodBanner(targetElement, data) {
       if (feedbackType === "safe") {
         headerTag.className = "ratiod-tag tag-safe tag-user-safe";
         headerTag.textContent = "[ 🛡️ USER OVERRIDE: SAFE ]";
-      } else if (feedbackType === "unsafe") {
-        headerTag.className = "ratiod-tag tag-high_risk tag-user-unsafe";
-        headerTag.textContent = "[ ⚠️ USER OVERRIDE: UNSAFE ]";
+      } else if (feedbackType === "suspicious") {
+        headerTag.className = "ratiod-tag tag-suspicious tag-user-suspicious";
+        headerTag.textContent = "[ 🟠 USER OVERRIDE: SUSPICIOUS ]";
       } else if (feedbackType === "promo") {
         headerTag.className = "ratiod-tag tag-promo_clutter tag-user-promo";
         headerTag.textContent = "[ 🏷️ USER OVERRIDE: PROMO ]";
+      } else if (feedbackType === "unsafe" || feedbackType === "high_risk") {
+        headerTag.className = "ratiod-tag tag-high_risk tag-user-unsafe";
+        headerTag.textContent = "[ ⚠️ USER OVERRIDE: UNSAFE ]";
       }
     }
 
     if (container) {
-      container.className = "ratiod-container theme-" + (feedbackType === "promo" ? "promo_clutter" : (feedbackType === "unsafe" ? "high_risk" : "safe"));
+      container.className = "ratiod-container theme-" + (feedbackType === "promo" ? "promo_clutter" : (feedbackType === "suspicious" ? "suspicious" : (feedbackType === "safe" ? "safe" : "high_risk")));
     }
 
     if (mailScoreVal) {
-      const newScore = feedbackType === "safe" ? 0 : (feedbackType === "promo" ? 45 : 85);
-      const newLevelKey = feedbackType === "safe" ? "low" : (feedbackType === "promo" ? "promo" : "high");
-      const newLevelText = feedbackType === "safe" ? "LOW RISK" : (feedbackType === "promo" ? "PROMO / CLUTTER" : "HIGH RISK");
+      const newScore = feedbackType === "safe" ? 0 : (feedbackType === "promo" ? 25 : (feedbackType === "suspicious" ? 45 : 85));
+      const newLevelKey = feedbackType === "safe" ? "low" : (feedbackType === "promo" ? "promo" : (feedbackType === "suspicious" ? "med" : "high"));
+      const newLevelText = feedbackType === "safe" ? "LOW RISK" : (feedbackType === "promo" ? "PROMO / CLUTTER" : (feedbackType === "suspicious" ? "SUSPICIOUS" : "HIGH RISK"));
       mailScoreVal.innerHTML = `<span class="score-type-badge">MAIL</span><span class="score-number">${newScore}</span><span class="score-denom">/100</span> <span class="score-level-badge level-${newLevelKey}">${newLevelText}</span>`;
     }
 
     if (explanationEl) {
-      const explType = feedbackType === "safe" ? "safe" : (feedbackType === "promo" ? "promotional newsletter" : "unsafe / phishing");
+      const explType = feedbackType === "safe" ? "safe" : (feedbackType === "promo" ? "promotional newsletter" : (feedbackType === "suspicious" ? "suspicious" : "unsafe / phishing"));
       explanationEl.innerHTML = `<span class="ratiod-explanation-label">User Feedback:</span> Marked as ${explType} by user. Local override applied.`;
+    }
+
+    const headerOverrideBtn = shadowRoot.getElementById("btn-header-safe") || shadowRoot.getElementById("btn-header-unsafe");
+    if (headerOverrideBtn) {
+      if (feedbackType === "safe") {
+        headerOverrideBtn.id = "btn-header-unsafe";
+        headerOverrideBtn.className = "ratiod-header-action-btn btn-highlight-unsafe";
+        headerOverrideBtn.setAttribute("data-feedback", "unsafe");
+        headerOverrideBtn.textContent = "[ ⚠️ MARK AS UNSAFE ]";
+      } else {
+        headerOverrideBtn.id = "btn-header-safe";
+        headerOverrideBtn.className = "ratiod-header-action-btn btn-highlight-safe";
+        headerOverrideBtn.setAttribute("data-feedback", "safe");
+        headerOverrideBtn.textContent = "[ 🛡️ MARK AS SAFE ]";
+      }
     }
 
     if (quickFeedbackBtn) {
@@ -1082,8 +1148,20 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     // Persist override to chrome.storage.local
-    const mappedVerdict = feedbackType === "unsafe" ? "high_risk" : (feedbackType === "promo" ? "promo_clutter" : "safe");
-    const mappedScore = feedbackType === "unsafe" ? 85 : (feedbackType === "promo" ? 45 : 0);
+    const mappedVerdict = feedbackType === "safe"
+      ? "safe"
+      : (feedbackType === "suspicious"
+        ? "suspicious"
+        : (feedbackType === "promo"
+          ? "promo_clutter"
+          : "high_risk"));
+    const mappedScore = feedbackType === "safe"
+      ? 0
+      : (feedbackType === "suspicious"
+        ? 45
+        : (feedbackType === "promo"
+          ? 25
+          : 85));
 
     const keysToOverride = [];
     if (data.emailMeta && data.emailMeta.subject) keysToOverride.push(data.emailMeta.subject);
@@ -1143,6 +1221,14 @@ function injectRatiodBanner(targetElement, data) {
         }).catch(() => {});
       } catch (err) {}
     }
+  }
+
+  const headerActionBtn = shadowRoot.getElementById("btn-header-safe") || shadowRoot.getElementById("btn-header-unsafe");
+  if (headerActionBtn) {
+    headerActionBtn.addEventListener("click", () => {
+      const fb = headerActionBtn.getAttribute("data-feedback") || "safe";
+      applyUserFeedback(fb, headerActionBtn);
+    });
   }
 
   const quickFeedbackBtn = shadowRoot.getElementById("btn-quick-feedback");
