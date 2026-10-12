@@ -299,7 +299,16 @@ const TRANSACTIONAL_SAFEGUARD_PATTERNS = [
   { regex: /\bappointment\s+(?:is\s+)?confirmed\s+for\b|\bdr\.\s+[a-z]+\s+\(cardiology|pediatrics|general\)\b/i, reason: "Medical healthcare appointment confirmation" },
   { regex: /\bround\s+\d+\s+will\s+take\s+place\s+tomorrow\s+at\s+\d+:\d+\s+utc\b/i, reason: "Scheduled competitive programming round announcement" },
   { regex: /\bworkspace\s+invited\b|\bis\s+inviting\s+you\s+to\s+a\s+scheduled\s+zoom\s+meeting\b/i, reason: "Direct team collaboration workspace or meeting invitation" },
-  { regex: /\bfall\s+\d{4}\s+final\s+examination\s+schedule\b|\bcapstone\s+submission\s+for\b/i, reason: "Academic university administration notice" }
+  { regex: /\bfall\s+\d{4}\s+final\s+examination\s+schedule\b|\bcapstone\s+submission\s+for\b/i, reason: "Academic university administration notice" },
+  { regex: /\b(?:we\s+had\s+promised\s+you\s+that\s+we['’]ll\s+plant\s+a\s+tree|tree\s+planted)\b/i, reason: "E-commerce customer service tree planting update" },
+  { regex: /\b(?:your\s+order\s+(?:has\s+been\s+placed|is\s+confirmed|shipped|dispatched))\b/i, reason: "Order status lifecycle tracking update" },
+  { regex: /\b(?:contactless\s+payments?|tap\s+&\s+pay|debit\s+card|credit\s+card)\b/i, reason: "Card banking contactless payment readiness" },
+  { regex: /\b(?:payout\s+of\s+[\$€£]|statement\s+for\s+cycle|minimum\s+due)\b/i, reason: "Financial merchant payout or statement summary" },
+  { regex: /\b(?:codeforces|leetcode|hackerrank|codechef)\s+round\b/i, reason: "Competitive programming contest announcement" },
+  { regex: /\bregistration\s+is\s+(?:now\s+)?open\b/i, reason: "Technical contest registration notification" },
+  { regex: /\b(?:ticket\s+confirmed|tickets\s+confirmed|showtime\s*:)\b/i, reason: "Entertainment cinema/event ticket confirmation" },
+  { regex: /\b(?:electricity\s+bill|broadband\s+bill|fastag\s+toll)\b/i, reason: "Utility bill or toll plaza transaction confirmation" },
+  { regex: /\b(?:security\s+alert\s*:\s*new\s+sign-in|discord\s+security\s+code|two-factor\s+login\s+code)\b/i, reason: "Routine account sign-in or multi-factor authentication passkey" }
 ];
 
 const PROMOTIONAL_CLUTTER_PATTERNS = [

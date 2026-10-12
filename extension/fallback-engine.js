@@ -37,7 +37,8 @@
     { name: "delivery_fee", points: 20, patterns: [
       /non-?payment\s+of\s+[\d.,]+|pay\s+the\s+new\s+shipping\s+cost/i,
       /unable\s+to\s+deliver|were\s+unable\s+to\s+deliver/i,
-      /delivery\s+failed\s+on|still\s+on\s+hold|on\s+hold\s+in\s+our\s+post/i ] },
+      /delivery\s+failed\s+on|still\s+on\s+hold|on\s+hold\s+in\s+our\s+post/i,
+      /unpaid\s+shipping|redelivery\s+fee|package\s+delivery\s+failed|address\s+fee/i ] },
     { name: "fake_subscription", points: 18, patterns: [
       /storage\s+is\s+full|upgrade\s+(your\s+)?storage|not\s+backing\s+up/i,
       /your\s+subscription\s+(ends|is\s+about\s+to\s+expire)/i,
@@ -143,17 +144,28 @@
     /\b(?:out\s+for\s+delivery|delivered\s+by|handed\s+directly\s+to\s+resident)\b/i,
     /\btracking\s+(?:awb|number|id)[:\s#]*[a-z0-9]+/i,
     /\b(?:ride|trip|order)\s+(?:receipt|invoice)\b|\bdelivered\s+in\s+\d+\s+minutes\b/i,
+    /\b(?:view\s+(?:your\s+)?order|thank\s+you\s+for\s+your\s+order|order\s+confirmation|order\s*#\s*[\w-]+)\b/i,
+    /@(?:[\w-]+\.)?shopifyemail\.com\b/i,
     /\breturn\s+item\s+has\s+been\s+inspected\s+and\s+picked\s+up\b|\brefund\s+initiated\b/i,
+    /\b(?:we\s+had\s+promised\s+you\s+that\s+we['’]ll\s+plant\s+a\s+tree|tree\s+planted)\b/i,
+    /\b(?:your\s+order\s+(?:has\s+been\s+placed|is\s+confirmed|shipped|dispatched))\b/i,
     /\bcollateral\s+at\s+client\s+level\b|\bcompliance\s+with\s+sebi\s+regulations\b/i,
     /\bsalary\s+credited\s+to\s+your\s+account\b|\bcredited\s+with\s+inr\s+[\d,.]+\s+via\s+neft\b/i,
     /\bmonthly\s+e-statement\s+for\s+your\s+(?:credit\s+card|account)\b/i,
     /\bterms\s+and\s+policies\b|\bdeveloper\s+distribution\s+agreement\b/i,
+    /\b(?:contactless\s+payments?|tap\s+&\s+pay|debit\s+card|credit\s+card)\b/i,
+    /\b(?:payout\s+of\s+[\$€£]|statement\s+for\s+cycle|minimum\s+due)\b/i,
     /\belectronic\s+reservation\s+slip\s+\(ers\)\s+pnr\b|\bcoach\s+[a-z0-9]+,\s*berth\s+\d+\b/i,
     /\bboarding\s+pass\b|\bgate\s+closes\s+\d+\s+minutes\s+prior\b/i,
     /\bappointment\s+(?:is\s+)?confirmed\s+for\b|\bdr\.\s+[a-z]+\s+\(cardiology|pediatrics|general\)\b/i,
     /\bround\s+\d+\s+will\s+take\s+place\s+tomorrow\s+at\s+\d+:\d+\s+utc\b/i,
+    /\b(?:codeforces|leetcode|hackerrank|codechef)\s+round\b/i,
+    /\bregistration\s+is\s+(?:now\s+)?open\b/i,
     /\bworkspace\s+invited\b|\bis\s+inviting\s+you\s+to\s+a\s+scheduled\s+zoom\s+meeting\b/i,
-    /\bfall\s+\d{4}\s+final\s+examination\s+schedule\b|\bcapstone\s+submission\s+for\b/i
+    /\bfall\s+\d{4}\s+final\s+examination\s+schedule\b|\bcapstone\s+submission\s+for\b/i,
+    /\b(?:ticket\s+confirmed|tickets\s+confirmed|showtime\s*:)\b/i,
+    /\b(?:electricity\s+bill|broadband\s+bill|fastag\s+toll)\b/i,
+    /\b(?:security\s+alert\s*:\s*new\s+sign-in|discord\s+security\s+code|two-factor\s+login\s+code)\b/i
   ];
 
   /*
@@ -368,6 +380,41 @@
       score += 20;
     }
 
+    // Brand display-name impersonation against sender domain
+    var brandNameMatch = t.match(/From:\s*([^\n<]+)<[^>@]+@([a-zA-Z0-9.-]+)>/i);
+    if (brandNameMatch) {
+      var claimedName = brandNameMatch[1].trim().toLowerCase();
+      var actualDomain = brandNameMatch[2].trim().toLowerCase();
+      for (var b = 0; b < BRANDS.length; b++) {
+        var brandRoot = BRANDS[b].split(".")[0];
+        if (claimedName.indexOf(brandRoot) !== -1) {
+          var isLegitBrand = actualDomain === BRANDS[b] || actualDomain.endsWith("." + BRANDS[b]);
+          if (!isLegitBrand) {
+            flags.push({
+              span: actualDomain,
+              reason: "Brand display name impersonation: sender claims '" + brandRoot + "' but sends from unrelated domain '" + actualDomain + "'",
+              type: "rule"
+            });
+            score += 80;
+            break;
+          }
+        }
+      }
+    }
+
+    // Risky TLD on sender domain
+    var senderRisky = from.filter(function (d) {
+      return /\.(xyz|top|tk|club|work|gq|cf|ml|monster|rest|hair|cfd|icu|buzz|cam|lol|quest|cyou|sbs)$/i.test(d);
+    })[0];
+    if (senderRisky) {
+      flags.push({
+        span: senderRisky,
+        reason: "Sender domain uses high-risk top-level domain (TLD)",
+        type: "rule"
+      });
+      score += 35;
+    }
+
     if (RISKY_TLD.test(t)) {
       flags.push({ span: t.match(RISKY_TLD)[0], reason: "Link to a heavily-abused cheap top-level domain", type: "rule" });
       score += 20;
@@ -526,7 +573,14 @@
     };
   }
 
-  global.RatiodFallback = { analyze: analyze, FAMILIES: FAMILIES.map(function (f) { return f.name; }) };
+  global.RatiodFallback = {
+    analyze: analyze,
+    FAMILIES: FAMILIES.map(function (f) { return f.name; }),
+    isTransactional: function (text) {
+      var t = String(text || "");
+      return TRANSACTIONAL.some(function (r) { return r.test(t); });
+    }
+  };
 
   if (typeof module !== "undefined" && module.exports) module.exports = global.RatiodFallback;
 })(typeof window !== "undefined" ? window : globalThis);

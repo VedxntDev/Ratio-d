@@ -285,6 +285,34 @@ async function runAllTests() {
     report(`Clean message ${i + 1} model calibration`, staysSafe, `p=${pred.probability}, label=${pred.label}`);
   });
 
+  // Test D: Realistic Pre-Box Inbox List Row Badging Simulation
+  const simulatedRows = [
+    { sender: "Parikh Jain", subj: "1,600+ Students Hired. 250+ Companies.", snip: "Hi Vedant, What does it actually take to crack your dream job?", expected: "promo_clutter" },
+    { sender: "Google", subj: "Security alert for your linked Google Account", snip: "A new sign-in was detected on your Mac device.", expected: "safe" },
+    { sender: "GitHub", subj: "[GitHub] Please verify your device", snip: "A sign in attempt was made from a new location.", expected: "safe" },
+    { sender: "Vedant Singh Baghel", subj: "[VedxntDev/Ratio-d] Run failed: test - main (8e0e962)", snip: "[VedxntDev/Ratio-d] test workflow run failed on branch main.", expected: "safe" },
+    { sender: "Mamaearth", subj: "A shipment from order #2795980 has been delivered", snip: "Order #2795980 Your order has been delivered handed directly to resident.", expected: "safe" },
+    { sender: "Mamaearth", subj: "Tree Planted", snip: "Dear Vedant singh baghel, We had promised you that we will plant a tree for your order.", expected: "safe" },
+    { sender: "Shiprocket", subj: "Vedant Singh Baghel, your Mamaearth order has been delivered!", snip: "Dear Vedant, your order has been delivered by courier.", expected: "safe" },
+    { sender: "noreply", subj: "Codeforces Round 1127 (Div. 1, Div. 2, Based on Mexican Olympiad in Informatics 20...", snip: "Round 1127 will take place tomorrow at 17:35 UTC. Registration is now open.", expected: "safe" },
+    { sender: "inspectioninfo", subj: "Segregation and Monitoring of Collateral at Client Level for 30/09/2026 with...", snip: "Collateral at client level in compliance with SEBI regulations.", expected: "safe" },
+    { sender: "Google Play", subj: "Quarterly reminder about Google Play terms and policies", snip: "Review our Google Play Developer Distribution Agreement.", expected: "safe" },
+    { sender: "SBI", subj: "Make Your SBI Debit Card, Tap & Pay Ready", snip: "Dear Customer, make your SBI Debit card tap & pay ready for contactless payments.", expected: "safe" },
+    { sender: "Rinske Fris", subj: "Be the annoying customer - The strategy for a wardrobe where every option is a...", snip: "Explore our latest collection with flat 20% off on your first purchase.", expected: "promo_clutter" },
+    { sender: "Naukri MINIs", subj: "₹50,000 basic. Here is how much of it goes into PF", snip: "Take a look at standard provident fund calculations and advisory.", expected: "promo_clutter" },
+    { sender: "Vested Shorts", subj: "Samsung’s best chip quarter could be its phone’s worst", snip: "Daily global market recap and stock commentary.", expected: "promo_clutter" },
+    { sender: "Netflix Support <billing@netflix-verify-account.xyz>", subj: "Urgent: Your account is suspended", snip: "Verify billing details immediately.", expected: "high_risk" },
+    { sender: "PayPal <service@paypal-account-center.top>", subj: "Action required: Confirm identity", snip: "Log in within 24 hours to prevent permanent restriction.", expected: "high_risk" },
+    { sender: "USPS Notice <delivery@usps-tracking.icu>", subj: "Package delivery failed", snip: "Unpaid shipping cost $2.99. Pay redelivery fee now.", expected: "high_risk" }
+  ];
+
+  simulatedRows.forEach((row, i) => {
+    const combinedText = `From: ${row.sender}\nSubject: ${row.subj}\n${row.snip}`;
+    const fbRes = fallbackEngine.analyze(combinedText);
+    const ok = fbRes.verdict === row.expected;
+    report(`Pre-box Row '${row.sender} - ${row.subj.slice(0, 25)}'`, ok, `Verdict: ${fbRes.verdict} (Score: ${fbRes.score})`);
+  });
+
   console.log("\n===============================================================================");
   console.log(`   TEST EXECUTION COMPLETE: ${passedCount} PASSED, ${failedCount} FAILED`);
   console.log("===============================================================================");

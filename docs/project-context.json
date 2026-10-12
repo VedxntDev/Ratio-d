@@ -583,7 +583,7 @@
         "urgency": 10,
         "credential": 5,
         "promotionalClutter": 22,
-        "transactionalSafeguards": 21,
+        "transactionalSafeguards": 30,
         "suspiciousDomains": 6,
         "advanceFee": 14,
         "refundBait": 5,
