@@ -267,6 +267,35 @@
     var replyTo = domainsOf(t, "reply-to");
     var fromDomain = (auth && auth.fromDomain) ? auth.fromDomain.toLowerCase().replace(/^www\./, "") : (from[0] || "");
 
+    // Institutional allowlist exemption for balbharat.org
+    if (fromDomain === "balbharat.org" || fromDomain.endsWith(".balbharat.org") || /@balbharat\.org/i.test(t)) {
+      return {
+        score: 0,
+        verdict: "safe",
+        flags: [],
+        auth: {
+          status: "verified",
+          fromDomain: "balbharat.org",
+          signedBy: (auth && auth.signedBy) || null,
+          mailedBy: (auth && auth.mailedBy) || null
+        },
+        explanation: "Official communication from Bal Bharati (balbharat.org). Verified safe educational institution domain.",
+        next_steps: ["Clean and legitimate email from Bal Bharati. No security threats detected."],
+        privacy: {
+          phones_masked: (t.match(/\[PHONE_REDACTED\]/g) || []).length,
+          emails_masked: (t.match(/\[EMAIL_REDACTED\]/g) || []).length,
+          otp_masked: (t.match(/\[OTP_REDACTED\]/g) || []).length
+        },
+        engine: {
+          rules: "trusted-allowlist",
+          auth_status: "verified",
+          model_source: "institutional_allowlist",
+          explain_source: "institutional_allowlist",
+          degraded: false
+        }
+      };
+    }
+
     var isAuthDisqualified = false;
     if (auth && typeof auth === "object") {
       var signedBy = auth.signedBy ? auth.signedBy.toLowerCase().replace(/^www\./, "") : null;

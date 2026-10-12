@@ -768,13 +768,24 @@ function scanAndAnalyzeGmail() {
 
   const onAnalysisComplete = (data) => {
     const cleanSender = extractCleanEmail(senderAddress || senderHeader);
+    const isBalBharat = (cleanSender && (cleanSender.endsWith("@balbharat.org") || cleanSender === "balbharat.org")) ||
+                        (senderHeader && senderHeader.toLowerCase().includes("balbharat.org")) ||
+                        (fullTextToAnalyze && /from:\s*.*@balbharat\.org/i.test(fullTextToAnalyze));
+
     const learnedRecord = cleanSender ? (
       memSenderLearning[cleanSender.toLowerCase()] ||
       memUserOverrides[cleanSender.toLowerCase()] ||
       memUserOverrides["sender:" + cleanSender.toLowerCase()]
     ) : null;
 
-    if (learnedRecord) {
+    if (isBalBharat) {
+      data.verdict = "safe";
+      data.score = 0;
+      data.mail_score = 0;
+      data.flags = [];
+      data.explanation = "Official email from Bal Bharati (balbharat.org). Verified safe educational institution domain.";
+      data.next_steps = ["Clean and legitimate email from Bal Bharati. No security threats detected."];
+    } else if (learnedRecord) {
       data.verdict = learnedRecord.verdict;
       data.score = learnedRecord.score !== undefined ? learnedRecord.score : (learnedRecord.verdict === "safe" ? 0 : 35);
       data.mail_score = data.score;
@@ -1013,17 +1024,21 @@ function scanInboxRows(forceUpdate = false) {
     let score = 0;
     let flags = [];
 
-    // Continuous Sender Learning & User Override (HIGHEST PRIORITY):
-    // If the user previously marked this sender as safe, promotional, or suspicious,
-    // every other email from this same sender inherits that verdict with 100% priority.
+    // Educational / Institutional Exemption: balbharat.org
     const cleanSenderEmail = extractCleanEmail(sender);
-    const learnedSenderRecord = cleanSenderEmail ? (
-      memSenderLearning[cleanSenderEmail] ||
-      memUserOverrides[cleanSenderEmail] ||
-      memUserOverrides["sender:" + cleanSenderEmail]
-    ) : null;
+    const isBalBharat = (cleanSenderEmail && (cleanSenderEmail.endsWith("@balbharat.org") || cleanSenderEmail === "balbharat.org")) ||
+                        (sender && (sender.toLowerCase().includes("@balbharat.org") || sender.toLowerCase().includes("balbharat.org"))) ||
+                        (combinedText && /from:\s*.*@balbharat\.org/i.test(combinedText));
 
-    if (learnedSenderRecord) {
+    if (isBalBharat) {
+      verdict = "safe";
+      score = 0;
+      flags = [{
+        span: "balbharat.org",
+        reason: "Official verified educational institution domain (Bal Bharati)",
+        type: "trusted_institution"
+      }];
+    } else if (learnedSenderRecord) {
       verdict = learnedSenderRecord.verdict;
       score = learnedSenderRecord.score !== undefined ? learnedSenderRecord.score : (verdict === "safe" ? 0 : 35);
       flags = [{

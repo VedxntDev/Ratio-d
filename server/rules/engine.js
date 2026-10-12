@@ -185,7 +185,7 @@ const LEGITIMATE_DOMAINS = new Set([
   "target.com", "bestbuy.com", "costco.com", "etsy.com", "ebay.com",
   "soundcloud.com", "bandcamp.com", "discogs.com", "medium.com", "substack.com",
   "notion.so", "airtable.com", "linear.app", "vercel.app", "netlify.app",
-  "gitlab.com", "codeforces.com", "mamaearth.in", "shiprocket.in", "fastag.ihmcl.com", "bookmyshow.com"
+  "gitlab.com", "codeforces.com", "mamaearth.in", "shiprocket.in", "fastag.ihmcl.com", "bookmyshow.com", "balbharat.org"
 ]);
 
 /**

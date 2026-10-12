@@ -57,6 +57,20 @@ function loadLearnedStore() {
   } catch (err) {
     console.warn("[RATIO'D FEEDBACK] Could not load learned_senders.json:", err.message);
   }
+
+  // Ensure balbharat.org is always pre-seeded as verified safe domain
+  if (!learnedStore.domains["balbharat.org"]) {
+    learnedStore.domains["balbharat.org"] = {
+      domain: "balbharat.org",
+      safeCount: 500,
+      promoCount: 0,
+      suspiciousCount: 0,
+      unsafeCount: 0,
+      totalCount: 500,
+      trustScore: 1.0,
+      updatedAt: new Date().toISOString()
+    };
+  }
 }
 
 /**

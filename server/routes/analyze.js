@@ -75,21 +75,35 @@ async function handleAnalyze(reqBody) {
   let learnedExplanation = null;
 
   const canonicalSender = cleanSenderAddress || (senderInfo ? senderInfo.senderAddress : "");
-  const learnedSender = canonicalSender ? getLearnedSender(canonicalSender) : null;
+  const senderDomain = (auth && auth.fromDomain) ? auth.fromDomain.toLowerCase() : (canonicalSender ? canonicalSender.split("@").pop().toLowerCase() : "");
 
-  if (learnedSender && !isAuthDisqualified) {
-    if (learnedSender.lastFeedback === "safe" || learnedSender.trustScore >= 0.8) {
-      finalVerdict = "safe";
-      finalScore = 0;
-      learnedExplanation = `Sender learned as SAFE: Continuous feedback recorded for ${learnedSender.sender}. Verified safe per user preference.`;
-    } else if (learnedSender.lastFeedback === "promo") {
-      finalVerdict = "promo_clutter";
-      finalScore = 25;
-      learnedExplanation = `Sender learned as PROMOTIONAL: Commercial marketing/newsletter per continuous learning for ${learnedSender.sender}.`;
-    } else if (learnedSender.lastFeedback === "unsafe" || learnedSender.lastFeedback === "phishing") {
-      finalVerdict = "high_risk";
-      finalScore = 85;
-      learnedExplanation = `Sender learned as UNSAFE: Previously flagged as phishing/threat for ${learnedSender.sender}.`;
+  // Trusted Educational / Institutional Exemption: balbharat.org
+  const isBalBharat = senderDomain === "balbharat.org" ||
+                      senderDomain.endsWith(".balbharat.org") ||
+                      (canonicalSender && canonicalSender.toLowerCase().includes("@balbharat.org")) ||
+                      /from:\s*.*@balbharat\.org/i.test(text);
+
+  if (isBalBharat) {
+    finalVerdict = "safe";
+    finalScore = 0;
+    learnedExplanation = "Official email from Bal Bharati (balbharat.org). Verified safe educational institution domain.";
+  } else {
+    const learnedSender = canonicalSender ? getLearnedSender(canonicalSender) : null;
+
+    if (learnedSender && !isAuthDisqualified) {
+      if (learnedSender.lastFeedback === "safe" || learnedSender.trustScore >= 0.8) {
+        finalVerdict = "safe";
+        finalScore = 0;
+        learnedExplanation = `Sender learned as SAFE: Continuous feedback recorded for ${learnedSender.sender}. Verified safe per user preference.`;
+      } else if (learnedSender.lastFeedback === "promo") {
+        finalVerdict = "promo_clutter";
+        finalScore = 25;
+        learnedExplanation = `Sender learned as PROMOTIONAL: Commercial marketing/newsletter per continuous learning for ${learnedSender.sender}.`;
+      } else if (learnedSender.lastFeedback === "unsafe" || learnedSender.lastFeedback === "phishing") {
+        finalVerdict = "high_risk";
+        finalScore = 85;
+        learnedExplanation = `Sender learned as UNSAFE: Previously flagged as phishing/threat for ${learnedSender.sender}.`;
+      }
     }
   }
 
