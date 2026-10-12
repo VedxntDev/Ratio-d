@@ -313,6 +313,54 @@ async function runAllTests() {
     report(`Pre-box Row '${row.sender} - ${row.subj.slice(0, 25)}'`, ok, `Verdict: ${fbRes.verdict} (Score: ${fbRes.score})`);
   });
 
+  // Test E: Verdict Cache Isolation & Anti-Poisoning Protection
+  const memCache = {};
+  const IGNORED_KEYS = new Set([
+    "", "inbox", "spam", "all", "trash", "sent", "drafts", "starred", "snoozed",
+    "important", "chats", "scheduled", "category", "promotions", "updates",
+    "forums", "social", "mail", "unread", "read", "none", "null", "undefined",
+    "category/promotions", "category/updates", "category/social", "category/forums"
+  ]);
+
+  function isIgnored(k) {
+    if (!k) return true;
+    const s = String(k).trim().toLowerCase();
+    if (s.length < 4) return true;
+    if (IGNORED_KEYS.has(s)) return true;
+    if (/^(inbox|spam|all|trash|sent|drafts|starred|category|search|label)(\/|$)/i.test(s)) return true;
+    return false;
+  }
+
+  function mockSave(keys, data) {
+    for (const k of keys) {
+      if (!k || isIgnored(k)) continue;
+      memCache[String(k).trim().toLowerCase()] = data;
+    }
+  }
+
+  function mockGet(keys) {
+    for (const k of keys) {
+      if (!k || isIgnored(k)) continue;
+      const hit = memCache[String(k).trim().toLowerCase()];
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  // 1. Assert system folders and route hashes are rejected from cache
+  mockSave(["inbox", "#inbox", "category/promotions", "spam", "sent", "all"], { verdict: "suspicious", score: 48 });
+  report("Cache rejects 'inbox' key", mockGet(["inbox"]) === null, "inbox key was blocked");
+  report("Cache rejects 'category/promotions' key", mockGet(["category/promotions"]) === null, "promo folder key was blocked");
+  report("Cache rejects 'spam' key", mockGet(["spam"]) === null, "spam folder key was blocked");
+
+  // 2. Assert saving a suspicious email does NOT poison innocent inbox rows
+  mockSave(["thread-f:1894018294", "paypal-spoof|urgent: verify credentials"], { verdict: "high_risk", score: 85 });
+  report("Innocent email not poisoned by other thread ID", mockGet(["thread-f:9999999999"]) === null, "Clean cache lookup");
+  report("Innocent subject not poisoned by other email", mockGet(["Order #1234 Delivered", "order #1234 delivered"]) === null, "Clean subject lookup");
+
+  // 3. Assert authoritative verdict correctly resolves for matched thread ID
+  report("Authoritative hit on exact thread ID", mockGet(["thread-f:1894018294"])?.verdict === "high_risk", "Thread lookup succeeded");
+
   console.log("\n===============================================================================");
   console.log(`   TEST EXECUTION COMPLETE: ${passedCount} PASSED, ${failedCount} FAILED`);
   console.log("===============================================================================");

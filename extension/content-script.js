@@ -78,28 +78,24 @@ function renderFallbackAnalysis(emailBodyElem, redactedText) {
 }
 
 // Shared verdict cache to eliminate any mismatch between open-email banner and inbox badge
-const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v7";
-const FORBIDDEN_CACHE_KEYS = /^(inbox|all|starred|sent|drafts|spam|trash|category|label|search|promotions|social|updates|primary|none|undefined|null|table|true|false)$/i;
+const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v8";
 const memVerdictCache = {};
 
-let localUserOverrides = {};
-try {
-  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(["ratiod_user_overrides"], (res) => {
-      if (res && res.ratiod_user_overrides) {
-        localUserOverrides = res.ratiod_user_overrides;
-      }
-    });
-    chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === "local" && changes.ratiod_user_overrides) {
-        localUserOverrides = changes.ratiod_user_overrides.newValue || {};
-        if (typeof triggerStaggeredScan === "function") {
-          triggerStaggeredScan(true);
-        }
-      }
-    });
-  }
-} catch (e) {}
+const IGNORED_CACHE_KEYS = new Set([
+  "", "inbox", "spam", "all", "trash", "sent", "drafts", "starred", "snoozed",
+  "important", "chats", "scheduled", "category", "promotions", "updates",
+  "forums", "social", "mail", "unread", "read", "none", "null", "undefined",
+  "category/promotions", "category/updates", "category/social", "category/forums"
+]);
+
+function isIgnoredCacheKey(k) {
+  if (!k) return true;
+  const s = String(k).trim().toLowerCase();
+  if (s.length < 4) return true;
+  if (IGNORED_CACHE_KEYS.has(s)) return true;
+  if (/^(inbox|spam|all|trash|sent|drafts|starred|category|search|label)(\/|$)/i.test(s)) return true;
+  return false;
+}
 
 /**
  * Normalise a thread ID into a clean canonical string.
@@ -108,13 +104,15 @@ try {
  */
 function normalizeThreadId(id) {
   if (!id) return "";
-  return String(id)
+  const cleaned = String(id)
     .replace(/^#/, "")
     .replace(/^thread-[a-z]:/i, "")
     .replace(/^thread-/, "")
     .replace(/^:\w+/, "")
     .trim()
     .toLowerCase();
+  if (isIgnoredCacheKey(cleaned)) return "";
+  return cleaned;
 }
 
 /**
@@ -124,7 +122,7 @@ function normalizeThreadId(id) {
  */
 function normalizeSubjectKey(value) {
   return String(value == null ? "" : value)
-    .replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "")
+    .replace(/\[\s*(?:🔴|🟠|🟡|🟢)?\s*(?:risk|susp|promo|safe)?[\s\d]*\]\s*/gi, "")
     .replace(/^(?:🔴|🟠|🟡|🟢)\s*/g, "")
     .replace(/^\[[^\]]+\]\s*/g, "")
     .replace(/^(?:re|fwd|fw|aw|sv):\s*/gi, "")
@@ -158,21 +156,19 @@ function saveVerdictToCache(key, data) {
     const cache = getVerdictCache();
 
     for (const k of keys) {
-      if (!k) continue;
+      if (!k || isIgnoredCacheKey(k)) continue;
       const rawKey = String(k).trim().toLowerCase();
-      if (!rawKey || FORBIDDEN_CACHE_KEYS.test(rawKey) || rawKey.length < 5) continue;
-
       memVerdictCache[rawKey] = entry;
       cache[rawKey] = entry;
 
       const normId = normalizeThreadId(k);
-      if (normId && normId !== rawKey && !FORBIDDEN_CACHE_KEYS.test(normId) && normId.length >= 6) {
+      if (normId && !isIgnoredCacheKey(normId)) {
         memVerdictCache[normId] = entry;
         cache[normId] = entry;
       }
 
       const cleanKey = normalizeSubjectKey(k);
-      if (cleanKey && cleanKey.length >= 6 && !FORBIDDEN_CACHE_KEYS.test(cleanKey)) {
+      if (cleanKey && cleanKey.length >= 6 && !isIgnoredCacheKey(cleanKey)) {
         memVerdictCache[cleanKey] = entry;
         cache[cleanKey] = entry;
       }
@@ -195,21 +191,19 @@ function getCachedVerdict(key) {
   const cache = getVerdictCache();
 
   for (const k of keys) {
-    if (!k) continue;
+    if (!k || isIgnoredCacheKey(k)) continue;
     const rawKey = String(k).trim().toLowerCase();
-    if (rawKey && !FORBIDDEN_CACHE_KEYS.test(rawKey)) {
-      if (memVerdictCache[rawKey]) return memVerdictCache[rawKey];
-      if (cache[rawKey]) return cache[rawKey];
-    }
+    if (memVerdictCache[rawKey]) return memVerdictCache[rawKey];
+    if (cache[rawKey]) return cache[rawKey];
 
     const normId = normalizeThreadId(k);
-    if (normId && !FORBIDDEN_CACHE_KEYS.test(normId) && normId.length >= 6) {
+    if (normId && !isIgnoredCacheKey(normId)) {
       if (memVerdictCache[normId]) return memVerdictCache[normId];
       if (cache[normId]) return cache[normId];
     }
 
     const cleanSubj = normalizeSubjectKey(k);
-    if (cleanSubj && cleanSubj.length >= 8 && !FORBIDDEN_CACHE_KEYS.test(cleanSubj)) {
+    if (cleanSubj && cleanSubj.length >= 6 && !isIgnoredCacheKey(cleanSubj)) {
       if (memVerdictCache[cleanSubj]) return memVerdictCache[cleanSubj];
       if (cache[cleanSubj]) return cache[cleanSubj];
     }
@@ -231,27 +225,34 @@ function extractCleanRowSubject(row) {
 }
 
 function getRowIdentifiers(row) {
+  if (!row) return [];
   const ids = [];
   const legacyId = row.getAttribute("data-legacy-thread-id");
-  if (legacyId && legacyId.length > 5 && !FORBIDDEN_CACHE_KEYS.test(legacyId)) {
+  if (legacyId && legacyId.length >= 8 && !isIgnoredCacheKey(legacyId)) {
     ids.push(legacyId);
     ids.push(normalizeThreadId(legacyId));
   }
   const threadId = row.getAttribute("data-thread-id");
-  if (threadId && threadId.length > 5 && !FORBIDDEN_CACHE_KEYS.test(threadId)) {
+  if (threadId && threadId.length >= 8 && !isIgnoredCacheKey(threadId)) {
     ids.push(threadId);
     ids.push(normalizeThreadId(threadId));
+  }
+  const rowId = row.getAttribute("id");
+  if (rowId && rowId.length >= 8 && !isIgnoredCacheKey(rowId)) {
+    ids.push(rowId);
+    ids.push(normalizeThreadId(rowId));
   }
   const link = row.querySelector("a[href*='#']");
   if (link) {
     const href = link.getAttribute("href") || "";
     const hash = href.includes("#") ? href.split("#")[1] : href;
-    if (hash && hash.length > 5 && !FORBIDDEN_CACHE_KEYS.test(hash)) {
-      const lastPart = hash.split("/").pop();
-      if (lastPart && lastPart.length > 5 && !FORBIDDEN_CACHE_KEYS.test(lastPart)) {
+    if (hash) {
+      const parts = hash.split("/");
+      const lastPart = parts[parts.length - 1];
+      if (lastPart && lastPart.length >= 10 && !isIgnoredCacheKey(lastPart)) {
         ids.push(lastPart);
-        const normPart = normalizeThreadId(lastPart);
-        if (normPart) ids.push(normPart);
+        const norm = normalizeThreadId(lastPart);
+        if (norm) ids.push(norm);
       }
     }
   }
@@ -466,6 +467,39 @@ function extractGmailAuthDetails(messageContainer) {
  * 6. Marketing Keywords: Promotional keywords in subject, body, or snippet
  */
 /**
+ * High-precision promotional text pattern test.
+ * Recognizes commercial marketing blasts, EdTech brag pitches, course sales, retail discounts,
+ * and newsletters across both opened emails and unopened inbox rows.
+ */
+function isPromotionalText(text) {
+  if (!text) return false;
+  const promoPattern = /\b(\d+[\d,]*\+?\s*(?:students|learners|graduates|candidates|professionals)\s*(?:hired|placed|enrolled|trained|cracked)|\d+[\d,]*\+?\s*(?:companies|partner\s+companies|hiring\s+partners)|(?:crack|master|ace|prepare\s+for)\s+[a-z\s]{0,25}interviews?|(?:free\s+)?(?:masterclass|bootcamp|live\s+workshop|cohort|average\s+(?:ctc|package)|placement\s+(?:assistance|guarantee))|(?:flat|upto|up\s+to|\d{1,2}%)\s*(?:off|discount|cashback|sale)|use\s+(?:coupon|code|promo\s+code)\s+[a-z0-9]+|(?:limited\s+time\s+offer|exclusive\s+deal|weekend\s+sale|clearance\s+sale|flash\s+sale|new\s+arrivals|latest\s+drop)|unsubscribe|newsletter|digest)\b/i;
+  return promoPattern.test(text);
+}
+
+/**
+ * Detects whether the user is actively viewing Gmail's Spam folder.
+ * STRICT: Only returns true when the hash is explicitly #spam and NOT viewing inbox.
+ * Never inspects document.title (which can include unread spam counts or subjects).
+ */
+function isSpamViewActive() {
+  try {
+    const hash = (window.location.hash || "").toLowerCase();
+    if (hash.includes("inbox") || hash.includes("category/") || hash.includes("starred") || hash.includes("sent") || hash.includes("all")) {
+      return false;
+    }
+    if (hash === "#spam" || hash.startsWith("#spam/") || hash.includes("label/spam") || hash.includes("category/spam")) {
+      return true;
+    }
+    const activeNavSpam = document.querySelector('a[href*="#spam"][aria-current="page"], a[href*="label/spam"][aria-selected="true"], div[data-tooltip="Spam" i][aria-selected="true"]');
+    if (activeNavSpam) {
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+/**
  * Detects whether the user is actively viewing Gmail's Promotions tab or section.
  * Strictly verifies the active hash, tab, or navigation link.
  * Never performs broad document queries or inspects unselected classes like .TO.nZ.
@@ -477,16 +511,15 @@ function isPromotionsViewActive() {
       return true;
     }
 
-    // Only inspect the main category tablist inside the inbox view
-    const activeCategoryTab = document.querySelector('div[role="tablist"] [role="tab"][aria-selected="true"]');
-    if (activeCategoryTab) {
-      const tabText = (activeCategoryTab.getAttribute("aria-label") || activeCategoryTab.textContent || activeCategoryTab.getAttribute("data-tooltip") || "").toLowerCase();
+    const activeTab = document.querySelector('[role="tab"][aria-selected="true"]');
+    if (activeTab) {
+      const tabText = (activeTab.getAttribute("aria-label") || activeTab.textContent || activeTab.getAttribute("data-tooltip") || "").toLowerCase();
       if (tabText.includes("promotion")) {
         return true;
       }
     }
 
-    const activeNavPromo = document.querySelector('a[href*="category/promotions"][aria-current="page"], a[href*="category/promotions"][aria-selected="true"]');
+    const activeNavPromo = document.querySelector('a[href*="category/promotions"][aria-current="page"], a[href*="category/promotions"][aria-selected="true"], div[data-tooltip="Promotions" i][aria-selected="true"]');
     if (activeNavPromo) {
       return true;
     }
@@ -504,7 +537,17 @@ function isPromotionsContext(container = null, text = "") {
       return true;
     }
 
+    if (text && isPromotionalText(text)) {
+      return true;
+    }
+
     if (!container) return false;
+
+    // Check for native Gmail Unsubscribe button in message header
+    const nativeUnsub = container.querySelector(".pG, [aria-label*='Unsubscribe' i], [data-tooltip*='Unsubscribe' i]");
+    if (nativeUnsub) {
+      return true;
+    }
 
     // Inside open email container: check for explicit category label chips
     const categoryChips = container.querySelectorAll('.av, span.hN, div.ar.as');
@@ -631,18 +674,9 @@ function scanAndAnalyzeGmail() {
     : senderAddress;
 
   // Check if Gmail placed this in Spam or shows a quarantine warning
-  const spamBannerElem = document.querySelector(".mE, .b8, .a2k, [data-message-id] div[role='alert']");
-  let spamWarning = "";
-  if (spamBannerElem) {
-    const text = spamBannerElem.innerText.trim();
-    if (/spam|suspicious|phishing|blocked|unwanted/i.test(text)) {
-      spamWarning = text;
-    }
-  }
-  const isSpamLocation = (window.location.hash && (window.location.hash.toLowerCase().includes("#spam") || window.location.hash.toLowerCase().includes("label/spam")));
-  if (!spamWarning && isSpamLocation) {
-    spamWarning = "Quarantined in Gmail Spam Folder";
-  }
+  const spamBanner = document.querySelector(".mE, .b8, div[role='alert'], .a2k");
+  const isSpamLocation = isSpamViewActive();
+  const spamWarning = spamBanner ? spamBanner.innerText.trim() : (isSpamLocation ? "Quarantined in Gmail Spam Folder" : "");
 
   let fullTextToAnalyze = "";
   if (spamWarning) fullTextToAnalyze += `Security Warning: ${spamWarning}\n`;
@@ -714,9 +748,11 @@ function scanAndAnalyzeGmail() {
       if (window.location.hash) {
         const hashKey = window.location.hash.replace(/^#/, "");
         if (hashKey) {
-          keysToSave.push(hashKey);
-          const lastPart = hashKey.split("/").pop();
-          if (lastPart) keysToSave.push(lastPart);
+          const parts = hashKey.split("/");
+          const threadPart = parts[parts.length - 1];
+          if (threadPart && threadPart.length >= 10 && !isIgnoredCacheKey(threadPart)) {
+            keysToSave.push(threadPart);
+          }
         }
       }
 
@@ -845,9 +881,7 @@ function scanInboxRows(forceUpdate = false) {
   const rows = document.querySelectorAll("tr.zA");
   if (!rows || rows.length === 0) return;
 
-  const isSpamView = (window.location.hash && (window.location.hash.toLowerCase().includes("#spam") || window.location.hash.toLowerCase().includes("label/spam"))) ||
-                     !!document.querySelector('a[href*="#spam"][aria-current="page"], a[href*="#spam"][aria-selected="true"], div[data-tooltip="Spam"][aria-selected="true"]');
-
+  const isSpamView = isSpamViewActive();
   const isPromotionsView = isPromotionsViewActive();
 
   rows.forEach((row) => {
@@ -860,21 +894,13 @@ function scanInboxRows(forceUpdate = false) {
 
     const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
 
-    // Check if user manually overrode verdict or if authoritative deep-analysis result exists in cache!
+    // Check if authoritative deep-analysis result exists in cache!
+    // Try thread identifiers first, clean subject, sender|subject tuple, and normalized key.
     const rowIds = getRowIdentifiers(row);
     const cacheKey = normalizeSubjectKey(subject);
     const tupleKey = sender ? `${sender.toLowerCase().trim()}|${cacheKey}` : "";
     const lookupKeys = [...rowIds, subject, tupleKey, cacheKey].filter(Boolean);
-
-    let userOverride = null;
-    for (const k of lookupKeys) {
-      if (localUserOverrides && localUserOverrides[k]) {
-        userOverride = localUserOverrides[k];
-        break;
-      }
-    }
-
-    const cachedVerdict = userOverride || getCachedVerdict(lookupKeys);
+    const cachedVerdict = getCachedVerdict(lookupKeys);
 
     // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
     const rowSignature = `${combinedText}|${cachedVerdict ? cachedVerdict.verdict + cachedVerdict.score : 'none'}`;
@@ -888,18 +914,15 @@ function scanInboxRows(forceUpdate = false) {
     let flags = [];
 
     if (cachedVerdict) {
-      // 100% PARITY WITH BANNER: Authoritative result from in-depth open-email analysis or user override
+      // 100% PARITY WITH BANNER: Authoritative result from in-depth open-email analysis
       verdict = cachedVerdict.verdict;
       score = cachedVerdict.score;
       flags = cachedVerdict.flags || [];
 
-      // Align marketing to promo clutter if browsing Promotions tab, preserving transactional mail
-      if (verdict === "safe" && isPromotionsView) {
-        const isTx = window.RatiodFallback.isTransactional && window.RatiodFallback.isTransactional(combinedText);
-        if (!isTx) {
-          verdict = "promo_clutter";
-          score = Math.max(score, 25);
-        }
+      // Harmonize low-risk emails to promo clutter if user is browsing the Promotions tab or text is promo
+      if (verdict === "safe" && (isPromotionsView || isPromotionalText(combinedText))) {
+        verdict = "promo_clutter";
+        score = Math.max(score, 38);
       }
     } else if (isSpamView) {
       // Gmail quarantined this message.
@@ -946,12 +969,33 @@ function scanInboxRows(forceUpdate = false) {
         }
       }
 
-      // Promotions / Marketing awareness: only categorize as promo clutter if viewing Promotions tab and not transactional
-      if (verdict === "safe" && isPromotionsView) {
-        const isTx = window.RatiodFallback.isTransactional && window.RatiodFallback.isTransactional(combinedText);
-        if (!isTx) {
-          verdict = "promo_clutter";
-          score = Math.max(score, 25);
+      // Urgent Credential / Phishing threat check:
+      // Escalates ONLY if urgent pressure is explicitly coupled with credential harvesting or malicious shortener.
+      // Legitimate operational notifications (password resets, 2FA confirmations, security alerts) remain SAFE.
+      const hasUrgentPressure = /(immediate action|action required.*to avoid (suspension|termination|closure)|account (will be|has been) (suspended|terminated|disabled)|unauthorized access.*verify credentials)/i.test(combinedText);
+      const hasHarvestingDemand = /(enter|verify|confirm)\s+(your\s+)?(password|credentials|pin|ssn|otp|seed phrase)|(bit\.ly|tinyurl|is\.gd|ow\.ly)/i.test(combinedText);
+      if (hasUrgentPressure && hasHarvestingDemand) {
+        score = Math.max(score, 78);
+        verdict = "high_risk";
+        flags.unshift({
+          span: "Urgent Credential Harvesting Combo",
+          reason: "Urgent pressure combined with credential or OTP harvesting demand"
+        });
+      }
+
+      // Promotional Marketing Awareness:
+      // Accurately categorizes marketing/newsletters/promotions as promo_clutter across all views
+      // (e.g. Parikh Jain: "1,600+ Students Hired. 250+ Companies", Coursera, discounts, newsletters)
+      const isPromo = isPromotionsView || isPromotionalText(combinedText);
+      if (verdict === "safe" && isPromo) {
+        verdict = "promo_clutter";
+        score = Math.max(score, 38);
+        if (!flags.some(f => f.type === "promo")) {
+          flags.push({
+            span: "Promotions / Marketing",
+            reason: "Identified as promotional marketing, newsletter, or commercial announcement",
+            type: "promo"
+          });
         }
       }
     }
