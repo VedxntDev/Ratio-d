@@ -8,4 +8,4 @@ __pycache__/
 
 # Upstream checkout the QR feature was ported from; not part of the site.
 external/
-server/data/*.jsonl
+server/data/

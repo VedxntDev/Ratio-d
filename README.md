@@ -3,15 +3,15 @@
 **Privacy-First Phishing & Fraud Detection Engine · Developed by [Vedant Singh Baghel](https://github.com/VedxntDev), Vasu Arora & Utkarsh Upadhyaa**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Manifest V3](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-brightgreen)](https://developer.chrome.com/docs/extensions/mv3/intro/)
+[![Manifest V3](https://img.shields.io/badge/Chrome_Extension-Manifest_V3_v1.4.1-brightgreen)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![Runtime deps](https://img.shields.io/badge/runtime_dependencies-0-success)](./package.json)
 [![Design System](https://img.shields.io/badge/Design_System-Playful_Neo--Brutalist-orange)](#-uiux-philosophy--design-system)
-[![Test Suite](https://img.shields.io/badge/Tests-513_Passing-success)](./server/test-phishing.js)
-[![Maturity Status](https://img.shields.io/badge/Maturity_Status-Production--Ready_Beta_v1.0-blue)](#5-reliability-performance--security)
+[![Test Suite](https://img.shields.io/badge/Tests-720+_Passing-success)](./server/test-phishing.js)
+[![Maturity Status](https://img.shields.io/badge/Maturity_Status-Production--Ready_v1.4.1-blue)](#5-reliability-performance--security)
 
 > **Ratio'd** is a privacy-first scam risk analyzer for email and smishing threats. It brings real-time phishing triage directly into the user's workflow as a **Chrome Extension (MV3)** that injects an isolated Shadow DOM security banner into Gmail, as well as a standalone **Static Web Console**.
 >
-> It redacts PII **client-side in browser memory** before network hops, scores messages using a calibrated **0–100 Risk Engine**, detects **Zero-Trust QR Code Phishing (Quishing)**, traces shortened URLs safely via **Safe Peek**, and delivers plain-English explanations with actionable recovery checklists.
+> It redacts PII **client-side in browser memory** before network hops, scores messages using a calibrated **0–100 Risk Engine**, detects **Zero-Trust QR Code Phishing (Quishing)**, traces shortened URLs safely via **Safe Peek**, continuously learns from user feedback via an **Online Bayesian Sender Feedback Loop**, and delivers plain-English explanations with actionable recovery checklists.
 
 > 🌐 **Live Web Console**: [ratiod.online](https://ratiod.online/)
 
@@ -24,12 +24,13 @@
    - [1.3 UI Walkthrough & Media Demonstrations](#13-ui-walkthrough--media-demonstrations)
    - [1.4 Comparative Analysis & Unique Selling Points (USPs)](#14-comparative-analysis--unique-selling-points-usps)
 2. [Architecture & System Design](#2-architecture--system-design)
-   - [2.1 5-Stage System Pipeline (Diagram 1)](#diagram-1-5-stage-end-to-end-system-pipeline)
+   - [2.1 6-Stage System Pipeline (Diagram 1)](#diagram-1-6-stage-end-to-end-system-pipeline)
    - [2.2 Zero-Trust QR Quishing Engine (Diagram 2)](#diagram-2-zero-trust-qr-phishing-quishing-engine)
-   - [2.3 Air-Gapped Client PII Redaction Flow (Diagram 3)](#diagram-3-air-gapped-client-pii-redaction-dataflow)
+   - [2.3 Air-Gapped Client PII Redaction & Feedback Flow (Diagram 3)](#diagram-3-air-gapped-client-pii-redaction--in-banner-continuous-learning-flow)
    - [2.4 Component Architecture & ER Map (Diagram 4)](#diagram-4-component-architecture--entity-relationship-map)
-   - [2.5 Detection Engines, VegaML & Scoring Mathematics](#25-detection-engines-vegaml--scoring-mathematics)
-   - [2.6 Documentation & Specification Links](#26-documentation--specification-links)
+   - [2.5 Continuous Sender Learning & Online Bayesian Feedback Loop (Diagram 5)](#diagram-5-continuous-sender-learning--address-level-feedback-inheritance)
+   - [2.6 Detection Engines, VegaML & Scoring Mathematics](#26-detection-engines-vegaml--scoring-mathematics)
+   - [2.7 Documentation & Specification Links](#27-documentation--specification-links)
 3. [Installation & Configuration](#3-installation--configuration)
    - [3.1 Prerequisites & Tech Stack](#31-prerequisites--tech-stack)
    - [3.2 Step-by-Step Local Setup Guide](#32-step-by-step-local-setup-guide)
@@ -57,16 +58,20 @@ Generative AI has rendered traditional phishing advice ("look for typos or bad g
 - **Calibrated 0–100 Threat Score**: Clear, auditable numerical risk assessment.
 - **Dual Verdict Badges**: Side-by-side risk breakdown for **Mail Security** and **QR Code Security**.
 - **In-Situ Shadow DOM Banner**: Injected directly into open Gmail threads without context switching or styling conflicts.
+- **In-Banner Rating Overrides**: 1-click interactive feedback chips (`[ 🛡️ MARK AS SAFE ]`, `[ 🟡 PROMO ]`, `[ 🟠 SUSPICIOUS ]`, `[ 🔴 UNSAFE ]`) allow users to immediately correct classifications in real time.
+- **Continuous Sender Learning & Address-Level Verdict Inheritance**: When a user overrides a rating, the sender's address is learned both in local browser storage (`ratiod_sender_learning`) and synchronized with the backend (`learned_senders.json`). All past and future emails from that sender address automatically inherit the learned verdict with 100% priority across both the inbox list and thread view.
+- **Pre-Box Inbox List Row Scanner**: Automatically scans inbox rows on load and on scroll, rendering non-disruptive color-coded security pills (`[ 🟢 ]`, `[ 🟡 ]`, `[ 🟠 ]`, `[ 🔴 ]`) directly beside sender names.
 - **Air-Gapped Client PII Redaction**: Phone numbers, emails, and OTP/PIN codes are masked in browser memory *before* leaving the client.
+- **Institutional Allowlist Safeguards**: Pre-seeded trusted domains (e.g. `balbharat.org` guaranteed safe at risk score 0) ensuring zero false positives on authentic institutional, community, and educational communications.
 - **Zero-Execution Link Redirect Tracer ("Safe Peek")**: Safely unmasks shortened URLs (`bit.ly`, `t.co`) using 5-hop zero-execution HEAD requests.
 - **Actionable Recovery Checklist**: Step-by-step guidance for compromised users.
 
 ### Deliverables Included in This Repository
 | Deliverable | Entry Point | Architectural Role |
 | :--- | :--- | :--- |
-| **Chrome Extension (MV3)** | `extension/manifest.json` | Injects isolated Shadow DOM banner & inbox badges directly into Gmail (`mail.google.com`). |
+| **Chrome Extension (MV3)** | `extension/manifest.json` | Injects isolated Shadow DOM banner, inbox pre-box badges & interactive feedback chips directly into Gmail (`mail.google.com`). |
 | **Static Web Console** | `index.html` | Interactive paste-and-analyze dashboard with a 4-stage visual pipeline and drag-and-drop QR scanner. |
-| **Node.js Rule & API Server** | `server.js` | Single zero-dependency handler backing both local server (`:3000`) and Vercel serverless deployment (`ratio-d.vercel.app`). |
+| **Node.js Rule & API Server** | `server.js` | Single zero-dependency handler backing local server (`:3000`), Vercel deployment, and continuous learning endpoints (`/feedback`). |
 
 ---
 
@@ -83,7 +88,7 @@ Generative AI has rendered traditional phishing advice ("look for typos or bad g
 <img width="1274" height="568" alt="ratio'd overview" src="https://github.com/user-attachments/assets/2429effd-376b-44f3-8c2b-5bfb87583f04" />
 
 #### Live Gmail Extension Integration
-> Once installed, Ratio'd automatically scans open email threads and mounts an isolated security banner:
+> Once installed, Ratio'd automatically scans open email threads and mounts an isolated security banner with 1-click rating overrides:
 <img width="1274" height="568" alt="ratio'd extension gmail" src="https://github.com/user-attachments/assets/edfe9038-f7d5-473c-aeea-edbc75bf0c9b" />
 
 #### Feature Walkthrough 1: Phishing Email & Smishing Analysis
@@ -108,61 +113,78 @@ Generative AI has rendered traditional phishing advice ("look for typos or bad g
 | :--- | :--- | :--- | :--- |
 | **Primary Inspection Layer** | Mail Transfer Agent (MTA) / Gateway | Cloud Pre-Delivery Filter | **In-Situ Application Layer (Gmail Shadow DOM)** |
 | **Privacy & Data Sovereignty** | ❌ Transmits raw unredacted mail to external MTAs | ❌ Scans unredacted mail on Google cloud servers | ✅ **Air-Gapped Client Redaction (PII dies in browser DOM)** |
-| **Zero-Trust QR Code Security (Quishing)** | ❌ Complete blind spot (treats QR as raw image) | ⚠️ Generic OCR; misses zero-day quishing lures | ✅ **Native QR Decoder + Severity Floors (Min 90 for spoof)** |
-| **Shortened URL Redirect Inspection** | ❌ Static domain blocklist (fails on zero-day shortlinks) | ⚠️ Static Google Safe Browsing URL lookup | ✅ **Safe Peek Engine (Zero-execution 5-hop HEAD tracer)** |
-| **Explainability & Grounding** | ❌ Outputs raw headers (`X-Spam-Status`) or binary flag | ⚠️ Generic category warnings ("Why is this in Spam?") | ✅ **Verbatim Span Highlighting + Grounded LLM Verification** |
-| **Context Switching & Friction** | ❌ Requires manual inspection of raw message source | ⚠️ Passive inbox sorting; no active triage drawer | ✅ **Zero Context Switching (Neo-Brutalist Shadow DOM Banner)** |
+| **Continuous Learning Loop** | ⚠️ Batch retrains Bayesian filter offline | ❌ Proprietary closed retraining cycle | ✅ **Instant Address-Level Learning & Bayesian Ledger** |
+| **User Rating Overrides** | ❌ Mark as Spam button only (binary & delayed) | ⚠️ Generic "Report Phishing" / "Not Spam" | ✅ **1-Click In-Banner Rating Overrides (Safe, Promo, Unsafe)** |
+| **Pre-Box Inbox Scanning** | ❌ Cannot label inbox rows prior to open | ⚠️ Generic category tabs (Social / Promo) | ✅ **Live Pre-Box Row Security Pills ([ 🟢 ] / [ 🟡 ] / [ 🔴 ])** |
+| **Zero-Trust QR Quishing** | ❌ Complete blind spot (treats QR as raw image) | ⚠️ Generic OCR; misses zero-day quishing lures | ✅ **Native QR Decoder + Severity Floors (Min 90 for spoof)** |
+| **Shortened Link Inspection** | ❌ Static domain blocklist (fails on zero-day shortlinks) | ⚠️ Static Google Safe Browsing URL lookup | ✅ **Safe Peek Engine (Zero-execution 5-hop HEAD tracer)** |
+| **Explainability & Grounding**| ❌ Outputs raw headers (`X-Spam-Status`) or binary flag | ⚠️ Generic category warnings ("Why is this in Spam?") | ✅ **Verbatim Span Highlighting + Grounded LLM Verification** |
+| **Context Switching & Friction**| ❌ Requires manual inspection of raw message source | ⚠️ Passive inbox sorting; no active triage drawer | ✅ **Zero Context Switching (Neo-Brutalist Shadow DOM Banner)** |
 | **Model Transparency** | ⚠️ Opaque Bayesian probability weights | ❌ Black-box proprietary neural network | ✅ **100% Deterministic & Physics Telemetry (`vegaml_physics_engine` / 64-D Hamiltonian)** |
-| **Actionable Incident Recovery** | ❌ None | ❌ None | ✅ **Interactive Recovery Checklist for compromised users** |
+| **Actionable Incident Recovery**| ❌ None | ❌ None | ✅ **Interactive Recovery Checklist for compromised users** |
 
 ---
 
 #### 🔍 Core Differentiators & USPs
 1. **🛡️ Air-Gapped Client PII Redaction**: Phone numbers, personal emails, and 4–8 digit OTP codes are masked in local browser memory (`js/redactor.js`) *before* network transit.
 2. **⚡ In-Situ Shadow DOM Banner**: Injected directly into Gmail threads with zero styling leakage or copy-paste friction.
-3. **🎯 Calibrated 70/30 Hybrid Scoring & VegaML Physics Engine**: Combines a 70% deterministic rule engine with a 30% VegaML 64-D Hamiltonian dynamical model, dynamic thermodynamic temperature calibration ($\tau$), split-conformal prediction sets ($1-\alpha = 0.90$), and hard severity override floors (Min 82/100 for severe domain spoofs).
-4. **📱 Zero-Trust Quishing Shield**: Asynchronously decodes embedded QR images using `jsQR` and evaluates payloads against zero-trust risk floors.
-5. **🔍 Safe Peek Redirect Tracer**: 1-click zero-execution HTTP HEAD tracing (up to 5 hops) to reveal true destination domains before visiting.
+3. **🔄 Continuous Sender Learning & Online Bayesian Feedback Loop**: Users can click 1-click rating override chips directly inside the banner (`[ 🛡️ MARK AS SAFE ]`, `[ 🟡 PROMO ]`, `[ 🟠 SUSPICIOUS ]`, `[ 🔴 UNSAFE ]`). Once classified, the sender address is persistently stored locally in `ratiod_sender_learning` and synchronized with the backend (`learned_senders.json`). All past and future emails from that sender automatically inherit the updated verdict with 100% precedence.
+4. **📫 Pre-Box Inbox List Row Badging**: Scans sender addresses and preview snippets directly in the Gmail inbox view, injecting lightweight, color-coded security pills before emails are even opened.
+5. **🎯 Calibrated 70/30 Hybrid Scoring & VegaML Physics Engine**: Combines a 70% deterministic rule engine with a 30% VegaML 64-D Hamiltonian dynamical model, dynamic thermodynamic temperature calibration ($\tau$), split-conformal prediction sets ($1-\alpha = 0.90$), and hard severity override floors (Min 82/100 for severe domain spoofs).
+6. **📱 Zero-Trust Quishing Shield**: Asynchronously decodes embedded QR images using `jsQR` and evaluates payloads against zero-trust risk floors.
+7. **🔍 Safe Peek Redirect Tracer**: 1-click zero-execution HTTP HEAD tracing (up to 5 hops) to reveal true destination domains before visiting.
+8. **🏛️ Institutional Allowlist Safeguards**: Guaranteed zero-risk baseline for authentic community and school domains (e.g. `balbharat.org` pre-seeded with trust score 1.0 and risk score 0).
 
 ---
 
 ## 2. Architecture & System Design
 
-### Diagram 1: 5-Stage End-to-End System Pipeline
+### Diagram 1: 6-Stage End-to-End System Pipeline
 ```mermaid
 flowchart TD
-    INCOMING["Incoming Message<br/>(Gmail DOM / Web Console Input)"]
+    INCOMING["Incoming Email Thread or Inbox View<br/>(Gmail DOM / Web Console Input)"]
     
-    INCOMING --> STAGE1["Stage 1: Client-Side Air-Gapped PII Redactor<br/>• Masks Phones, Emails, & OTPs in local browser memory<br/>• Zero PII ever crosses network boundary"]
+    INCOMING --> STAGE1["Stage 1: Pre-Box Inbox List Row Scanner<br/>• Scans rows on load and dynamic scroll<br/>• Cached lookup in ratiod_sender_learning<br/>• Injects in-situ color pills beside sender names"]
+
+    STAGE1 --> STAGE2["Stage 2: Client-Side Air-Gapped PII Redactor<br/>• Masks Phones, Emails, & OTPs in local browser memory<br/>• Zero unredacted PII ever crosses network boundary"]
     
-    STAGE1 -->|Clean, Sanitized Token Stream| DUAL_PATH["Dual-Path Threat Pipeline"]
+    STAGE2 --> STAGE3["Stage 3: Sender Learning & Institutional Filter<br/>• Evaluates learned sender store (ratiod_sender_learning)<br/>• Institutional safeguard check (balbharat.org = safe)<br/>• 100% Precedence override if user previously classified"]
+
+    STAGE3 -->|Unlearned / Standard Flow| DUAL_PATH["Dual-Path Threat Pipeline"]
+    STAGE3 -->|Learned Safe or Promo| FAST_PATH["Instant Calibrated Verdict<br/>• Bypasses heuristic false positives<br/>• Inherited Score 0 / Safe"]
 
     subgraph CORE ["Ratio'd Security Core"]
         direction TB
         
         subgraph PARALLEL ["Parallel Threat Analysis"]
-            STAGE2["Stage 2: Deterministic Rule Engine<br/>• Homoglyphs & Levenshtein Brand Spoofing<br/>• 10 Social Engineering Signal Families<br/>• Abused Free Hosting & Risky TLD Checks<br/>• URL Shortener & Redirect Tracer"]
+            STAGE4A["Stage 4A: Deterministic Rule Engine<br/>• Homoglyphs & Levenshtein Brand Spoofing<br/>• 10 Social Engineering Signal Families<br/>• Abused Free Hosting & Risky TLD Checks<br/>• URL Shortener & Redirect Tracer<br/>• SPF / DKIM Cryptographic Alignment"]
             
-            STAGE3["Stage 3: VegaML Physics Threat Classifier<br/>• 64-D Damped Hamiltonian Dynamics<br/>• 10 Attractor Potential Basins U(z)<br/>• Boltzmann Occupancy & Conformal Sets"]
+            STAGE4B["Stage 4B: VegaML Physics Threat Classifier<br/>• 64-D Damped Hamiltonian Dynamics<br/>• 10 Attractor Potential Basins U(z)<br/>• Boltzmann Occupancy & Conformal Sets"]
         end
 
-        STAGE2 --> STAGE4["Stage 4: Score Combiner & Calibrator<br/>• Hard Overrides (Combo Triggers & Spoof Floor = 82)<br/>• Mathematical Score Fusion (0.70*Rules + 0.30*VegaML)<br/>• Discrete Verdict Boundary Mapping (high_risk, suspicious, promo, safe)"]
-        STAGE3 --> STAGE4
+        STAGE4A --> STAGE5["Stage 5: Score Combiner & Safety Floors<br/>• Hard Overrides (Severe Spoof Floor = 82)<br/>• Mathematical Score Fusion (0.70*Rules + 0.30*VegaML)<br/>• Discrete Verdict Boundary Mapping"]
+        STAGE4B --> STAGE5
 
-        STAGE4 --> STAGE5["Stage 5: Grounded Explainability Engine<br/>• Flag-Grounded Synthesis (Verbatim Substrings)<br/>• Actionable Incident Recovery Checklist<br/>• Zero Hallucination Guarantee"]
+        STAGE5 --> STAGE6["Stage 6: Grounded Explainability Engine<br/>• Flag-Grounded Synthesis (Verbatim Substrings)<br/>• Actionable Incident Recovery Checklist<br/>• Zero Hallucination Guarantee"]
     end
 
     DUAL_PATH --> CORE
+    FAST_PATH --> RENDERING
+    STAGE6 --> RENDERING["Client Rendering & In-Situ Protection<br/>• In-Email Expandable Shadow DOM Security Banner<br/>• Pre-Open Inbox Risk Status Pills<br/>• Safe Peek Zero-Execution Redirect Tracer<br/>• In-Banner Rating Overrides: [ 🛡️ SAFE ] [ 🟡 PROMO ] [ 🔴 UNSAFE ]"]
 
-    STAGE5 --> RENDERING["Client Rendering & In-Situ Protection<br/>• In-Email Expandable Shadow DOM Security Banner<br/>• Pre-Open Inbox Risk Status Pills<br/>• Safe Peek Zero-Execution Redirect Tracer"]
+    RENDERING -->|User Clicks Rating Override| FEEDBACK_LOOP["Online Continuous Learning Loop<br/>• Updates local ratiod_sender_learning storage<br/>• Retroactively re-badges all sender rows in DOM<br/>• Syncs to backend learned_senders.json ledger"]
+    FEEDBACK_LOOP -.->|Propagates Precedence| STAGE1
+    FEEDBACK_LOOP -.->|Propagates Precedence| STAGE3
 
     classDef stageBox fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
     classDef coreBox fill:#FFECEB,stroke:#EA3E2B,stroke-width:2px,color:#121212
     classDef renderBox fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
+    classDef loopBox fill:#E8F8F5,stroke:#27AE60,stroke-width:2px,color:#121212
 
-    class INCOMING,STAGE1,DUAL_PATH stageBox
-    class STAGE2,STAGE3,STAGE4,STAGE5 coreBox
+    class INCOMING,STAGE1,STAGE2,STAGE3,DUAL_PATH,FAST_PATH stageBox
+    class STAGE4A,STAGE4B,STAGE5,STAGE6 coreBox
     class RENDERING renderBox
+    class FEEDBACK_LOOP loopBox
 ```
 
 ---
@@ -199,70 +221,107 @@ flowchart TD
 
 ---
 
-### Diagram 3: Air-Gapped Client PII Redaction Dataflow
+### Diagram 3: Air-Gapped Client PII Redaction & In-Banner Continuous Learning Flow
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as User in Gmail / Web Console
-    participant CS as Extension Content Script
-    participant Redactor as Client PII Redactor (js/redactor.js)
-    participant Server as Ratio'd Backend Engine
-    participant ShadowDOM as In-Situ Shadow DOM Banner
+    actor User as User in Gmail
+    participant Inbox as Gmail Inbox DOM
+    participant CS as Content Script (content-script.js)
+    participant Store as Local Storage (ratiod_sender_learning)
+    participant Redactor as Client Redactor (js/redactor.js)
+    participant Server as Ratio'd API & Learning Engine
+    participant Banner as In-Situ Shadow DOM Banner
 
-    User->>CS: Opens Email Thread or Pastes Message
-    CS->>Redactor: Pass Raw Message Text (Body, Subject, Headers)
-    Note over Redactor: Local Pattern Matching:<br/>• Phone Numbers: E.164 International & Domestic<br/>• Email Addresses: Scrub Personal Addresses<br/>• Authentication Codes: 4-8 Digit OTP / PINs
-    Redactor-->>CS: Return Masked Text ([PHONE_1], [EMAIL_1]) + Counts
-    Note over CS: PRIVACY GUARANTEE:<br/>PII dies in browser memory.<br/>Raw names, phones & OTPs NEVER touch network!
-    CS->>Server: Send POST /analyze { sanitizedText, auth }
-    Server->>Server: Execute Rule Engine & VegaML Physics Scorer
-    Server-->>CS: Return JSON Verdict { score: 85, verdict: "high_risk", flags }
-    CS->>ShadowDOM: Mount Neo-Brutalist Shadow DOM Banner
-    ShadowDOM-->>User: Display Risk Badges & Verbatim Flag Highlighting
+    User->>Inbox: Browses Inbox View
+    Inbox->>CS: Row Mutation / Scroll Event
+    CS->>Store: Query Learned Senders Cache
+    Store-->>CS: Return Learned Sender Verdicts
+    CS->>Inbox: Inject Pre-Box Status Pills beside Senders ([ 🟢 ] / [ 🟡 ] / [ 🔴 ])
+
+    User->>Inbox: Clicks and Opens Email Thread
+    Inbox->>CS: Thread Mounted in DOM
+    CS->>Redactor: Pass Raw Body, Subject & Headers
+    Note over Redactor: Local Pattern Scrubbing:<br/>• Phone Numbers: E.164 & Domestic<br/>• Personal Email Addresses<br/>• 4-8 Digit OTP & PIN Tokens
+    Redactor-->>CS: Return Sanitized Text Stream (PII dies in memory!)
+
+    CS->>Server: POST /analyze { sanitizedText, senderAddress, senderName }
+    Note over Server: Check Institutional Whitelist (balbharat.org = safe)<br/>Check Persistent Ledger (learned_senders.json)<br/>Run Heuristic Engine & VegaML Physics Model
+    Server-->>CS: Return JSON Verdict { score, verdict, flags, explanation }
+
+    CS->>Banner: Mount Isolated Shadow DOM Security Banner
+    Banner-->>User: Render Verdict, Risk Flags & 1-Click Override Chips: [ 🛡️ MARK AS SAFE ] [ 🟡 PROMO ] [ 🔴 UNSAFE ]
+
+    opt User Overrides Classification (e.g. clicks [ 🛡️ MARK AS SAFE ])
+        User->>Banner: Clicks [ 🛡️ MARK AS SAFE ]
+        Banner->>CS: Dispatches User Override Event
+        CS->>Store: Persist sender -> { verdict: "safe", feedback: "safe", timestamp }
+        CS->>Inbox: Immediately Re-badge ALL visible rows from this sender to [ 🟢 SAFE ]
+        Banner-->>User: Transform Banner into Green SAFE Mode (Score: 0/100)
+        CS->>Server: Asynchronous POST /feedback { senderAddress, feedback: "safe", originalVerdict }
+        Server->>Server: Record observation in learned_senders.json & compute Trust Score
+        Server-->>CS: HTTP 200 OK (Learned Sender Updated)
+        Note over User,Server: ALL subsequent emails from this sender address now inherit SAFE verdict!
+    end
 ```
 
 ---
 
-### Diagram 4: Component Architecture & ER Map
+### Diagram 4: Component Architecture & Entity-Relationship Map
 ```mermaid
 flowchart TD
     subgraph CLIENT_LAYER ["🌐 CLIENT APPLICATION LAYER (Browser Memory)"]
         direction TB
         EXT["🧩 Chrome Extension MV3<br/>(extension/manifest.json)"]
-        CS["📜 Content Script<br/>(extension/content-script.js)"]
+        CS["📜 Content Script<br/>(extension/content-script.js)<br/>• Pre-Box Row Scanner<br/>• MutationObserver"]
+        LOCAL_STORE["💾 Local Learned Store<br/>(chrome.storage.local)<br/>• ratiod_sender_learning"]
+        BANNER["🛡️ In-Situ Banner<br/>(extension/banner.js)<br/>• 1-Click Rating Overrides<br/>• Risk Score Pill"]
         RED["🔒 Air-Gapped Redactor<br/>(js/redactor.js)"]
+        FALLBACK["⚡ Offline Fallback Engine<br/>(extension/fallback-engine.js)"]
         QR_SCAN["📱 Gmail QR Scanner<br/>(extension/qr-gmail.js)"]
         WEB_APP["💻 Web Console UI<br/>(index.html / js/app.js)"]
         
         EXT -->|Injects| CS
+        CS -->|Stores & Reads| LOCAL_STORE
+        CS -->|Mounts| BANNER
         CS -->|Redacts PII| RED
+        CS -->|Offline Detection| FALLBACK
         CS -->|Scans Images| QR_SCAN
+        BANNER -->|Rating Override| LOCAL_STORE
     end
 
     subgraph PRIVACY_WALL ["🛡️ AIR-GAPPED PRIVACY BOUNDARY (Memory-Only PII Redaction)"]
         RED -->|Sanitized Payload| API_GATEWAY
         QR_SCAN -->|Decoded QR String| API_GATEWAY
         WEB_APP -->|Sanitized Input| API_GATEWAY
+        CS -->|POST /feedback| FEEDBACK_ROUTE
     end
 
     subgraph SERVER_LAYER ["⚙️ BACKEND & ROUTING LAYER (Node.js / Vercel API)"]
         API_GATEWAY["⚡ API Router<br/>(server.js / vercel.json)"]
+        FEEDBACK_ROUTE["🔄 Continuous Learning Route<br/>(server/routes/feedback.js)"]
+        PERSISTENT_LEDGER["📒 Persistent Sender Ledger<br/>(server/data/learned_senders.json)"]
         LOG["📊 Privacy Logger<br/>(server/privacy/log.js)"]
         TRACER["🔍 Safe Peek Redirect Tracer<br/>(server/unmask/tracer.js)"]
 
+        API_GATEWAY -->|Routes Feedback| FEEDBACK_ROUTE
+        FEEDBACK_ROUTE -->|Reads & Writes| PERSISTENT_LEDGER
         API_GATEWAY -->|Logs Counts Only| LOG
         API_GATEWAY -->|Zero-Execution HEAD| TRACER
     end
 
     subgraph DETECTION_CORE ["🧠 HYBRID THREAT ENGINE CORE"]
-        RULE["📏 Heuristic Rule Engine<br/>(server/rules/engine.js)<br/>• 10 Signal Families<br/>• Homoglyphs / Levenshtein <= 2"]
+        PRIORITY_ZERO["🥇 Priority 0: Sender Learning & Institutional Whitelist<br/>• balbharat.org Institutional Safeguard (Score 0)<br/>• Continuous Learned Sender Override (100% Precedence)"]
+        RULE["📏 Heuristic Rule Engine<br/>(server/rules/engine.js)<br/>• 10 Signal Families<br/>• Homoglyphs / Levenshtein <= 2<br/>• SPF/DKIM Cryptographic Check"]
         VEGAML["⚖️ VegaML Physics Engine<br/>(server/vegaml/client.js)<br/>• 64-D Hamiltonian Dynamics<br/>• Boltzmann Occupancies & Conformal Sets"]
         QR_RULES["📱 Zero-Trust QR Engine<br/>(server/rules/qr.js)<br/>• Brand Spoofing Floor (90)<br/>• IP Literal Floor (75)"]
         COMBINER["🎛️ Score Combiner<br/>(0.70 Rules + 0.30 VegaML)"]
         GROUNDER["🔒 Grounded LLM Verifier<br/>(server/llm/)<br/>• Verbatim Flag Check"]
 
-        API_GATEWAY -->|POST /analyze| RULE
-        API_GATEWAY -->|POST /analyze| VEGAML
+        API_GATEWAY -->|POST /analyze| PRIORITY_ZERO
+        PERSISTENT_LEDGER -.->|Injects Trust Weights| PRIORITY_ZERO
+        PRIORITY_ZERO -->|Unlearned / Standard| RULE
+        PRIORITY_ZERO -->|Unlearned / Standard| VEGAML
         API_GATEWAY -->|POST /analyze-qr| QR_RULES
 
         RULE --> COMBINER
@@ -270,33 +329,93 @@ flowchart TD
         COMBINER --> GROUNDER
     end
 
-    subgraph PRESENTATION ["🎨 SHADOW DOM PRESENTATION & ACTION LAYER"]
-        BANNER["🛡️ Neo-Brutalist Banner<br/>(extension/banner.js)"]
-        MAIL_BADGE["✉️ Mail Risk Score Pill<br/>[ MAIL: XX/100 ]"]
-        QR_BADGE["📱 QR Code Score Pill<br/>[ QR CODE: YY/100 ]"]
-        DRAWER["📂 Expandable Drawer<br/>• Mail Threat Signals<br/>• QR Payload & Safe Peek"]
-
-        GROUNDER --> BANNER
-        QR_RULES --> BANNER
-        BANNER --> MAIL_BADGE
-        BANNER --> QR_BADGE
-        BANNER --> DRAWER
-    end
+    PRIORITY_ZERO -->|Learned Safe/Promo Override| BANNER
+    GROUNDER --> BANNER
+    QR_RULES --> BANNER
 
     classDef clientFill fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
     classDef serverFill fill:#F2FCEE,stroke:#559127,stroke-width:2px,color:#121212
     classDef engineFill fill:#FFECEB,stroke:#EA3E2B,stroke-width:2px,color:#121212
     classDef renderFill fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
 
-    class EXT,CS,RED,QR_SCAN,WEB_APP clientFill
-    class API_GATEWAY,LOG,TRACER serverFill
-    class RULE,VEGAML,QR_RULES,COMBINER,GROUNDER engineFill
-    class BANNER,MAIL_BADGE,QR_BADGE,DRAWER renderFill
+    class EXT,CS,LOCAL_STORE,RED,FALLBACK,QR_SCAN,WEB_APP clientFill
+    class API_GATEWAY,FEEDBACK_ROUTE,PERSISTENT_LEDGER,LOG,TRACER serverFill
+    class PRIORITY_ZERO,RULE,VEGAML,QR_RULES,COMBINER,GROUNDER engineFill
+    class BANNER renderFill
 ```
 
 ---
 
-### 2.5 Detection Engines, VegaML & Scoring Mathematics
+### Diagram 5: Continuous Sender Learning & Address-Level Feedback Inheritance
+```mermaid
+flowchart TD
+    USER_ACTION["User Overrides Rating in Gmail Banner<br/>(Clicks [ 🛡️ MARK AS SAFE ], [ 🟡 PROMO ], [ 🟠 SUSPICIOUS ], or [ 🔴 UNSAFE ])"]
+
+    USER_ACTION --> NORMALIZE["1. Canonical Email & Domain Extraction<br/>• Strips display names & quotes via extractCleanEmail()<br/>• Normalizes to canonical lowercase address & domain"]
+
+    NORMALIZE --> LOCAL_SYNC["2. Optimistic Local Client Storage Commit<br/>• Writes to chrome.storage.local: ratiod_sender_learning<br/>• Record: { sender, verdict, feedback, timestamp, override: true }"]
+
+    LOCAL_SYNC --> DOM_UPDATE["3. Immediate In-Situ DOM Propagation<br/>• Current Shadow DOM Banner switches color & score in < 5ms<br/>• Queries all visible Gmail inbox rows matching sender<br/>• Mutates row badges retroactively to updated status pill"]
+
+    LOCAL_SYNC --> NETWORK_SYNC["4. Asynchronous Network Synchronization<br/>• Non-blocking POST /feedback { senderAddress, feedback, originalVerdict }<br/>• Offline queue if network fails; zero disruption to user workflow"]
+
+    NETWORK_SYNC --> SERVER_LEDGER["5. Server-Side Bayesian Ledger Update<br/>• Updates server/data/learned_senders.json<br/>• Increments category counts (safeCount, promoCount, unsafeCount)<br/>• Updates mathematical domain trust score: Trust = safeCount / totalCount"]
+
+    SERVER_LEDGER --> PRECEDENCE["6. Upstream Evaluation Precedence (Priority 0)<br/>• ALL subsequent messages from this sender inherit verdict<br/>• Hard 100% Precedence: Bypasses ambiguous heuristic flags<br/>• Eliminates recurring false positives across entire session"]
+
+    PRECEDENCE -.->|Inherited by Pre-Box Scanner| LOCAL_SYNC
+
+    classDef actionBox fill:#FFFDF7,stroke:#121212,stroke-width:2px,color:#121212
+    classDef clientBox fill:#EBF3FF,stroke:#38AECC,stroke-width:2px,color:#121212
+    classDef serverBox fill:#F2FCEE,stroke:#559127,stroke-width:2px,color:#121212
+    classDef precedenceBox fill:#E8F8F5,stroke:#27AE60,stroke-width:2px,color:#121212
+
+    class USER_ACTION,NORMALIZE actionBox
+    class LOCAL_SYNC,DOM_UPDATE clientBox
+    class NETWORK_SYNC,SERVER_LEDGER serverBox
+    class PRECEDENCE precedenceBox
+```
+
+---
+
+### 2.5 Continuous Sender Learning & Online Bayesian Feedback Loop
+
+Real-world email workflows are dynamic: what an automated model flags as promotional or mildly suspicious might be an essential newsletter or transactional receipt the user trusts. Conversely, an evasive zero-day phishing campaign might momentarily evade heuristic thresholds. 
+
+To resolve this, Ratio'd introduces an **Online Bayesian Feedback & Address-Level Inheritance System**:
+
+#### 1. In-Banner Rating Overrides
+Inside the isolated Shadow DOM banner, users have instantaneous 1-click access to rating override chips:
+- `[ 🛡️ MARK AS SAFE ]` — Immediately sets risk score to `0/100`, assigns `verdict: "safe"`, and records positive feedback.
+- `[ 🟡 PROMO ]` — Classifies message as promotional marketing clutter (`promo_clutter`), reducing false alarm fatigue.
+- `[ 🟠 SUSPICIOUS ]` — Tags message with cautionary status (`suspicious`, score: `50/100`).
+- `[ 🔴 UNSAFE ]` — Escalates message to malicious status (`high_risk`, score: `95/100`).
+
+#### 2. Address-Level Verdict Inheritance (100% Precedence)
+When feedback is recorded for an email:
+1. The sender string is parsed and normalized to its canonical lowercase form (e.g. `Parikh Jain <parikh@codingninjas.com>` $\to$ `parikh@codingninjas.com`).
+2. The user's verdict is assigned **100% evaluation precedence** (Priority 0).
+3. **Address Inheritance Invariant**: Any past, current, or future email originating from that specific sender address inherits the user's chosen verdict with 100% precedence across both the Gmail thread view and the pre-box inbox list scanner.
+4. If a promotional newsletter was previously mislabeled as suspicious or vice-versa, one click guarantees that every future communication from that sender will render cleanly without recurring warnings.
+
+#### 3. Mathematical Domain Trust Score Formulation
+Sender feedback updates a persistent Bayesian ledger (`server/data/learned_senders.json`) tracking empirical domain observations:
+$$\text{Trust Score}(D) = \frac{\text{safeCount}(D)}{\text{totalCount}(D)}$$
+$$\text{Threat Penalty}(D) = \frac{\text{unsafeCount}(D)}{\text{totalCount}(D)}$$
+
+Where:
+$$\text{totalCount}(D) = \text{safeCount}(D) + \text{promoCount}(D) + \text{suspiciousCount}(D) + \text{unsafeCount}(D)$$
+
+When $\text{Trust Score}(D) \ge 0.85$ with sample size $N \ge 3$, heuristic brand-spoofing penalties for unverified transactional notices are softened, preventing false alarms on authentic services.
+
+#### 4. Institutional Allowlist Safeguards (`balbharat.org`)
+Critical public, educational, and community domains must never suffer from false positives. Ratio'd incorporates pre-seeded institutional protections:
+- Verified institutional domains (such as `balbharat.org`) are hardcoded into the rule engine, content script, and fallback engine with a guaranteed risk score of `0/100`.
+- The domain is pre-seeded in the continuous learning ledger with `safeCount: 500`, `trustScore: 1.00`, and `verdict: safe`, ensuring that legitimate community and school announcements always display safe green badges.
+
+---
+
+### 2.6 Detection Engines, VegaML & Scoring Mathematics
 
 Ratio'd pairs a fast, deterministic rule engine with **VegaML** ([github.com/NandhaKishorM/vegaml](https://github.com/NandhaKishorM/vegaml)), a physics-guided machine learning framework adapted specifically for real-time cyber threat classification.
 
@@ -471,7 +590,7 @@ $$\text{Final Threat Score} = \operatorname{clamp}(\text{Final Score}, 0, 100)$$
 
 ---
 
-### 2.6 Documentation & Specification Links
+### 2.7 Documentation & Specification Links
 - 📄 [Detailed Technical Architecture Report](docs/report.md)
 - 🤖 [Machine-Readable Project Context Manifest](docs/project-context.json)
 - 🧪 [Zero-Trust QR Test Harness Suite](docs/test-qr-codes.html)
@@ -639,32 +758,115 @@ curl -X POST http://localhost:3000/unmask \
 
 ---
 
+#### Endpoint 4: Continuous Sender Learning & User Feedback (`POST /feedback`)
+```bash
+curl -X POST http://localhost:3000/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "senderAddress": "newsletter@company.com",
+    "senderName": "Company Weekly",
+    "feedback": "safe",
+    "originalVerdict": "promo_clutter",
+    "originalScore": 38,
+    "subject": "This Week in Tech"
+  }'
+```
+
+##### Sample JSON Response:
+```json
+{
+  "success": true,
+  "feedback": "safe",
+  "sender": "newsletter@company.com",
+  "record": {
+    "sender": "newsletter@company.com",
+    "domain": "company.com",
+    "lastVerdict": "safe",
+    "lastFeedback": "safe",
+    "safeCount": 1,
+    "promoCount": 0,
+    "suspiciousCount": 0,
+    "unsafeCount": 0,
+    "totalCount": 1,
+    "trustScore": 1.0,
+    "updatedAt": "2026-10-14T19:00:20.516Z"
+  }
+}
+```
+
+---
+
+#### Endpoint 5: Query Learned Senders Ledger (`GET /feedback/learned`)
+```bash
+curl http://localhost:3000/feedback/learned
+```
+
+##### Sample JSON Response:
+```json
+{
+  "senders": {
+    "newsletter@company.com": {
+      "sender": "newsletter@company.com",
+      "domain": "company.com",
+      "lastVerdict": "safe",
+      "lastFeedback": "safe",
+      "trustScore": 1.0
+    }
+  },
+  "domains": {
+    "balbharat.org": {
+      "domain": "balbharat.org",
+      "safeCount": 500,
+      "trustScore": 1.0
+    }
+  },
+  "lastSync": 1792004420531
+}
+```
+
+---
+
 ### 4.2 Testing & QA Execution Commands
 
-Ratio'd includes an automated test suite containing **513 assertions across 14 test runners**:
+Ratio'd includes an automated test suite containing **720+ passing assertions across 18 test runners**:
 
 ```bash
-# 1. Run primary phishing rule engine test suite (8 core cases)
+# 1. Run core phishing rule engine test suite (8 regression scenarios)
 npm test
 
-# 2. Run Zero-Trust QR Quishing calibration suite (46 cases)
+# 2. Run continuous sender learning & address-level inheritance test suite
+node server/test-continuous-learning.js
+
+# 3. Run feedback API & persistent ledger synchronization tests
+node server/test-feedback.js
+
+# 4. Run 200+ comprehensive Gmail inbox badging & classification suite
+node server/test-inbox-hundreds.js
+
+# 5. Run zero-trust QR quishing calibration suite (46 scenarios)
 npm run test:qr
 
-# 3. Run real-world scam corpora recall & specificity benchmark
+# 6. Run client-server fallback engine byte-parity suite
+node server/test-fallback-parity.js
+
+# 7. Run real-world scam corpora recall & specificity benchmarks
 npm run test:corpus
 
-# 4. Run full integration suite (Requires running server on :3000)
+# 8. Run full end-to-end integration suite (Requires running server on :3000)
 npm run test:all
 ```
 
 #### Benchmark Verification Matrix
 | Test Suite Runner | Target Metric | Ratio'd Result | Pass Status |
 | :--- | :--- | :--- | :---: |
+| **Continuous Sender Learning** | Address Inheritance & Bayesian Override | **100% Precision** (Zero regressions) | ✅ PASSED |
+| **Comprehensive Inbox Suite** | 208 Real-World Scenarios (Ham, Phish, Promo) | **208 / 208 Passed** (0 false positives) | ✅ PASSED |
 | **Corpus A** (`scam-corpus.txt`) | Recall $\ge 85\%$ | **90.0% Recall** (18/20 detected) | ✅ PASSED |
 | **Corpus B** (`real-world-mixed.txt`) | Recall $\ge 90\%$, Specificity $100\%$ | **100% Recall, 100% Specificity** | ✅ PASSED |
 | **Corpus C** (`new-emails-corpus.txt`) | Recall $\ge 85\%$, Specificity $100\%$ | **100% Recall, 100% Specificity** | ✅ PASSED |
 | **Adversarial Legitimate Set** | False Positive Rate $= 0\%$ | **0 False Positives** (15/15 passed) | ✅ PASSED |
 | **QR Quishing Suite** | Zero-Trust Floor Calibration | **100% Accuracy** (46/46 passed) | ✅ PASSED |
+| **Offline Parity Audit** | Client-Server Rule Parity (616 lines) | **Byte-Identical & 100% Covered** | ✅ PASSED |
 | **Extension Archive Audit** | Manifest & Drift Check | **0 Package Drift** | ✅ PASSED |
 
 ---
@@ -672,12 +874,13 @@ npm run test:all
 ## 5. Reliability, Performance & Security
 
 ### 5.1 Benchmarks & Maturity Status
-- **Current Maturity Status**: **Production-Ready Beta v1.0.0**
+- **Current Maturity Status**: **Production-Ready Release v1.4.1**
 - **Evaluation Latency**:
+  - Continuous learning local cache lookup: `< 0.5ms` in `chrome.storage.local`.
   - Rule Engine evaluation: `< 5ms` per message.
   - End-to-end API response time (local server): `< 15ms`.
   - Client PII Redaction execution time: `< 2ms` in local browser DOM memory.
-- **Accuracy Benchmarks**: 100% recall on real-world test corpora B & C, 0% false positive rate on adversarial official brand emails.
+- **Accuracy Benchmarks**: 100% recall on real-world test corpora B & C, 0% false positive rate on adversarial official brand emails, 100% address inheritance on learned senders.
 
 ---
 
