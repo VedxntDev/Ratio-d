@@ -293,12 +293,21 @@ function extractCleanRowSubject(row) {
   const subjectElem = row.querySelector("span.bog, .bog, .y6, span.bqe");
   if (!subjectElem) return "";
 
-  const clone = subjectElem.cloneNode(true);
-  clone.querySelectorAll(".ratiod-inbox-pill, [data-verdict]").forEach(p => p.remove());
+  try {
+    const clone = (subjectElem.cloneNode && typeof subjectElem.cloneNode === "function")
+      ? subjectElem.cloneNode(true)
+      : subjectElem;
+    if (clone && clone.querySelectorAll) {
+      clone.querySelectorAll(".ratiod-inbox-pill, [data-verdict]").forEach(p => p.remove());
+    }
 
-  let text = clone.innerText || clone.textContent || "";
-  text = text.replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "").replace(/^(?:🔴|🟠|🟡|🟢)\s*/g, "").trim();
-  return text;
+    let text = (clone && (clone.innerText || clone.textContent)) || "";
+    text = text.replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "").replace(/^(?:🔴|🟠|🟡|🟢)\s*/g, "").trim();
+    return text;
+  } catch (e) {
+    let raw = subjectElem.innerText || subjectElem.textContent || "";
+    return raw.replace(/\[\s*(?:🔴|🟠|🟡|🟢|risk|susp|promo|safe)[\s\d]*\]/gi, "").replace(/^(?:🔴|🟠|🟡|🟢)\s*/g, "").trim();
+  }
 }
 
 function getRowIdentifiers(row) {
@@ -996,178 +1005,214 @@ function scanInboxRows(forceUpdate = false) {
   const isPromotionsView = isPromotionsViewActive();
 
   rows.forEach((row) => {
-    const senderElem = row.querySelector(".yX, .bqe, .zF, span[email], td.yX");
-    const snippetElem = row.querySelector(".y2");
+    try {
+      // Enhanced sender extraction for Gmail inbox rows:
+      // Query inner elements with email attribute or hovercard first to get the true canonical address
+      const emailElem = row.querySelector("span[email], [email], .zF[data-hovercard-id], [data-hovercard-id], .zF");
+      const rawEmail = emailElem ? (emailElem.getAttribute("email") || emailElem.getAttribute("data-hovercard-id") || "") : "";
+      const rawName = emailElem ? (emailElem.getAttribute("name") || emailElem.innerText || emailElem.textContent || "") : "";
 
-    const sender = senderElem ? (senderElem.getAttribute("email") || senderElem.getAttribute("title") || senderElem.innerText || "") : "";
-    const subject = extractCleanRowSubject(row);
-    const snippet = snippetElem ? snippetElem.innerText.trim() : "";
+      const senderCell = row.querySelector("td.yX, .yX, .yW, .bqe");
+      const cellText = senderCell ? (senderCell.getAttribute("title") || senderCell.innerText || senderCell.textContent || "") : "";
 
-    const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
-
-    // Check if authoritative deep-analysis result exists in cache!
-    // Try thread identifiers first, clean subject, sender|subject tuple, and normalized key.
-    const rowIds = getRowIdentifiers(row);
-    const cacheKey = normalizeSubjectKey(subject);
-    const tupleKey = sender ? `${sender.toLowerCase().trim()}|${cacheKey}` : "";
-    const lookupKeys = [...rowIds, subject, tupleKey, cacheKey].filter(Boolean);
-    const cachedVerdict = getCachedVerdict(lookupKeys);
-
-    // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
-    const rowSignature = `${combinedText}|${cachedVerdict ? cachedVerdict.verdict + cachedVerdict.score : 'none'}`;
-    const existingBadge = row.querySelector(".ratiod-inbox-pill");
-    if (!forceUpdate && existingBadge && row.getAttribute("data-ratiod-sig") === rowSignature && row.getAttribute("data-ratiod-verdict")) {
-      return;
-    }
-
-    let verdict = "safe";
-    let score = 0;
-    let flags = [];
-
-    // Educational / Institutional Exemption: balbharat.org
-    const cleanSenderEmail = extractCleanEmail(sender);
-    const isBalBharat = (cleanSenderEmail && (cleanSenderEmail.endsWith("@balbharat.org") || cleanSenderEmail === "balbharat.org")) ||
-                        (sender && (sender.toLowerCase().includes("@balbharat.org") || sender.toLowerCase().includes("balbharat.org"))) ||
-                        (combinedText && /from:\s*.*@balbharat\.org/i.test(combinedText));
-
-    if (isBalBharat) {
-      verdict = "safe";
-      score = 0;
-      flags = [{
-        span: "balbharat.org",
-        reason: "Official verified educational institution domain (Bal Bharati)",
-        type: "trusted_institution"
-      }];
-    } else if (learnedSenderRecord) {
-      verdict = learnedSenderRecord.verdict;
-      score = learnedSenderRecord.score !== undefined ? learnedSenderRecord.score : (verdict === "safe" ? 0 : 35);
-      flags = [{
-        span: cleanSenderEmail,
-        reason: `Sender learned as ${learnedSenderRecord.feedback || verdict}: Continuous preference applied from your user feedback`,
-        type: "user_learned"
-      }];
-      // Continuous user preference for this sender takes ABSOLUTE PRECEDENCE:
-      // It completely bypasses isPromotionsView, isPromotionalText, and isSpamView!
-    } else if (cachedVerdict) {
-      // 100% PARITY WITH BANNER: Authoritative result from in-depth open-email analysis
-      verdict = cachedVerdict.verdict;
-      score = cachedVerdict.score;
-      flags = cachedVerdict.flags || [];
-
-      // If cached verdict came from an explicit user override, preserve it unconditionally!
-      if (!cachedVerdict.isUserOverride && verdict === "safe" && (isPromotionsView || isPromotionalText(combinedText))) {
-        verdict = "promo_clutter";
-        score = Math.max(score, 38);
+      let sender = "";
+      if (rawEmail && rawName && rawEmail !== rawName) {
+        sender = `${rawName.trim()} <${rawEmail.trim()}>`;
+      } else if (rawEmail) {
+        sender = rawEmail.trim();
+      } else if (rawName) {
+        sender = rawName.trim();
+      } else {
+        sender = cellText.trim();
       }
-    } else if (isSpamView) {
-      // Gmail quarantined this message.
-      const redactedSpamRow = redactPiiLocally(combinedText || "Email Message");
-      const spamResult = window.RatiodFallback.analyze(redactedSpamRow);
 
-      verdict = spamResult.verdict;
-      score = spamResult.score;
-      flags = (spamResult.flags || []).slice();
+      const subject = extractCleanRowSubject(row);
+      const snippetElem = row.querySelector(".y2");
+      const snippet = snippetElem ? snippetElem.innerText.trim() : "";
 
-      // Being in Spam is evidence the mailbox distrusted the message, so the
-      // row is floored out of "safe" - but it is a filter decision, not proof
-      // of phishing, so it never escalates to high_risk on its own.
-      if (verdict === "safe" || verdict === "promo_clutter") {
-        verdict = "suspicious";
+      const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
+
+      // Check if authoritative deep-analysis result exists in cache!
+      // Try thread identifiers first, clean subject, sender|subject tuple, and normalized key.
+      const rowIds = getRowIdentifiers(row);
+      const cacheKey = normalizeSubjectKey(subject);
+      const tupleKey = sender ? `${sender.toLowerCase().trim()}|${cacheKey}` : "";
+      const lookupKeys = [...rowIds, subject, tupleKey, cacheKey].filter(Boolean);
+      const cachedVerdict = getCachedVerdict(lookupKeys);
+
+      // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
+      const rowSignature = `${combinedText}|${cachedVerdict ? cachedVerdict.verdict + cachedVerdict.score : 'none'}`;
+      const existingBadge = row.querySelector(".ratiod-inbox-pill");
+      if (!forceUpdate && existingBadge && row.getAttribute("data-ratiod-sig") === rowSignature && row.getAttribute("data-ratiod-verdict")) {
+        return;
       }
-      score = Math.max(score, 45);
 
-      flags.unshift({
-        span: "Quarantined in Spam",
-        reason: "Gmail routed this message to the Spam folder before Ratio'd analysed it",
-        type: "quarantine"
-      });
-    } else {
-      // Run heuristic analysis on preview snippet
-      const redacted = redactPiiLocally(combinedText || "Email Message");
-      const result = window.RatiodFallback.analyze(redacted);
-      verdict = result.verdict;
-      score = result.score;
-      flags = (result.flags || []).slice();
+      let verdict = "safe";
+      let score = 0;
+      let flags = [];
 
-      // Brand display-name impersonation check from free-mail or mismatched address in inbox row
-      if (sender) {
-        const freeMailPattern = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com|proton(mail\.com|me)|aol\.com)\b/i;
-        const brandPattern = /\b(paypal|netflix|microsoft|google|apple|amazon|chase|wellsfargo|bank of america|dhl|fedex|ups)\b/i;
-        const brandMatch = sender.match(brandPattern);
-        if (brandMatch && freeMailPattern.test(sender)) {
-          score = Math.max(score, 82);
+      // Educational / Institutional Exemption: balbharat.org
+      const cleanSenderEmail = extractCleanEmail(sender) || (rawEmail ? rawEmail.toLowerCase().trim() : "");
+      const isBalBharat = (cleanSenderEmail && (cleanSenderEmail.endsWith("@balbharat.org") || cleanSenderEmail === "balbharat.org")) ||
+                          (sender && (sender.toLowerCase().includes("@balbharat.org") || sender.toLowerCase().includes("balbharat.org"))) ||
+                          (combinedText && /from:\s*.*@balbharat\.org/i.test(combinedText));
+
+      // Continuous Sender Learning & User Override (HIGHEST PRIORITY):
+      // If the user previously marked this sender as safe, promotional, or suspicious,
+      // every other email from this same sender inherits that verdict with 100% priority.
+      const cleanKey = cleanSenderEmail ? cleanSenderEmail.toLowerCase() : "";
+      const rawSenderKey = sender ? sender.toLowerCase().trim() : "";
+      const learnedSenderRecord = (cleanKey && memSenderLearning[cleanKey]) ||
+                                  (cleanKey && memUserOverrides[cleanKey]) ||
+                                  (cleanKey && memUserOverrides["sender:" + cleanKey]) ||
+                                  (rawSenderKey && memSenderLearning[rawSenderKey]) ||
+                                  (rawSenderKey && memUserOverrides[rawSenderKey]) ||
+                                  (rawSenderKey && memUserOverrides["sender:" + rawSenderKey]) ||
+                                  null;
+
+      if (isBalBharat) {
+        verdict = "safe";
+        score = 0;
+        flags = [{
+          span: "balbharat.org",
+          reason: "Official verified educational institution domain (Bal Bharati)",
+          type: "trusted_institution"
+        }];
+      } else if (learnedSenderRecord) {
+        verdict = learnedSenderRecord.verdict;
+        score = learnedSenderRecord.score !== undefined ? learnedSenderRecord.score : (verdict === "safe" ? 0 : 35);
+        flags = [{
+          span: cleanSenderEmail || sender,
+          reason: `Sender learned as ${learnedSenderRecord.feedback || verdict}: Continuous preference applied from your user feedback`,
+          type: "user_learned"
+        }];
+        // Continuous user preference for this sender takes ABSOLUTE PRECEDENCE:
+        // It completely bypasses isPromotionsView, isPromotionalText, and isSpamView!
+      } else if (cachedVerdict) {
+        // 100% PARITY WITH BANNER: Authoritative result from in-depth open-email analysis
+        verdict = cachedVerdict.verdict;
+        score = cachedVerdict.score;
+        flags = cachedVerdict.flags || [];
+
+        // If cached verdict came from an explicit user override, preserve it unconditionally!
+        if (!cachedVerdict.isUserOverride && verdict === "safe" && (isPromotionsView || isPromotionalText(combinedText))) {
+          verdict = "promo_clutter";
+          score = Math.max(score, 38);
+        }
+      } else if (isSpamView) {
+        // Gmail quarantined this message.
+        const redactedSpamRow = redactPiiLocally(combinedText || "Email Message");
+        const spamResult = window.RatiodFallback.analyze(redactedSpamRow);
+
+        verdict = spamResult.verdict;
+        score = spamResult.score;
+        flags = (spamResult.flags || []).slice();
+
+        // Being in Spam is evidence the mailbox distrusted the message, so the
+        // row is floored out of "safe" - but it is a filter decision, not proof
+        // of phishing, so it never escalates to high_risk on its own.
+        if (verdict === "safe" || verdict === "promo_clutter") {
+          verdict = "suspicious";
+        }
+        score = Math.max(score, 45);
+
+        flags.unshift({
+          span: "Quarantined in Spam",
+          reason: "Gmail routed this message to the Spam folder before Ratio'd analysed it",
+          type: "quarantine"
+        });
+      } else {
+        // Run heuristic analysis on preview snippet
+        const redacted = redactPiiLocally(combinedText || "Email Message");
+        const result = window.RatiodFallback.analyze(redacted);
+        verdict = result.verdict;
+        score = result.score;
+        flags = (result.flags || []).slice();
+
+        // Brand display-name impersonation check from free-mail or mismatched address in inbox row
+        if (sender) {
+          const freeMailPattern = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com|proton(mail\.com|me)|aol\.com)\b/i;
+          const brandPattern = /\b(paypal|netflix|microsoft|google|apple|amazon|chase|wellsfargo|bank of america|dhl|fedex|ups)\b/i;
+          const brandMatch = sender.match(brandPattern);
+          if (brandMatch && freeMailPattern.test(sender)) {
+            score = Math.max(score, 82);
+            verdict = "high_risk";
+            flags.unshift({
+              span: sender,
+              reason: `Brand display name '${brandMatch[0]}' paired with free/unrelated mailbox address`
+            });
+          }
+        }
+
+        // Urgent Credential / Phishing threat check:
+        // Escalates ONLY if urgent pressure is explicitly coupled with credential harvesting or malicious shortener.
+        // Legitimate operational notifications (password resets, 2FA confirmations, security alerts) remain SAFE.
+        const hasUrgentPressure = /(immediate action|action required.*to avoid (suspension|termination|closure)|account (will be|has been) (suspended|terminated|disabled)|unauthorized access.*verify credentials)/i.test(combinedText);
+        const hasHarvestingDemand = /(enter|verify|confirm)\s+(your\s+)?(password|credentials|pin|ssn|otp|seed phrase)|(bit\.ly|tinyurl|is\.gd|ow\.ly)/i.test(combinedText);
+        if (hasUrgentPressure && hasHarvestingDemand) {
+          score = Math.max(score, 78);
           verdict = "high_risk";
           flags.unshift({
-            span: sender,
-            reason: `Brand display name '${brandMatch[0]}' paired with free/unrelated mailbox address`
+            span: "Urgent Credential Harvesting Combo",
+            reason: "Urgent pressure combined with credential or OTP harvesting demand"
           });
+        }
+
+        // Promotional Marketing Awareness:
+        // Accurately categorizes marketing/newsletters/promotions as promo_clutter across all views
+        // (e.g. Parikh Jain: "1,600+ Students Hired. 250+ Companies", Coursera, discounts, newsletters)
+        const isPromo = isPromotionsView || isPromotionalText(combinedText);
+        if (verdict === "safe" && isPromo) {
+          verdict = "promo_clutter";
+          score = Math.max(score, 38);
+          if (!flags.some(f => f.type === "promo")) {
+            flags.push({
+              span: "Promotions / Marketing",
+              reason: "Identified as promotional marketing, newsletter, or commercial announcement",
+              type: "promo"
+            });
+          }
         }
       }
 
-      // Urgent Credential / Phishing threat check:
-      // Escalates ONLY if urgent pressure is explicitly coupled with credential harvesting or malicious shortener.
-      // Legitimate operational notifications (password resets, 2FA confirmations, security alerts) remain SAFE.
-      const hasUrgentPressure = /(immediate action|action required.*to avoid (suspension|termination|closure)|account (will be|has been) (suspended|terminated|disabled)|unauthorized access.*verify credentials)/i.test(combinedText);
-      const hasHarvestingDemand = /(enter|verify|confirm)\s+(your\s+)?(password|credentials|pin|ssn|otp|seed phrase)|(bit\.ly|tinyurl|is\.gd|ow\.ly)/i.test(combinedText);
-      if (hasUrgentPressure && hasHarvestingDemand) {
-        score = Math.max(score, 78);
-        verdict = "high_risk";
-        flags.unshift({
-          span: "Urgent Credential Harvesting Combo",
-          reason: "Urgent pressure combined with credential or OTP harvesting demand"
-        });
-      }
+      row.setAttribute("data-ratiod-sig", rowSignature);
+      row.setAttribute("data-ratiod-verdict", verdict);
 
-      // Promotional Marketing Awareness:
-      // Accurately categorizes marketing/newsletters/promotions as promo_clutter across all views
-      // (e.g. Parikh Jain: "1,600+ Students Hired. 250+ Companies", Coursera, discounts, newsletters)
-      const isPromo = isPromotionsView || isPromotionalText(combinedText);
-      if (verdict === "safe" && isPromo) {
-        verdict = "promo_clutter";
-        score = Math.max(score, 38);
-        if (!flags.some(f => f.type === "promo")) {
-          flags.push({
-            span: "Promotions / Marketing",
-            reason: "Identified as promotional marketing, newsletter, or commercial announcement",
-            type: "promo"
-          });
+      // Check if row already has a badge mounted
+      if (existingBadge) {
+        // Synchronize in place if deep analysis or cache updated verdict/score!
+        const curVerdict = existingBadge.getAttribute("data-verdict");
+        const curScore = existingBadge.getAttribute("data-score");
+        if (forceUpdate || curVerdict !== verdict || curScore !== String(score)) {
+          updateBadgeElement(existingBadge, verdict, score, flags);
         }
+        return;
       }
-    }
 
-    row.setAttribute("data-ratiod-sig", rowSignature);
-    row.setAttribute("data-ratiod-verdict", verdict);
+      // Target container: find the best insertion anchor across all Gmail DOM variations
+      const target = row.querySelector("span.bog") ||
+                     row.querySelector(".bog") ||
+                     row.querySelector(".y6") ||
+                     row.querySelector("span.bqe") ||
+                     row.querySelector("td.xY") ||
+                     row.querySelector("td.a4W") ||
+                     row.querySelector("td");
+      if (!target) return;
 
-    // Check if row already has a badge mounted
-    if (existingBadge) {
-      // Synchronize in place if deep analysis or cache updated verdict/score!
-      const curVerdict = existingBadge.getAttribute("data-verdict");
-      const curScore = existingBadge.getAttribute("data-score");
-      if (forceUpdate || curVerdict !== verdict || curScore !== String(score)) {
-        updateBadgeElement(existingBadge, verdict, score, flags);
+      const badge = document.createElement("span");
+      badge.className = "ratiod-inbox-pill";
+      updateBadgeElement(badge, verdict, score, flags);
+
+      // Mount badge cleanly inside table cell
+      if (target.tagName === "TD" || target.tagName === "TR") {
+        target.prepend(badge);
+      } else if (target.parentNode) {
+        target.parentNode.insertBefore(badge, target);
+      } else if (target.prepend) {
+        target.prepend(badge);
       }
-      return;
-    }
-
-    // Target container: find the best insertion anchor across all Gmail DOM variations
-    const target = row.querySelector("span.bog") ||
-                   row.querySelector(".bog") ||
-                   row.querySelector(".y6") ||
-                   row.querySelector("span.bqe") ||
-                   row.querySelector("td.xY") ||
-                   row.querySelector("td.a4W") ||
-                   row.querySelector("td");
-    if (!target) return;
-
-    const badge = document.createElement("span");
-    badge.className = "ratiod-inbox-pill";
-    updateBadgeElement(badge, verdict, score, flags);
-
-    // Mount badge as a sibling BEFORE target so it never enters span.bog.innerText
-    if (target.parentNode) {
-      target.parentNode.insertBefore(badge, target);
-    } else if (target.prepend) {
-      target.prepend(badge);
+    } catch (rowErr) {
+      console.warn("[Ratio'd] Error badging row:", rowErr);
     }
   });
 }
@@ -1181,14 +1226,18 @@ let debounceTimer = null;
 function scheduleScan(delay = 140, forceUpdate = false) {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    if (window.requestIdleCallback) {
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
       window.requestIdleCallback(() => {
         executeScanPass(forceUpdate);
       }, { timeout: 250 });
-    } else {
+    } else if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
       window.requestAnimationFrame(() => {
         executeScanPass(forceUpdate);
       });
+    } else {
+      setTimeout(() => {
+        executeScanPass(forceUpdate);
+      }, 0);
     }
   }, delay);
 }
