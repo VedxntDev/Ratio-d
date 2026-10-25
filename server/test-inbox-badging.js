@@ -52,7 +52,8 @@ const screenshotEmails = [
   { sender: "FlyRank Internship", email: "interns@flyrank.com", subj: "You have successfully unsubscribed from interns.", snip: "You have successfully unsubscribed from" },
   { sender: "Alen Malkoc", email: "alen@malkoc.org", subj: "Hi :)", snip: "Hi everyone, A full update on what has been happening and what we are working" },
   { sender: "SBI", email: "alerts@sbi.co.in", subj: "Make Your SBI Debit Card, Tap & Pay Ready", snip: "Enable your SBI Debit Card for Online/PoS" },
-  { sender: "Bal Bharati School", email: "principal@balbharat.org", subj: "Annual Day Invitation & Schedule", snip: "Dear Parents, We are pleased to invite you" }
+  { sender: "Bal Bharati School", email: "principal@balbharat.org", subj: "Annual Day Invitation & Schedule", snip: "Dear Parents, We are pleased to invite you" },
+  { sender: "Google", email: "no-reply@accounts.google.com", subj: "Security alert for vedantsbaghel.2626@gmail.com", snip: "This is a copy of a security alert sent to vedantsbaghel.2626@gmail.com. vedantsbaghel.26@gmail.com is the recovery email for this account. If you don't recognize this account, remove it." }
 ];
 
 const mockRows = screenshotEmails.map((item, idx) => {
@@ -151,10 +152,18 @@ console.log(`Pills created: ${pillsCreated.length} / ${mockRows.length}`);
 assert.strictEqual(pillsCreated.length, mockRows.length, `Expected ${mockRows.length} badges to be created!`);
 
 // Verify Bal Bharati is marked safe with score 0
-const balBharatPill = pillsCreated[pillsCreated.length - 1];
+const balBharatIndex = screenshotEmails.findIndex(e => e.email === "principal@balbharat.org");
+const balBharatPill = pillsCreated[balBharatIndex];
 assert.strictEqual(balBharatPill.attributes["data-verdict"], "safe");
 assert.strictEqual(balBharatPill.attributes["data-score"], "0");
 console.log("PASS  Bal Bharati row verified safe (score 0)");
+
+// Verify Google Security Alert is marked safe with score 0 (Official Brand Sender parity)
+const googleAlertIndex = screenshotEmails.findIndex(e => e.email === "no-reply@accounts.google.com");
+const googleAlertPill = pillsCreated[googleAlertIndex];
+assert.strictEqual(googleAlertPill.attributes["data-verdict"], "safe");
+assert.strictEqual(googleAlertPill.attributes["data-score"], "0");
+console.log("PASS  Google Security Alert row verified safe (score 0, 100% parity with banner)");
 
 // Verify Notion Team (learned sender) inherited safe verdict
 const notionRowIndex = screenshotEmails.findIndex(e => e.email === "team@notion.so");

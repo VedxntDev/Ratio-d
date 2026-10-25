@@ -165,7 +165,7 @@
     /\bfall\s+\d{4}\s+final\s+examination\s+schedule\b|\bcapstone\s+submission\s+for\b/i,
     /\b(?:ticket\s+confirmed|tickets\s+confirmed|showtime\s*:)\b/i,
     /\b(?:electricity\s+bill|broadband\s+bill|fastag\s+toll)\b/i,
-    /\b(?:security\s+alert\s*:\s*new\s+sign-in|discord\s+security\s+code|two-factor\s+login\s+code)\b/i
+    /\b(?:security\s+alert(?:\s+for|\s*:)?|new\s+(?:sign-in|login)\s+on\s+[a-z0-9_-]+|recovery\s+email\s+for\s+this\s+account|unrecognized\s+device\s+login|password\s+changed|two-factor\s+(?:authentication|login|passkey)|discord\s+security\s+code)\b/i
   ];
 
   /*
@@ -226,6 +226,12 @@
       if (d === b || d.endsWith("." + b)) return true;
     }
     return false;
+  }
+
+  function regDom(domain) {
+    if (!domain) return "";
+    var parts = domain.toLowerCase().replace(/^www\./, "").split(".");
+    return parts.slice(-2).join(".");
   }
 
   /**
@@ -317,7 +323,10 @@
 
       var isBrand = isProtectedBrand(fromDomain);
       if (isBrand && signedBy) {
-        var isDkimAligned = signedBy === fromDomain || signedBy.endsWith("." + fromDomain);
+        var isDkimAligned = signedBy === fromDomain ||
+                            signedBy.endsWith("." + fromDomain) ||
+                            fromDomain.endsWith("." + signedBy) ||
+                            regDom(signedBy) === regDom(fromDomain);
         if (!isDkimAligned) {
           flags.push({
             span: fromDomain,
@@ -331,7 +340,11 @@
       }
 
       if (isBrand && mailedBy) {
-        var isSpfAligned = mailedBy === fromDomain || mailedBy.endsWith("." + fromDomain) || /(amazonses\.com|sendgrid\.net|mailgun\.(org|net)|mandrillapp\.com|sparkpostmail\.com)$/i.test(mailedBy);
+        var isSpfAligned = mailedBy === fromDomain ||
+                           mailedBy.endsWith("." + fromDomain) ||
+                           fromDomain.endsWith("." + mailedBy) ||
+                           regDom(mailedBy) === regDom(fromDomain) ||
+                           /(amazonses\.com|sendgrid\.net|mailgun\.(org|net)|mandrillapp\.com|sparkpostmail\.com)$/i.test(mailedBy);
         if (!isSpfAligned) {
           flags.push({
             span: fromDomain,
@@ -343,7 +356,7 @@
         }
       }
 
-      if (isBrand && !signedBy && !mailedBy && !dmarc && !dkim && !spf) {
+      if (isBrand && !auth.uninspected && !signedBy && !mailedBy && !dmarc && !dkim && !spf) {
         flags.push({
           span: fromDomain,
           reason: "Email claims to be from institutional brand '" + fromDomain + "' but carries no cryptographic signature.",

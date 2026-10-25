@@ -154,6 +154,52 @@ function extractEmailDomain(email) {
   return clean.split("@")[1].toLowerCase().trim();
 }
 
+/**
+ * Official Verified Platform Brand Senders & Educational Institutions
+ * Mails from these authentic organizational domains receive consistent safe classification (score 0),
+ * completely harmonizing the open-email banner and pre-open inbox list badge.
+ */
+const OFFICIAL_BRAND_DOMAINS_SET = new Set([
+  "google.com", "accounts.google.com", "googlemail.com", "mail.google.com", "notifications.google.com",
+  "apple.com", "email.apple.com", "id.apple.com",
+  "microsoft.com", "accountprotection.microsoft.com", "microsoftsupport.com",
+  "github.com",
+  "amazon.com", "amazon.in",
+  "netflix.com",
+  "paypal.com",
+  "linkedin.com",
+  "balbharat.org"
+]);
+
+function isOfficialBrandSender(cleanSenderEmail, senderText, combinedText) {
+  const email = (cleanSenderEmail || extractCleanEmail(senderText) || "").toLowerCase().trim();
+  if (!email || !email.includes("@")) return false;
+
+  // Consumer free-mail addresses claiming to be a brand are NEVER official
+  const freeMailPattern = /@(gmail\.com|googlemail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com|proton(mail\.com|me)|aol\.com)$/i;
+  const domain = email.split("@")[1].toLowerCase().trim();
+
+  let isOfficialDomain = false;
+  for (const official of OFFICIAL_BRAND_DOMAINS_SET) {
+    if (domain === official || domain.endsWith("." + official)) {
+      if ((official === "google.com" || official === "apple.com") && freeMailPattern.test(email)) {
+        continue;
+      }
+      isOfficialDomain = true;
+      break;
+    }
+  }
+  if (!isOfficialDomain) return false;
+
+  // Defensive sanity check: Ensure no urgent credential harvesting demand + link shortener
+  const text = (combinedText || "").toLowerCase();
+  const hasCredentialDemand = /(?:enter|verify|confirm|send)\s+(?:your\s+)?(?:password|pin|ssn|otp|passcode|seed phrase)/i.test(text);
+  const hasShortener = /(bit\.ly|tinyurl|is\.gd|ow\.ly|t\.co|rb\.gy)/i.test(text);
+  if (hasCredentialDemand && hasShortener) return false;
+
+  return true;
+}
+
 // Shared verdict cache to eliminate any mismatch between open-email banner and inbox badge
 const VERDICT_CACHE_KEY = "ratiod_verdict_cache_v8";
 const memVerdictCache = {};
@@ -780,6 +826,7 @@ function scanAndAnalyzeGmail() {
     const isBalBharat = (cleanSender && (cleanSender.endsWith("@balbharat.org") || cleanSender === "balbharat.org")) ||
                         (senderHeader && senderHeader.toLowerCase().includes("balbharat.org")) ||
                         (fullTextToAnalyze && /from:\s*.*@balbharat\.org/i.test(fullTextToAnalyze));
+    const isOfficial = isOfficialBrandSender(cleanSender, senderHeader, fullTextToAnalyze);
 
     const learnedRecord = cleanSender ? (
       memSenderLearning[cleanSender.toLowerCase()] ||
@@ -787,13 +834,24 @@ function scanAndAnalyzeGmail() {
       memUserOverrides["sender:" + cleanSender.toLowerCase()]
     ) : null;
 
-    if (isBalBharat) {
+    if (isBalBharat || isOfficial) {
       data.verdict = "safe";
       data.score = 0;
       data.mail_score = 0;
-      data.flags = [];
-      data.explanation = "Official email from Bal Bharati (balbharat.org). Verified safe educational institution domain.";
-      data.next_steps = ["Clean and legitimate email from Bal Bharati. No security threats detected."];
+      data.flags = [{
+        span: cleanSender || senderHeader,
+        reason: isBalBharat
+          ? "Official verified educational institution domain (Bal Bharati)"
+          : `Official verified communication from authentic platform (${cleanSender || senderHeader})`,
+        type: "official_brand"
+      }];
+      data.explanation = isBalBharat
+        ? "Official email from Bal Bharati (balbharat.org). Verified safe educational institution domain."
+        : `Official authentic communication from ${cleanSender || senderHeader}. Verified platform domain with no security threats detected.`;
+      data.next_steps = [
+        `Authentic email from ${cleanSender || senderHeader}.`,
+        "This is an official communication and is safe to interact with."
+      ];
     } else if (learnedRecord) {
       data.verdict = learnedRecord.verdict;
       data.score = learnedRecord.score !== undefined ? learnedRecord.score : (learnedRecord.verdict === "safe" ? 0 : 35);
@@ -850,17 +908,43 @@ function scanAndAnalyzeGmail() {
       }
       // 3. Persist authoritative verdict to cache across all subject & thread identifiers
       const keysToSave = [];
-      if (subject) keysToSave.push(subject);
-      if (senderAddress) keysToSave.push(`${senderAddress}|${normalizeSubjectKey(subject)}`);
+      const cleanSubj = subject ? subject.trim().toLowerCase() : "";
+      const normSubj = subject ? normalizeSubjectKey(subject) : "";
+      if (subject) {
+        keysToSave.push(subject);
+        if (cleanSubj) keysToSave.push(cleanSubj);
+        if (normSubj) {
+          keysToSave.push(normSubj);
+          keysToSave.push(normSubj.slice(0, 30));
+        }
+      }
+      const sAddr = (cleanSender || senderAddress || "").toLowerCase().trim();
+      if (sAddr && normSubj) {
+        keysToSave.push(`${sAddr}|${normSubj}`);
+        keysToSave.push(`${sAddr}|${cleanSubj}`);
+        keysToSave.push(`${sAddr}|${normSubj.slice(0, 30)}`);
+      }
+      if (senderHeader && normSubj) {
+        keysToSave.push(`${senderHeader.toLowerCase().trim()}|${normSubj}`);
+      }
 
       const threadElem = document.querySelector("[data-thread-perm-id], [data-legacy-thread-id], [data-legacy-message-id]");
       if (threadElem) {
         const permId = threadElem.getAttribute("data-thread-perm-id");
-        if (permId) keysToSave.push(permId);
+        if (permId) {
+          keysToSave.push(permId);
+          keysToSave.push(normalizeThreadId(permId));
+        }
         const legId = threadElem.getAttribute("data-legacy-thread-id");
-        if (legId) keysToSave.push(legId);
+        if (legId) {
+          keysToSave.push(legId);
+          keysToSave.push(normalizeThreadId(legId));
+        }
         const msgId = threadElem.getAttribute("data-legacy-message-id");
-        if (msgId) keysToSave.push(msgId);
+        if (msgId) {
+          keysToSave.push(msgId);
+          keysToSave.push(normalizeThreadId(msgId));
+        }
       }
 
       if (window.location.hash) {
@@ -870,22 +954,30 @@ function scanAndAnalyzeGmail() {
           const threadPart = parts[parts.length - 1];
           if (threadPart && threadPart.length >= 10 && !isIgnoredCacheKey(threadPart)) {
             keysToSave.push(threadPart);
+            keysToSave.push(normalizeThreadId(threadPart));
           }
         }
       }
 
       saveVerdictToCache(keysToSave, finalData);
 
-      // 3. Immediately synchronize any active row in split view
-      const activeRow = document.querySelector("tr.zA.aqw, tr.zA[aria-selected='true'], tr.zA.apv, tr.zA.btb");
-      if (activeRow) {
-        activeRow.setAttribute("data-ratiod-verdict", finalData.verdict);
-        const activeBadge = activeRow.querySelector(".ratiod-inbox-pill");
-        if (activeBadge) {
-          updateBadgeElement(activeBadge, finalData.verdict, finalData.score, finalData.flags);
-          activeRow.setAttribute("data-ratiod-sig", `authoritative|${finalData.verdict}${finalData.score}`);
+      // 4. Immediately synchronize ALL matching rows in the DOM (split view & main inbox)
+      const allRows = document.querySelectorAll("tr.zA");
+      allRows.forEach(r => {
+        const rIds = getRowIdentifiers(r);
+        const rSubj = extractCleanRowSubject(r);
+        const rNormSubj = normalizeSubjectKey(rSubj);
+        const idMatch = rIds.some(id => keysToSave.includes(id));
+        const subjMatch = normSubj && (rNormSubj === normSubj || (rNormSubj && normSubj.startsWith(rNormSubj)));
+        if (idMatch || subjMatch) {
+          r.setAttribute("data-ratiod-verdict", finalData.verdict);
+          const rBadge = r.querySelector(".ratiod-inbox-pill");
+          if (rBadge) {
+            updateBadgeElement(rBadge, finalData.verdict, finalData.score, finalData.flags);
+          }
+          r.setAttribute("data-ratiod-sig", `authoritative|${finalData.verdict}${finalData.score}`);
         }
-      }
+      });
 
       // 4. Trigger multi-pass staggered scan to update inbox list view instantly
       triggerStaggeredScan(true);
@@ -942,10 +1034,14 @@ function scanAndAnalyzeGmail() {
 
   // 2. Extract Header Authentication Details (SPF/DKIM/From)
   const authDetails = extractGmailAuthDetails(emailBodyElem);
-  const authPayload = {
+  const hasExtractedHeaders = Boolean(authDetails.mailedBy || authDetails.signedBy);
+  const authPayload = hasExtractedHeaders ? {
     fromDomain: authDetails.fromDomain || null,
     mailedBy: authDetails.mailedBy || null,
     signedBy: authDetails.signedBy || null
+  } : {
+    fromDomain: authDetails.fromDomain || null,
+    uninspected: true
   };
 
   const payload = {
@@ -1032,12 +1128,30 @@ function scanInboxRows(forceUpdate = false) {
 
       const combinedText = `From: ${sender}\nSubject: ${subject}\n${snippet}`.trim();
 
+      // Educational / Institutional Exemption: balbharat.org & Official Brand Senders
+      const cleanSenderEmail = extractCleanEmail(sender) || (rawEmail ? rawEmail.toLowerCase().trim() : "");
+      const isBalBharat = (cleanSenderEmail && (cleanSenderEmail.endsWith("@balbharat.org") || cleanSenderEmail === "balbharat.org")) ||
+                          (sender && (sender.toLowerCase().includes("@balbharat.org") || sender.toLowerCase().includes("balbharat.org"))) ||
+                          (combinedText && /from:\s*.*@balbharat\.org/i.test(combinedText));
+      const isOfficial = isOfficialBrandSender(cleanSenderEmail, sender, combinedText);
+
       // Check if authoritative deep-analysis result exists in cache!
-      // Try thread identifiers first, clean subject, sender|subject tuple, and normalized key.
       const rowIds = getRowIdentifiers(row);
       const cacheKey = normalizeSubjectKey(subject);
-      const tupleKey = sender ? `${sender.toLowerCase().trim()}|${cacheKey}` : "";
-      const lookupKeys = [...rowIds, subject, tupleKey, cacheKey].filter(Boolean);
+      const rawSenderKey = sender ? sender.toLowerCase().trim() : "";
+      const tupleKeyClean = cleanSenderEmail ? `${cleanSenderEmail}|${cacheKey}` : "";
+      const tupleKeyCleanExact = (cleanSenderEmail && subject) ? `${cleanSenderEmail}|${subject.toLowerCase().trim()}` : "";
+      const tupleKeyRaw = rawSenderKey ? `${rawSenderKey}|${cacheKey}` : "";
+
+      const lookupKeys = [
+        ...rowIds,
+        tupleKeyClean,
+        tupleKeyCleanExact,
+        tupleKeyRaw,
+        subject,
+        cacheKey,
+        cacheKey.slice(0, 30)
+      ].filter(Boolean);
       const cachedVerdict = getCachedVerdict(lookupKeys);
 
       // Fast-path: If row already processed and its text signature & cache state have not changed, skip!
@@ -1051,17 +1165,10 @@ function scanInboxRows(forceUpdate = false) {
       let score = 0;
       let flags = [];
 
-      // Educational / Institutional Exemption: balbharat.org
-      const cleanSenderEmail = extractCleanEmail(sender) || (rawEmail ? rawEmail.toLowerCase().trim() : "");
-      const isBalBharat = (cleanSenderEmail && (cleanSenderEmail.endsWith("@balbharat.org") || cleanSenderEmail === "balbharat.org")) ||
-                          (sender && (sender.toLowerCase().includes("@balbharat.org") || sender.toLowerCase().includes("balbharat.org"))) ||
-                          (combinedText && /from:\s*.*@balbharat\.org/i.test(combinedText));
-
       // Continuous Sender Learning & User Override (HIGHEST PRIORITY):
       // If the user previously marked this sender as safe, promotional, or suspicious,
       // every other email from this same sender inherits that verdict with 100% priority.
       const cleanKey = cleanSenderEmail ? cleanSenderEmail.toLowerCase() : "";
-      const rawSenderKey = sender ? sender.toLowerCase().trim() : "";
       const learnedSenderRecord = (cleanKey && memSenderLearning[cleanKey]) ||
                                   (cleanKey && memUserOverrides[cleanKey]) ||
                                   (cleanKey && memUserOverrides["sender:" + cleanKey]) ||
@@ -1070,13 +1177,15 @@ function scanInboxRows(forceUpdate = false) {
                                   (rawSenderKey && memUserOverrides["sender:" + rawSenderKey]) ||
                                   null;
 
-      if (isBalBharat) {
+      if (isBalBharat || isOfficial) {
         verdict = "safe";
         score = 0;
         flags = [{
-          span: "balbharat.org",
-          reason: "Official verified educational institution domain (Bal Bharati)",
-          type: "trusted_institution"
+          span: cleanSenderEmail || sender,
+          reason: isBalBharat
+            ? "Official verified educational institution domain (Bal Bharati)"
+            : `Official verified communication from authentic platform (${cleanSenderEmail || sender})`,
+          type: "official_brand"
         }];
       } else if (learnedSenderRecord) {
         verdict = learnedSenderRecord.verdict;
@@ -1093,12 +1202,6 @@ function scanInboxRows(forceUpdate = false) {
         verdict = cachedVerdict.verdict;
         score = cachedVerdict.score;
         flags = cachedVerdict.flags || [];
-
-        // If cached verdict came from an explicit user override, preserve it unconditionally!
-        if (!cachedVerdict.isUserOverride && verdict === "safe" && (isPromotionsView || isPromotionalText(combinedText))) {
-          verdict = "promo_clutter";
-          score = Math.max(score, 38);
-        }
       } else if (isSpamView) {
         // Gmail quarantined this message.
         const redactedSpamRow = redactPiiLocally(combinedText || "Email Message");

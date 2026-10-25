@@ -308,7 +308,7 @@ const TRANSACTIONAL_SAFEGUARD_PATTERNS = [
   { regex: /\bregistration\s+is\s+(?:now\s+)?open\b/i, reason: "Technical contest registration notification" },
   { regex: /\b(?:ticket\s+confirmed|tickets\s+confirmed|showtime\s*:)\b/i, reason: "Entertainment cinema/event ticket confirmation" },
   { regex: /\b(?:electricity\s+bill|broadband\s+bill|fastag\s+toll)\b/i, reason: "Utility bill or toll plaza transaction confirmation" },
-  { regex: /\b(?:security\s+alert\s*:\s*new\s+sign-in|discord\s+security\s+code|two-factor\s+login\s+code)\b/i, reason: "Routine account sign-in or multi-factor authentication passkey" }
+  { regex: /\b(?:security\s+alert(?:\s+for|\s*:)?|new\s+(?:sign-in|login)\s+on\s+[a-z0-9_-]+|recovery\s+email\s+for\s+this\s+account|unrecognized\s+device\s+login|password\s+changed|two-factor\s+(?:authentication|login|passkey)|discord\s+security\s+code)\b/i, reason: "Routine account sign-in, security alert, or multi-factor authentication passkey" }
 ];
 
 const PROMOTIONAL_CLUTTER_PATTERNS = [
@@ -812,8 +812,12 @@ function evaluateAuthentication(auth, senderDomain) {
   const isBrand = isProtectedBrandDomain(fromDomain) && !isFreeMailDomain(fromDomain);
 
   // Check B: DKIM Alignment Mismatch (The Smoking Gun)
+  // Supports relaxed organizational domain matching (RFC 7489 §3.1.1)
   if (isBrand && signedBy) {
-    const isDkimAligned = signedBy === fromDomain || signedBy.endsWith("." + fromDomain);
+    const isDkimAligned = signedBy === fromDomain ||
+                          signedBy.endsWith("." + fromDomain) ||
+                          fromDomain.endsWith("." + signedBy) ||
+                          registeredDomain(signedBy) === registeredDomain(fromDomain);
     if (!isDkimAligned) {
       flags.push({
         span: fromDomain,
@@ -827,8 +831,13 @@ function evaluateAuthentication(auth, senderDomain) {
   }
 
   // Check C: SPF Envelope Mismatch
+  // Supports relaxed organizational domain matching (RFC 7489 §3.1.2)
   if (isBrand && mailedBy) {
-    const isSpfAligned = mailedBy === fromDomain || mailedBy.endsWith("." + fromDomain) || isSharedRelay(mailedBy);
+    const isSpfAligned = mailedBy === fromDomain ||
+                         mailedBy.endsWith("." + fromDomain) ||
+                         fromDomain.endsWith("." + mailedBy) ||
+                         registeredDomain(mailedBy) === registeredDomain(fromDomain) ||
+                         isSharedRelay(mailedBy);
     if (!isSpfAligned) {
       flags.push({
         span: fromDomain,
@@ -841,7 +850,8 @@ function evaluateAuthentication(auth, senderDomain) {
   }
 
   // Check D: Unauthenticated High-Value Brand
-  if (isBrand && !signedBy && !mailedBy && !dmarc && !dkim && !spf) {
+  // Only flags when auth headers were evaluated and found completely absent, not when uninspected.
+  if (isBrand && !auth.uninspected && !signedBy && !mailedBy && !dmarc && !dkim && !spf) {
     flags.push({
       span: fromDomain,
       reason: `Email claims to be from institutional brand '${fromDomain}' but carries no cryptographic signature.`,
@@ -916,9 +926,9 @@ function evaluateRules(text, channel = "email", auth = null, senderInfo = null) 
     const fromDom = (auth.fromDomain || senderDomain || "").toLowerCase().trim().replace(/^www\./, "");
     if (auth.signedBy) {
       const sBy = auth.signedBy.toLowerCase().trim().replace(/^www\./, "");
-      isAuthAligned = (sBy === fromDom || sBy.endsWith("." + fromDom)) && !isAuthDisqualified;
+      isAuthAligned = (sBy === fromDom || sBy.endsWith("." + fromDom) || fromDom.endsWith("." + sBy) || registeredDomain(sBy) === registeredDomain(fromDom)) && !isAuthDisqualified;
     } else {
-      isAuthAligned = !isAuthDisqualified && !isProtectedBrandDomain(fromDom);
+      isAuthAligned = !isAuthDisqualified && (!isProtectedBrandDomain(fromDom) || !auth.inspected);
     }
   }
 
