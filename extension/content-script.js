@@ -391,6 +391,69 @@ function getRowIdentifiers(row) {
   return [...new Set(ids.filter(Boolean))];
 }
 
+function isGmailDarkTheme() {
+  try {
+    const htmlEl = document.documentElement;
+    const bodyEl = document.body;
+    if (htmlEl && ((htmlEl.getAttribute && htmlEl.getAttribute("data-theme") === "dark") || (htmlEl.classList && htmlEl.classList.contains && htmlEl.classList.contains("dark")) || (htmlEl.hasAttribute && htmlEl.hasAttribute("data-darkreader-scheme")))) {
+      return true;
+    }
+    if (bodyEl && ((bodyEl.getAttribute && bodyEl.getAttribute("data-theme") === "dark") || (bodyEl.classList && bodyEl.classList.contains && bodyEl.classList.contains("dark")))) {
+      return true;
+    }
+
+    // Sample computed background of Gmail containers
+    if (typeof window !== "undefined" && typeof window.getComputedStyle === "function" && typeof document.querySelector === "function") {
+      const sampleTargets = [
+        document.body,
+        document.querySelector(".AO"),
+        document.querySelector(".nH"),
+        document.querySelector("[role='main']"),
+        document.querySelector(".bkK")
+      ].filter(Boolean);
+
+      for (const el of sampleTargets) {
+        const style = window.getComputedStyle(el);
+        const bg = style && style.backgroundColor;
+        if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
+          const rgb = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+          if (rgb) {
+            const r = parseInt(rgb[1], 10);
+            const g = parseInt(rgb[2], 10);
+            const b = parseInt(rgb[3], 10);
+            const lum = (0.299 * r) + (0.587 * g) + (0.114 * b);
+            return lum < 128;
+          }
+        }
+      }
+    }
+
+    if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function updateThemeDetection() {
+  try {
+    const isDark = isGmailDarkTheme();
+    const theme = isDark ? "dark" : "light";
+    if (document.documentElement && typeof document.documentElement.getAttribute === "function" && document.documentElement.getAttribute("data-ratiod-theme") !== theme) {
+      if (typeof document.documentElement.setAttribute === "function") {
+        document.documentElement.setAttribute("data-ratiod-theme", theme);
+      }
+      const host = document.getElementById && document.getElementById("ratiod-banner-host");
+      if (host && typeof host.setAttribute === "function") {
+        host.setAttribute("data-theme", theme);
+      }
+    }
+    return isDark;
+  } catch (e) {
+    return false;
+  }
+}
+
 function ensureInboxStyles() {
   if (document.getElementById("ratiod-inbox-styles")) return;
   const style = document.createElement("style");
@@ -450,7 +513,41 @@ function ensureInboxStyles() {
       transition: background-color 0.15s ease !important;
     }
 
-    /* Dark Mode Theme */
+    /* True Dark Mode Theme: applied when Gmail theme is dark */
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) {
+      background-color: rgba(34, 197, 94, 0.15) !important;
+    }
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover {
+      background-color: rgba(34, 197, 94, 0.25) !important;
+    }
+
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) {
+      background-color: rgba(234, 179, 8, 0.15) !important;
+    }
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover {
+      background-color: rgba(234, 179, 8, 0.25) !important;
+    }
+
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) {
+      background-color: rgba(249, 115, 22, 0.18) !important;
+    }
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover {
+      background-color: rgba(249, 115, 22, 0.28) !important;
+    }
+
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) {
+      background-color: rgba(239, 68, 68, 0.20) !important;
+    }
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover {
+      background-color: rgba(239, 68, 68, 0.30) !important;
+    }
+
+    html[data-ratiod-theme="dark"] .ratiod-inbox-pill {
+      border-color: #3F3F46 !important;
+      box-shadow: 1px 1px 0px #09090B !important;
+    }
+
+    /* Fallback OS-level Dark Mode (if data-ratiod-theme is not yet set) */
     @media (prefers-color-scheme: dark) {
       tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) {
         background-color: rgba(34, 197, 94, 0.15) !important;
@@ -458,26 +555,319 @@ function ensureInboxStyles() {
       tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover {
         background-color: rgba(34, 197, 94, 0.25) !important;
       }
-
       tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) {
         background-color: rgba(234, 179, 8, 0.15) !important;
       }
       tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover {
         background-color: rgba(234, 179, 8, 0.25) !important;
       }
-
       tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) {
         background-color: rgba(249, 115, 22, 0.18) !important;
       }
       tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover {
         background-color: rgba(249, 115, 22, 0.28) !important;
       }
-
       tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) {
         background-color: rgba(239, 68, 68, 0.20) !important;
       }
       tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover {
         background-color: rgba(239, 68, 68, 0.30) !important;
+      }
+      .ratiod-inbox-pill {
+        border-color: #3F3F46 !important;
+        box-shadow: 1px 1px 0px #09090B !important;
+      }
+    }
+
+    /* ==========================================================================
+       Ratio'd Quick-Filter Inbox Triage Bar
+       ========================================================================== */
+    .ratiod-triage-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      margin: 6px 16px;
+      background-color: #FFFFFF;
+      border: 2px solid #121212;
+      border-radius: 10px;
+      box-shadow: 3px 3px 0px #121212;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      z-index: 4;
+      flex-wrap: wrap;
+    }
+    .triage-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 4px;
+    }
+    .triage-title {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 800;
+      color: #121212;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .triage-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .triage-pill {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      border: 1.5px solid #121212;
+      background-color: #F8F7F2;
+      color: #121212;
+      cursor: pointer;
+      box-shadow: 1.5px 1.5px 0px #121212;
+      transition: all 0.1s ease;
+      white-space: nowrap;
+    }
+    .triage-pill:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 0.5px 0.5px 0px #121212;
+    }
+    .triage-pill.active {
+      background-color: #121212 !important;
+      color: #FFFFFF !important;
+      box-shadow: 1.5px 1.5px 0px #121212;
+    }
+    .triage-pill.pill-risk.active {
+      background-color: #EA3E2B !important;
+      color: #FFFFFF !important;
+    }
+    .triage-pill.pill-susp.active {
+      background-color: #E8720C !important;
+      color: #FFFFFF !important;
+    }
+    .triage-pill.pill-promo.active {
+      background-color: #FFD23F !important;
+      color: #121212 !important;
+    }
+    .triage-pill.pill-safe.active {
+      background-color: #4ADE80 !important;
+      color: #121212 !important;
+    }
+
+    /* Dark Mode for Triage Bar */
+    html[data-ratiod-theme="dark"] .ratiod-triage-bar {
+      background-color: #18181B;
+      border-color: #3F3F46;
+      box-shadow: 3px 3px 0px #09090B;
+    }
+    html[data-ratiod-theme="dark"] .triage-title {
+      color: #F4F4F5;
+    }
+    html[data-ratiod-theme="dark"] .triage-pill {
+      background-color: #27272A;
+      border-color: #3F3F46;
+      color: #F4F4F5;
+      box-shadow: 1.5px 1.5px 0px #09090B;
+    }
+    html[data-ratiod-theme="dark"] .triage-pill.active {
+      background-color: #3F3F46 !important;
+      color: #F4F4F5 !important;
+    }
+    @media (prefers-color-scheme: dark) {
+      .ratiod-triage-bar {
+        background-color: #18181B;
+        border-color: #3F3F46;
+        box-shadow: 3px 3px 0px #09090B;
+      }
+      .triage-title {
+        color: #F4F4F5;
+      }
+      .triage-pill {
+        background-color: #27272A;
+        border-color: #3F3F46;
+        color: #F4F4F5;
+        box-shadow: 1.5px 1.5px 0px #09090B;
+      }
+      .triage-pill.active {
+        background-color: #3F3F46 !important;
+        color: #F4F4F5 !important;
+      }
+    }
+
+    /* ==========================================================================
+       Ratio'd Smart Link Shield Tooltip
+       ========================================================================== */
+    .ratiod-link-shield {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #FFFFFF;
+      border: 2px solid #121212;
+      border-radius: 10px;
+      box-shadow: 4px 4px 0px #121212;
+      color: #121212;
+      padding: 10px 14px;
+      min-width: 260px;
+      max-width: 420px;
+      pointer-events: auto;
+      animation: ratiod-pop 0.12s ease-out;
+    }
+    @keyframes ratiod-pop {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .shield-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .shield-title {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .shield-status {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #121212;
+      text-transform: uppercase;
+    }
+    .shield-dest {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      padding: 5px 8px;
+      background-color: #F8F7F2;
+      border: 1.5px dashed #121212;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+    .shield-dest-label {
+      font-size: 9px;
+      color: #6B7280;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .shield-dest-url {
+      font-weight: 700;
+      color: #121212;
+    }
+    .shield-warning {
+      font-size: 11px;
+      font-weight: 600;
+      color: #B91C1C;
+      background-color: #FEF2F2;
+      border-left: 3px solid #EA3E2B;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+    .shield-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed #E5E7EB;
+    }
+    .shield-copy-btn {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      background-color: #FFFFFF;
+      color: #121212;
+      border: 1.5px solid #121212;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0px #121212;
+      text-transform: uppercase;
+    }
+    .shield-copy-btn:hover {
+      background-color: #FACC15;
+    }
+    .shield-tracking-note {
+      font-size: 10px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+
+    /* Dark Mode for Link Shield */
+    html[data-ratiod-theme="dark"] .ratiod-link-shield {
+      background-color: #18181B;
+      border-color: #3F3F46;
+      box-shadow: 4px 4px 0px #09090B;
+      color: #F4F4F5;
+    }
+    html[data-ratiod-theme="dark"] .shield-dest {
+      background-color: #27272A;
+      border-color: #52525B;
+    }
+    html[data-ratiod-theme="dark"] .shield-dest-url {
+      color: #F4F4F5;
+    }
+    html[data-ratiod-theme="dark"] .shield-warning {
+      background-color: #2D0B0E;
+      border-left-color: #EF4444;
+      color: #FCA5A5;
+    }
+    html[data-ratiod-theme="dark"] .shield-footer {
+      border-top-color: #3F3F46;
+    }
+    html[data-ratiod-theme="dark"] .shield-copy-btn {
+      background-color: #27272A;
+      color: #F4F4F5;
+      border-color: #3F3F46;
+      box-shadow: 1px 1px 0px #09090B;
+    }
+    html[data-ratiod-theme="dark"] .shield-copy-btn:hover {
+      background-color: #3F3F46;
+    }
+    html[data-ratiod-theme="dark"] .shield-tracking-note {
+      color: #A1A1AA;
+    }
+    @media (prefers-color-scheme: dark) {
+      .ratiod-link-shield {
+        background-color: #18181B;
+        border-color: #3F3F46;
+        box-shadow: 4px 4px 0px #09090B;
+        color: #F4F4F5;
+      }
+      .shield-dest {
+        background-color: #27272A;
+        border-color: #52525B;
+      }
+      .shield-dest-url {
+        color: #F4F4F5;
+      }
+      .shield-warning {
+        background-color: #2D0B0E;
+        border-left-color: #EF4444;
+        color: #FCA5A5;
+      }
+      .shield-footer {
+        border-top-color: #3F3F46;
+      }
+      .shield-copy-btn {
+        background-color: #27272A;
+        color: #F4F4F5;
+        border-color: #3F3F46;
+        box-shadow: 1px 1px 0px #09090B;
+      }
+      .shield-copy-btn:hover {
+        background-color: #3F3F46;
+      }
+      .shield-tracking-note {
+        color: #A1A1AA;
       }
     }
   `;
@@ -828,10 +1218,14 @@ function scanAndAnalyzeGmail() {
                         (fullTextToAnalyze && /from:\s*.*@balbharat\.org/i.test(fullTextToAnalyze));
     const isOfficial = isOfficialBrandSender(cleanSender, senderHeader, fullTextToAnalyze);
 
+    const senderDomain = cleanSender && cleanSender.includes("@") ? cleanSender.split("@")[1].toLowerCase() : "";
     const learnedRecord = cleanSender ? (
       memSenderLearning[cleanSender.toLowerCase()] ||
       memUserOverrides[cleanSender.toLowerCase()] ||
-      memUserOverrides["sender:" + cleanSender.toLowerCase()]
+      memUserOverrides["sender:" + cleanSender.toLowerCase()] ||
+      (senderDomain && memSenderLearning["@" + senderDomain]) ||
+      (senderDomain && memSenderLearning[senderDomain]) ||
+      (senderDomain && memSenderLearning["domain:" + senderDomain])
     ) : null;
 
     if (isBalBharat || isOfficial) {
@@ -1166,12 +1560,16 @@ function scanInboxRows(forceUpdate = false) {
       let flags = [];
 
       // Continuous Sender Learning & User Override (HIGHEST PRIORITY):
-      // If the user previously marked this sender as safe, promotional, or suspicious,
+      // If the user previously marked this sender or domain as safe, promotional, or suspicious,
       // every other email from this same sender inherits that verdict with 100% priority.
       const cleanKey = cleanSenderEmail ? cleanSenderEmail.toLowerCase() : "";
+      const senderDomain = cleanKey && cleanKey.includes("@") ? cleanKey.split("@")[1].toLowerCase() : "";
       const learnedSenderRecord = (cleanKey && memSenderLearning[cleanKey]) ||
                                   (cleanKey && memUserOverrides[cleanKey]) ||
                                   (cleanKey && memUserOverrides["sender:" + cleanKey]) ||
+                                  (senderDomain && memSenderLearning["@" + senderDomain]) ||
+                                  (senderDomain && memSenderLearning[senderDomain]) ||
+                                  (senderDomain && memSenderLearning["domain:" + senderDomain]) ||
                                   (rawSenderKey && memSenderLearning[rawSenderKey]) ||
                                   (rawSenderKey && memUserOverrides[rawSenderKey]) ||
                                   (rawSenderKey && memUserOverrides["sender:" + rawSenderKey]) ||
@@ -1354,6 +1752,7 @@ function triggerStaggeredScan(forceUpdate = true) {
 
 function executeScanPass(forceUpdate = false) {
   if (document.hidden) return;
+  updateThemeDetection();
   const isEmailOpen = !!document.querySelector(
     ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
   );
@@ -1361,6 +1760,259 @@ function executeScanPass(forceUpdate = false) {
     scanAndAnalyzeGmail();
   }
   scanInboxRows(forceUpdate);
+  injectInboxTriageBar();
+}
+
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// ---------------------------------------------------------------------------
+// Ratio'd Quick-Filter Inbox Triage Bar
+// ---------------------------------------------------------------------------
+let currentTriageFilter = "all";
+
+function injectInboxTriageBar() {
+  if (typeof document === "undefined" || !document.querySelector || !document.querySelectorAll) return;
+  if (document.querySelector(".a3s, .ii.gt, .adn.ads, [role='main'] .h7")) {
+    const existing = document.getElementById("ratiod-triage-bar");
+    if (existing) existing.remove();
+    return;
+  }
+
+  const rows = document.querySelectorAll("tr.zA");
+  if (!rows || rows.length === 0) {
+    const existing = document.getElementById("ratiod-triage-bar");
+    if (existing) existing.remove();
+    return;
+  }
+
+  let safeCount = 0;
+  let promoCount = 0;
+  let suspCount = 0;
+  let riskCount = 0;
+  let totalCount = rows.length;
+
+  rows.forEach(r => {
+    const v = r.getAttribute("data-ratiod-verdict");
+    if (v === "high_risk") riskCount++;
+    else if (v === "suspicious") suspCount++;
+    else if (v === "promo_clutter") promoCount++;
+    else safeCount++;
+  });
+
+  let triageBar = document.getElementById("ratiod-triage-bar");
+  if (!triageBar) {
+    triageBar = document.createElement("div");
+    triageBar.id = "ratiod-triage-bar";
+    triageBar.className = "ratiod-triage-bar";
+
+    triageBar.innerHTML = `
+      <div class="triage-header">
+        <span class="triage-title">RATIO'D TRIAGE</span>
+      </div>
+      <div class="triage-pills">
+        <button class="triage-pill pill-all ${currentTriageFilter === 'all' ? 'active' : ''}" data-filter="all" type="button">All (${totalCount})</button>
+        <button class="triage-pill pill-risk ${currentTriageFilter === 'high_risk' ? 'active' : ''}" data-filter="high_risk" type="button">🔴 Risk (${riskCount})</button>
+        <button class="triage-pill pill-susp ${currentTriageFilter === 'suspicious' ? 'active' : ''}" data-filter="suspicious" type="button">🟠 Suspicious (${suspCount})</button>
+        <button class="triage-pill pill-promo ${currentTriageFilter === 'promo_clutter' ? 'active' : ''}" data-filter="promo_clutter" type="button">🟡 Promo (${promoCount})</button>
+        <button class="triage-pill pill-safe ${currentTriageFilter === 'safe' ? 'active' : ''}" data-filter="safe" type="button">🟢 Safe (${safeCount})</button>
+      </div>
+    `;
+
+    if (triageBar.addEventListener) {
+      triageBar.addEventListener("click", (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest(".triage-pill") : null;
+        if (!btn || !btn.getAttribute) return;
+        const filter = btn.getAttribute("data-filter");
+        applyTriageFilter(filter);
+      });
+    }
+
+    const anchor = document.querySelector(".G-atb, .AO .nH, .nH.oy8Mbf, table.F.cf.zT");
+    if (anchor && anchor.parentNode && anchor.parentNode.insertBefore) {
+      anchor.parentNode.insertBefore(triageBar, anchor);
+    }
+  } else if (triageBar.querySelector) {
+    const pAll = triageBar.querySelector(".pill-all");
+    const pRisk = triageBar.querySelector(".pill-risk");
+    const pSusp = triageBar.querySelector(".pill-susp");
+    const pPromo = triageBar.querySelector(".pill-promo");
+    const pSafe = triageBar.querySelector(".pill-safe");
+
+    if (pAll) pAll.textContent = `All (${totalCount})`;
+    if (pRisk) pRisk.textContent = `🔴 Risk (${riskCount})`;
+    if (pSusp) pSusp.textContent = `🟠 Suspicious (${suspCount})`;
+    if (pPromo) pPromo.textContent = `🟡 Promo (${promoCount})`;
+    if (pSafe) pSafe.textContent = `🟢 Safe (${safeCount})`;
+  }
+}
+
+function applyTriageFilter(filter) {
+  currentTriageFilter = filter;
+  const triageBar = document.getElementById("ratiod-triage-bar");
+  if (triageBar) {
+    triageBar.querySelectorAll(".triage-pill").forEach(p => {
+      if (p.getAttribute("data-filter") === filter) {
+        p.classList.add("active");
+      } else {
+        p.classList.remove("active");
+      }
+    });
+  }
+
+  const rows = document.querySelectorAll("tr.zA");
+  rows.forEach(r => {
+    if (filter === "all") {
+      r.style.removeProperty("display");
+    } else {
+      const v = r.getAttribute("data-ratiod-verdict") || "safe";
+      if (v === filter) {
+        r.style.removeProperty("display");
+      } else {
+        r.style.setProperty("display", "none", "important");
+      }
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Ratio'd Smart Link Shield Tooltip
+// ---------------------------------------------------------------------------
+let activeLinkShield = null;
+let linkShieldTimer = null;
+
+function removeLinkShield() {
+  if (linkShieldTimer) {
+    clearTimeout(linkShieldTimer);
+    linkShieldTimer = null;
+  }
+  if (activeLinkShield) {
+    activeLinkShield.remove();
+    activeLinkShield = null;
+  }
+}
+
+function initSmartLinkShield() {
+  if (typeof document === "undefined" || !document.addEventListener) return;
+  document.addEventListener("mouseover", handleLinkMouseOver, true);
+  document.addEventListener("mouseout", handleLinkMouseOut, true);
+  document.addEventListener("scroll", () => removeLinkShield(), { passive: true });
+}
+
+function handleLinkMouseOver(e) {
+  const link = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+  if (!link || !link.href) return;
+  if (!link.closest(".a3s, .ii.gt, [role='main'] .a3s, .adn")) return;
+
+  const href = String(link.href).trim();
+  if (!href || /^javascript:|^mailto:|^tel:/i.test(href)) return;
+
+  const displayedText = (link.innerText || link.textContent || "").trim();
+  const assessment = window.RatiodFallback && typeof window.RatiodFallback.verifyLinkSafety === "function"
+    ? window.RatiodFallback.verifyLinkSafety(displayedText, href)
+    : { isSafe: true, risk: "safe", reason: "Standard destination", destHost: "" };
+
+  if (linkShieldTimer) clearTimeout(linkShieldTimer);
+  linkShieldTimer = setTimeout(() => {
+    renderLinkShield(link, displayedText, href, assessment);
+  }, 160);
+}
+
+function handleLinkMouseOut(e) {
+  const link = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+  if (!link) return;
+  setTimeout(() => {
+    if (activeLinkShield && !activeLinkShield.matches(":hover")) {
+      removeLinkShield();
+    }
+  }, 120);
+}
+
+function renderLinkShield(linkElem, displayedText, href, assessment) {
+  removeLinkShield();
+
+  const rect = linkElem.getBoundingClientRect();
+  if (!rect || rect.width === 0) return;
+
+  const shield = document.createElement("div");
+  shield.id = "ratiod-link-shield";
+  shield.className = `ratiod-link-shield shield-${assessment.risk || 'safe'}`;
+
+  let cleanUrl = href;
+  try {
+    const u = new URL(href);
+    const trackingKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid', 'mc_cid', 'mc_eid', '_hsenc'];
+    trackingKeys.forEach(k => u.searchParams.delete(k));
+    cleanUrl = u.toString();
+  } catch (err) {}
+
+  let badgeColor = "#4ADE80";
+  let badgeLabel = "VERIFIED LINK";
+  if (assessment.risk === "high_risk") {
+    badgeColor = "#EA3E2B";
+    badgeLabel = "⚠️ HIGH RISK / DECEPTIVE";
+  } else if (assessment.risk === "suspicious") {
+    badgeColor = "#F97316";
+    badgeLabel = "⚠️ SUSPICIOUS ROUTING";
+  }
+
+  shield.innerHTML = `
+    <div class="shield-header">
+      <span class="shield-title">🛡️ LINK SHIELD</span>
+      <span class="shield-status" style="background-color:${badgeColor}; color:${assessment.risk === 'high_risk' || assessment.risk === 'suspicious' ? '#FFFFFF' : '#121212'};">${badgeLabel}</span>
+    </div>
+    <div class="shield-dest">
+      <span class="shield-dest-label">DESTINATION:</span>
+      <span class="shield-dest-url" title="${escapeHtml(href)}">${escapeHtml(assessment.destHost || cleanUrl.slice(0, 45))}</span>
+    </div>
+    ${assessment.reason && assessment.risk !== 'safe' ? `<div class="shield-warning">${escapeHtml(assessment.reason)}</div>` : ''}
+    <div class="shield-footer">
+      <button class="shield-copy-btn" type="button" title="Copy clean link without tracking parameters">[ 📋 COPY CLEAN LINK ]</button>
+      <span class="shield-tracking-note">${cleanUrl !== href ? 'Tracking cleaned' : 'No tracking params'}</span>
+    </div>
+  `;
+
+  shield.style.position = "fixed";
+  shield.style.zIndex = "999999";
+
+  document.body.appendChild(shield);
+  activeLinkShield = shield;
+
+  const shieldRect = shield.getBoundingClientRect();
+  let top = rect.top - shieldRect.height - 8;
+  if (top < 10) {
+    top = rect.bottom + 8;
+  }
+  let left = rect.left;
+  if (left + shieldRect.width > window.innerWidth - 16) {
+    left = window.innerWidth - shieldRect.width - 16;
+  }
+  left = Math.max(12, left);
+
+  shield.style.top = `${top}px`;
+  shield.style.left = `${left}px`;
+
+  const copyBtn = shield.querySelector(".shield-copy-btn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      navigator.clipboard.writeText(cleanUrl).then(() => {
+        copyBtn.textContent = "[ ✓ COPIED CLEAN LINK ]";
+        setTimeout(() => removeLinkShield(), 1200);
+      });
+    });
+  }
+
+  shield.addEventListener("mouseleave", () => {
+    removeLinkShield();
+  });
 }
 
 // Observe Gmail DOM mutation with smart debounce to prevent UI thread lock
@@ -1407,6 +2059,18 @@ setInterval(() => {
 
 // Ensure inbox styles are injected immediately
 ensureInboxStyles();
+
+// Initialize Smart Link Shield hover inspector
+initSmartLinkShield();
+
+// Escape key listener to reset triage filter instantly
+if (typeof document !== "undefined" && document.addEventListener) {
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && typeof currentTriageFilter !== "undefined" && currentTriageFilter !== "all") {
+      applyTriageFilter("all");
+    }
+  });
+}
 
 // Initial scan
 triggerStaggeredScan(true);

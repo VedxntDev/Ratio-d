@@ -615,13 +615,106 @@
     };
   }
 
+  /**
+   * Evaluates the security safety of a hyperlink.
+   * Compares displayed text against the actual destination URL,
+   * detects URL shorteners, punycode homoglyphs, and executable payload extensions.
+   */
+  function verifyLinkSafety(displayedText, href) {
+    var rawText = String(displayedText || "").trim();
+    var url = String(href || "").trim();
+    if (!url || /^javascript:/i.test(url) || /^mailto:/i.test(url) || /^tel:/i.test(url)) {
+      return { isSafe: true, reason: "Non-navigational link", type: "benign" };
+    }
+
+    var destHost = "";
+    try {
+      var parsed = new URL(url);
+      destHost = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    } catch (e) {
+      destHost = (url.match(/^[a-z]+:\/\/([^/?#]+)/i) || [])[1] || "";
+      destHost = destHost.toLowerCase().replace(/^www\./, "");
+    }
+
+    // 1. Detect Direct Executable / Dangerous Payload Downloads
+    if (/\.(exe|scr|bat|vbs|iso|dmg|apk|msi|ps1|cmd|jar|hta)(\?|#|$)/i.test(url)) {
+      return {
+        isSafe: false,
+        risk: "high_risk",
+        reason: "Link directly downloads an executable or installer payload",
+        type: "dangerous_file",
+        destHost: destHost
+      };
+    }
+
+    // 2. Detect URL Shorteners / Concealed Redirectors
+    if (/(bit\.ly|tinyurl\.com|is\.gd|t\.co|ow\.ly|rb\.gy|goo\.gl|buff\.ly|rebrand\.ly)/i.test(destHost)) {
+      return {
+        isSafe: false,
+        risk: "suspicious",
+        reason: "URL shortener conceals the final destination address",
+        type: "url_shortener",
+        destHost: destHost
+      };
+    }
+
+    // 3. Detect Direct IP Address Navigation
+    if (/^https?:\/\/(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?(?:\/|$)/i.test(url)) {
+      return {
+        isSafe: false,
+        risk: "suspicious",
+        reason: "Link routes directly to a numeric IP address rather than a domain name",
+        type: "direct_ip",
+        destHost: destHost
+      };
+    }
+
+    // 4. Detect Punycode / IDN Homoglyphs
+    if (/^xn--/i.test(destHost) || /[^\x00-\x7F]/.test(destHost)) {
+      return {
+        isSafe: false,
+        risk: "high_risk",
+        reason: "Punycode or non-Latin characters used to mimic a known domain",
+        type: "punycode_homoglyph",
+        destHost: destHost
+      };
+    }
+
+    // 5. Detect Displayed Domain vs Destination Domain Mismatch (Deceptive Phishing Link)
+    var textDomainMatch = rawText.match(/\b([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)\b/i);
+    if (textDomainMatch) {
+      var claimedDomain = textDomainMatch[1].toLowerCase().replace(/^www\./, "");
+      var regClaimed = regDom(claimedDomain);
+      var regDest = regDom(destHost);
+      if (regClaimed && regDest && regClaimed !== regDest) {
+        return {
+          isSafe: false,
+          risk: "high_risk",
+          reason: "Display text claims domain '" + claimedDomain + "' but link actually points to '" + destHost + "'",
+          type: "domain_mismatch",
+          claimedDomain: claimedDomain,
+          destHost: destHost
+        };
+      }
+    }
+
+    return {
+      isSafe: true,
+      risk: "safe",
+      reason: "No deceptive routing or hazardous extensions detected",
+      type: "normal",
+      destHost: destHost
+    };
+  }
+
   global.RatiodFallback = {
     analyze: analyze,
     FAMILIES: FAMILIES.map(function (f) { return f.name; }),
     isTransactional: function (text) {
       var t = String(text || "");
       return TRANSACTIONAL.some(function (r) { return r.test(t); });
-    }
+    },
+    verifyLinkSafety: verifyLinkSafety
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = global.RatiodFallback;

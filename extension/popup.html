@@ -12,7 +12,7 @@
     }
 
     body {
-      width: 360px;
+      width: 380px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #F8F7F2;
       color: #121212;
@@ -28,7 +28,7 @@
       justify-content: space-between;
       padding-bottom: 12px;
       border-bottom: 2px solid #121212;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .brand-wrap {
@@ -87,6 +87,49 @@
       height: 6px;
       border-radius: 50%;
       background-color: #16A34A;
+    }
+
+    /* Navigation Tabs */
+    .tab-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 7px 4px;
+      border-radius: 8px;
+      border: 2px solid #121212;
+      background-color: #FFFFFF;
+      color: #121212;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #121212;
+      transition: all 0.1s ease;
+      text-align: center;
+    }
+
+    .tab-btn:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #121212;
+    }
+
+    .tab-btn.active {
+      background-color: #121212;
+      color: #FFFFFF;
+      box-shadow: 2px 2px 0px #EA3E2B;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     /* Hero Total Card */
@@ -250,6 +293,199 @@
       color: #121212;
     }
 
+    /* Senders & Whitelist Manager Section */
+    .sender-summary-card {
+      background-color: #FFFFFF;
+      border: 2px solid #121212;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 2px 2px 0px #121212;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sender-summary-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+    }
+
+    .sender-count-badge {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 800;
+      background-color: #FEF08A;
+      border: 1.5px solid #121212;
+      padding: 2px 8px;
+      border-radius: 6px;
+      box-shadow: 1px 1px 0px #121212;
+    }
+
+    .search-box {
+      margin-bottom: 10px;
+    }
+
+    .input-field {
+      width: 100%;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      padding: 7px 10px;
+      border: 2px solid #121212;
+      border-radius: 8px;
+      background-color: #FFFFFF;
+      color: #121212;
+      box-shadow: 2px 2px 0px #121212;
+      outline: none;
+      transition: all 0.1s ease;
+    }
+
+    .input-field:focus {
+      border-color: #2563EB;
+      box-shadow: 2px 2px 0px #2563EB;
+    }
+
+    .add-rule-card {
+      background-color: #FFFFFF;
+      border: 2px solid #121212;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 2px 2px 0px #121212;
+      margin-bottom: 12px;
+    }
+
+    .add-rule-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .add-rule-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .select-field {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 8px;
+      border: 2px solid #121212;
+      border-radius: 8px;
+      background-color: #FFFFFF;
+      color: #121212;
+      box-shadow: 1.5px 1.5px 0px #121212;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .rules-list-container {
+      max-height: 230px;
+      overflow-y: auto;
+      border: 2px solid #121212;
+      border-radius: 10px;
+      background-color: #FFFFFF;
+      box-shadow: 2px 2px 0px #121212;
+      margin-bottom: 12px;
+      padding: 6px;
+    }
+
+    .rule-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1.5px solid #121212;
+      border-radius: 8px;
+      background-color: #F8F7F2;
+      margin-bottom: 6px;
+      box-shadow: 1.5px 1.5px 0px #121212;
+      transition: all 0.1s ease;
+    }
+
+    .rule-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .rule-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .rule-sender {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 800;
+      color: #121212;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rule-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+
+    .rule-verdict-badge {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #121212;
+      text-transform: uppercase;
+    }
+
+    .badge-safe { background-color: #4ADE80; color: #121212; }
+    .badge-promo { background-color: #FACC15; color: #121212; }
+    .badge-suspicious { background-color: #FB923C; color: #121212; }
+    .badge-high_risk { background-color: #F87171; color: #FFFFFF; }
+
+    .rule-source {
+      font-size: 9px;
+      color: #6B7280;
+      font-weight: 600;
+    }
+
+    .rule-del-btn {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: 1.5px solid #121212;
+      background-color: #FEE2E2;
+      color: #991B1B;
+      cursor: pointer;
+      box-shadow: 1px 1px 0px #121212;
+      transition: all 0.1s ease;
+    }
+
+    .rule-del-btn:hover {
+      background-color: #EF4444;
+      color: #FFFFFF;
+      transform: translate(1px, 1px);
+      box-shadow: 0px 0px 0px #121212;
+    }
+
+    .rules-empty-state {
+      padding: 24px 12px;
+      text-align: center;
+      color: #6B7280;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
     /* Empty state notice */
     .empty-notice {
       display: none;
@@ -308,6 +544,16 @@
       color: #121212;
     }
 
+    .btn-danger {
+      background-color: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .btn-danger:hover {
+      background-color: #EF4444;
+      color: #FFFFFF;
+    }
+
     /* Footer */
     .footer {
       border-top: 2px solid #121212;
@@ -330,6 +576,165 @@
       text-decoration: underline;
       color: #EA3E2B;
     }
+
+    /* ==========================================================================
+       Dark Mode Adaptive Styling for Popup
+       ========================================================================== */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #121214;
+        color: #F4F4F5;
+      }
+      .header {
+        border-bottom-color: #3F3F46;
+      }
+      .brand-logo {
+        border-color: #3F3F46;
+        box-shadow: 2px 2px 0px #09090B;
+      }
+      .brand-text h1 {
+        color: #F4F4F5;
+      }
+      .brand-text p {
+        color: #A1A1AA;
+      }
+      .status-pill {
+        background-color: #064E3B;
+        color: #A7F3D0;
+        border-color: #3F3F46;
+        box-shadow: 1px 1px 0px #09090B;
+      }
+      .tab-btn {
+        background-color: #202024;
+        color: #F4F4F5;
+        border-color: #3F3F46;
+        box-shadow: 2px 2px 0px #09090B;
+      }
+      .tab-btn.active {
+        background-color: #3F3F46;
+        color: #FFFFFF;
+        border-color: #52525B;
+        box-shadow: 2px 2px 0px #EA3E2B;
+      }
+      .hero-card,
+      .telemetry-card,
+      .sender-summary-card,
+      .add-rule-card,
+      .rules-list-container {
+        background-color: #18181B;
+        border-color: #3F3F46;
+        box-shadow: 3px 3px 0px #09090B;
+        color: #F4F4F5;
+      }
+      .hero-label {
+        color: #A1A1AA;
+      }
+      .hero-number {
+        color: #F4F4F5;
+      }
+      .hero-sub {
+        color: #A1A1AA;
+      }
+      .bar-container {
+        background-color: #27272A;
+        border-color: #3F3F46;
+        box-shadow: 1px 1px 0px #09090B;
+      }
+      .stat-card {
+        border-color: #3F3F46;
+        box-shadow: 2px 2px 0px #09090B;
+      }
+      .stat-card.card-safe { background-color: rgba(6, 78, 59, 0.25); }
+      .stat-card.card-promo { background-color: rgba(113, 63, 18, 0.25); }
+      .stat-card.card-suspicious { background-color: rgba(124, 45, 18, 0.25); }
+      .stat-card.card-high_risk { background-color: rgba(127, 29, 29, 0.25); }
+      .card-name { color: #D4D4D8; }
+      .card-value { color: #F4F4F5; }
+      .card-tag {
+        background-color: #27272A;
+        color: #F4F4F5;
+        border-color: #3F3F46;
+      }
+      .telemetry-row {
+        color: #A1A1AA;
+        border-bottom-color: #27272A;
+      }
+      .telemetry-val {
+        color: #F4F4F5;
+      }
+      .sender-summary-text {
+        color: #D4D4D8;
+      }
+      .sender-count-badge {
+        background-color: #3F3F46;
+        border-color: #52525B;
+        color: #F4F4F5;
+        box-shadow: 1px 1px 0px #09090B;
+      }
+      .input-field,
+      .select-field {
+        background-color: #202024;
+        border-color: #3F3F46;
+        color: #F4F4F5;
+        box-shadow: 1.5px 1.5px 0px #09090B;
+      }
+      .input-field::placeholder {
+        color: #71717A;
+      }
+      .rule-item {
+        background-color: #202024;
+        border-color: #3F3F46;
+        box-shadow: 1.5px 1.5px 0px #09090B;
+      }
+      .rule-sender {
+        color: #F4F4F5;
+      }
+      .rule-source {
+        color: #A1A1AA;
+      }
+      .rule-verdict-badge {
+        border-color: #3F3F46;
+      }
+      .rule-del-btn {
+        background-color: #3B1214;
+        border-color: #7F1D1D;
+        color: #FCA5A5;
+        box-shadow: 1px 1px 0px #09090B;
+      }
+      .rule-del-btn:hover {
+        background-color: #DC2626;
+        color: #FFFFFF;
+      }
+      .btn {
+        border-color: #3F3F46;
+        box-shadow: 2px 2px 0px #09090B;
+      }
+      .btn-secondary {
+        background-color: #3F3F46;
+        color: #F4F4F5;
+      }
+      .btn-danger {
+        background-color: #3B1214;
+        border-color: #7F1D1D;
+        color: #FCA5A5;
+      }
+      .btn-danger:hover {
+        background-color: #DC2626;
+        color: #FFFFFF;
+      }
+      .footer {
+        border-top-color: #3F3F46;
+        color: #A1A1AA;
+      }
+      .footer a {
+        color: #F4F4F5;
+      }
+      .empty-notice {
+        background-color: #1E293B;
+        border-color: #3B82F6;
+        color: #93C5FD;
+      }
+    }
   </style>
 </head>
 <body>
@@ -349,104 +754,161 @@
     </div>
   </header>
 
-  <!-- Empty state guide -->
-  <div class="empty-notice" id="empty-notice">
-    <strong>👋 Ready for Gmail!</strong> Open <a href="https://mail.google.com" target="_blank" style="color:#1E40AF;font-weight:800;">mail.google.com</a> and view any email to see live scan analytics update automatically.
-  </div>
+  <!-- Navigation Tabs -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" id="tab-btn-telemetry" data-tab="telemetry" type="button">📊 Telemetry</button>
+    <button class="tab-btn" id="tab-btn-senders" data-tab="senders" type="button">🛡️ Senders &amp; Whitelist</button>
+  </nav>
 
-  <!-- Hero Metric Card -->
-  <section class="hero-card">
-    <div class="hero-label">Total Emails Processed</div>
-    <div class="hero-number" id="val-total">0</div>
-    <div class="hero-sub" id="hero-subtext">Air-gapped scam analysis &bull; Rules + VegaML (Physics Engine)</div>
-
-    <div class="bar-container" title="Risk Distribution">
-      <div class="bar-seg bar-safe" id="bar-safe" title="Safe"></div>
-      <div class="bar-seg bar-promo" id="bar-promo" title="Promotional"></div>
-      <div class="bar-seg bar-suspicious" id="bar-suspicious" title="Suspicious"></div>
-      <div class="bar-seg bar-high_risk" id="bar-high_risk" title="Scam / Phishing"></div>
+  <!-- ================= TAB 1: TELEMETRY ================= -->
+  <main class="tab-content active" id="panel-telemetry">
+    <!-- Empty state guide -->
+    <div class="empty-notice" id="empty-notice">
+      <strong>👋 Ready for Gmail!</strong> Open <a href="https://mail.google.com" target="_blank" style="color:#1E40AF;font-weight:800;">mail.google.com</a> and view any email to see live scan analytics update automatically.
     </div>
-  </section>
 
-  <!-- Category Breakdown Grid -->
-  <section class="stats-grid">
-    <!-- Safe -->
-    <div class="stat-card card-safe">
-      <div class="card-top">
-        <span class="card-emoji">🟢</span>
-        <span class="card-tag">SAFE</span>
+    <!-- Hero Metric Card -->
+    <section class="hero-card">
+      <div class="hero-label">Total Emails Processed</div>
+      <div class="hero-number" id="val-total">0</div>
+      <div class="hero-sub" id="hero-subtext">Air-gapped scam analysis &bull; Rules + VegaML (Physics Engine)</div>
+
+      <div class="bar-container" title="Risk Distribution">
+        <div class="bar-seg bar-safe" id="bar-safe" title="Safe"></div>
+        <div class="bar-seg bar-promo" id="bar-promo" title="Promotional"></div>
+        <div class="bar-seg bar-suspicious" id="bar-suspicious" title="Suspicious"></div>
+        <div class="bar-seg bar-high_risk" id="bar-high_risk" title="Scam / Phishing"></div>
       </div>
-      <div class="card-value" id="val-safe">0</div>
-      <div class="card-name">Clean Emails</div>
-      <div class="card-pct" id="pct-safe">0%</div>
-    </div>
+    </section>
 
-    <!-- Promo -->
-    <div class="stat-card card-promo">
-      <div class="card-top">
-        <span class="card-emoji">🟡</span>
-        <span class="card-tag">PROMO</span>
+    <!-- Category Breakdown Grid -->
+    <section class="stats-grid">
+      <!-- Safe -->
+      <div class="stat-card card-safe">
+        <div class="card-top">
+          <span class="card-emoji">🟢</span>
+          <span class="card-tag">SAFE</span>
+        </div>
+        <div class="card-value" id="val-safe">0</div>
+        <div class="card-name">Clean Emails</div>
+        <div class="card-pct" id="pct-safe">0%</div>
       </div>
-      <div class="card-value" id="val-promo">0</div>
-      <div class="card-name">Marketing / Blasts</div>
-      <div class="card-pct" id="pct-promo">0%</div>
-    </div>
 
-    <!-- Suspicious -->
-    <div class="stat-card card-suspicious">
-      <div class="card-top">
-        <span class="card-emoji">🟠</span>
-        <span class="card-tag">CAUTION</span>
+      <!-- Promo -->
+      <div class="stat-card card-promo">
+        <div class="card-top">
+          <span class="card-emoji">🟡</span>
+          <span class="card-tag">PROMO</span>
+        </div>
+        <div class="card-value" id="val-promo">0</div>
+        <div class="card-name">Marketing / Blasts</div>
+        <div class="card-pct" id="pct-promo">0%</div>
       </div>
-      <div class="card-value" id="val-suspicious">0</div>
-      <div class="card-name">Suspicious Signals</div>
-      <div class="card-pct" id="pct-suspicious">0%</div>
-    </div>
 
-    <!-- High Risk / Scam -->
-    <div class="stat-card card-high_risk">
-      <div class="card-top">
-        <span class="card-emoji">🔴</span>
-        <span class="card-tag">SCAM</span>
+      <!-- Suspicious -->
+      <div class="stat-card card-suspicious">
+        <div class="card-top">
+          <span class="card-emoji">🟠</span>
+          <span class="card-tag">CAUTION</span>
+        </div>
+        <div class="card-value" id="val-suspicious">0</div>
+        <div class="card-name">Suspicious Signals</div>
+        <div class="card-pct" id="pct-suspicious">0%</div>
       </div>
-      <div class="card-value" id="val-high_risk">0</div>
-      <div class="card-name">Phishing Blocked</div>
-      <div class="card-pct" id="pct-high_risk">0%</div>
-    </div>
-  </section>
 
-  <!-- Privacy & Threat Telemetry -->
-  <section class="telemetry-card">
-    <div class="telemetry-title">
-      <span>🛡️</span> On-Device Privacy & Threat Telemetry
-    </div>
-    <div class="telemetry-row">
-      <span>Active Engine:</span>
-      <span class="telemetry-val" style="color:#2563EB;">Rules + VegaML (Physics)</span>
-    </div>
-    <div class="telemetry-row">
-      <span>Personal Data (PII) Redacted:</span>
-      <span class="telemetry-val" id="val-pii">0 items</span>
-    </div>
-    <div class="telemetry-row">
-      <span>Embedded QR Codes Scanned:</span>
-      <span class="telemetry-val" id="val-qr">0</span>
-    </div>
-    <div class="telemetry-row">
-      <span>Cloud Data Storage:</span>
-      <span class="telemetry-val" style="color:#16A34A;">0 bytes (Air-Gapped)</span>
-    </div>
-  </section>
+      <!-- High Risk / Scam -->
+      <div class="stat-card card-high_risk">
+        <div class="card-top">
+          <span class="card-emoji">🔴</span>
+          <span class="card-tag">SCAM</span>
+        </div>
+        <div class="card-value" id="val-high_risk">0</div>
+        <div class="card-name">Phishing Blocked</div>
+        <div class="card-pct" id="pct-high_risk">0%</div>
+      </div>
+    </section>
 
-  <!-- Quick Actions -->
-  <div class="actions-row">
-    <button class="btn btn-primary" id="btn-open-gmail" type="button">
-      ✉️ Open Gmail
-    </button>
-    <button class="btn btn-secondary" id="btn-reset" type="button" title="Reset counters">
-      🔄 Reset Stats
-    </button>
-  </div>
+    <!-- Privacy & Threat Telemetry -->
+    <section class="telemetry-card">
+      <div class="telemetry-title">
+        <span>🛡️</span> On-Device Privacy &amp; Threat Telemetry
+      </div>
+      <div class="telemetry-row">
+        <span>Active Engine:</span>
+        <span class="telemetry-val" style="color:#2563EB;">Rules + VegaML (Physics)</span>
+      </div>
+      <div class="telemetry-row">
+        <span>Personal Data (PII) Redacted:</span>
+        <span class="telemetry-val" id="val-pii">0 items</span>
+      </div>
+      <div class="telemetry-row">
+        <span>Embedded QR Codes Scanned:</span>
+        <span class="telemetry-val" id="val-qr">0</span>
+      </div>
+      <div class="telemetry-row">
+        <span>Cloud Data Storage:</span>
+        <span class="telemetry-val" style="color:#16A34A;">0 bytes (Air-Gapped)</span>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <div class="actions-row">
+      <button class="btn btn-primary" id="btn-open-gmail" type="button">
+        ✉️ Open Gmail
+      </button>
+      <button class="btn btn-secondary" id="btn-reset" type="button" title="Reset counters">
+        🔄 Reset Stats
+      </button>
+    </div>
+  </main>
+
+  <!-- ================= TAB 2: SENDERS & WHITELIST ================= -->
+  <main class="tab-content" id="panel-senders">
+    <!-- Active Rules Summary Card -->
+    <section class="sender-summary-card">
+      <div class="sender-summary-text">Learned Feedback &amp; Custom Rules:</div>
+      <div class="sender-count-badge" id="val-rule-count">0 Rules</div>
+    </section>
+
+    <!-- Filter Search Box -->
+    <div class="search-box">
+      <input type="text" id="sender-search-input" class="input-field" placeholder="🔍 Filter rules by email or domain..." />
+    </div>
+
+    <!-- Quick Add Sender / Domain Form -->
+    <section class="add-rule-card">
+      <div class="add-rule-title">
+        <span>➕</span> Add Sender or Domain Override
+      </div>
+      <input type="text" id="new-sender-address" class="input-field" placeholder="e.g. news@domain.com or @company.com" />
+      <div class="add-rule-row">
+        <select id="new-sender-verdict" class="select-field" style="flex: 1.2;">
+          <option value="safe">🟢 Safe (Score 0)</option>
+          <option value="promo_clutter">🟡 Promotional</option>
+          <option value="suspicious">🟠 Suspicious</option>
+          <option value="high_risk">🔴 High Risk / Scam</option>
+        </select>
+        <button id="btn-add-rule" class="btn btn-secondary" type="button" style="flex: 0.9;">
+          + Add Rule
+        </button>
+      </div>
+    </section>
+
+    <!-- Rules List View -->
+    <div class="rules-list-container" id="sender-rules-list">
+      <div class="rules-empty-state">
+        No custom rules or learned senders yet.<br>
+        Add a rule above or mark an email directly in Gmail!
+      </div>
+    </div>
+
+    <!-- Clear All Rules Button -->
+    <div class="actions-row">
+      <button class="btn btn-danger" id="btn-clear-rules" type="button">
+        🧹 Clear All Sender Rules
+      </button>
+    </div>
+  </main>
 
   <!-- Footer -->
   <footer class="footer">

@@ -189,6 +189,11 @@ function injectRatiodBanner(targetElement, data) {
 
   const host = document.createElement("div");
   host.id = "ratiod-banner-host";
+  const isDarkTheme = (data && data.theme === "dark") ||
+                      (typeof document !== "undefined" && document.documentElement && document.documentElement.getAttribute("data-ratiod-theme") === "dark");
+  if (isDarkTheme) {
+    host.setAttribute("data-theme", "dark");
+  }
   const shadowRoot = host.attachShadow({ mode: "open" });
 
   const styleElem = document.createElement("style");
@@ -808,6 +813,112 @@ function injectRatiodBanner(targetElement, data) {
       font-size: 11px;
       color: #8A8B5C;
       margin-top: 10px;
+    }
+
+    /* ==========================================================================
+       Dark Mode Adaptive Neo-Brutalist Styling
+       Applies when Gmail theme is dark OR OS prefers dark
+       ========================================================================== */
+    :host([data-theme="dark"]) .ratiod-container,
+    @media (prefers-color-scheme: dark) {
+      .ratiod-container {
+        background-color: #18181B;
+        border-color: #3F3F46;
+        box-shadow: 4px 4px 0px #09090B;
+        color: #F4F4F5;
+      }
+      .ratiod-container.theme-safe {
+        background-color: #052312;
+        border-color: #15803D;
+      }
+      .ratiod-container.theme-promo_clutter {
+        background-color: #272004;
+        border-color: #A16207;
+      }
+      .ratiod-container.theme-suspicious {
+        background-color: #2D1404;
+        border-color: #C2410C;
+      }
+      .ratiod-container.theme-high_risk {
+        background-color: #2D0B0E;
+        border-color: #B91C1C;
+      }
+      .ratiod-summary-card {
+        background-color: #202024;
+        border-color: #3F3F46;
+        box-shadow: 2px 2px 0px #09090B;
+        color: #F4F4F5;
+      }
+      .ratiod-summary-title {
+        color: #F4F4F5;
+      }
+      .ratiod-summary-lead {
+        color: #E4E4E7;
+      }
+      .ratiod-summary-tip {
+        background-color: #27272A;
+        border-left-color: #52525B;
+        color: #D4D4D8;
+      }
+      .ratiod-explanation {
+        border-top-color: #3F3F46;
+        color: #A1A1AA;
+      }
+      .ratiod-explanation-label {
+        background-color: #3F3F46;
+        color: #F4F4F5;
+      }
+      .ratiod-btn {
+        background-color: #27272A;
+        color: #F4F4F5;
+        border-color: #3F3F46;
+        box-shadow: 2px 2px 0px #09090B;
+      }
+      .ratiod-btn:hover {
+        background-color: #3F3F46;
+      }
+      .flag-item {
+        background-color: #27272A;
+        border-color: #3F3F46;
+        color: #F4F4F5;
+      }
+      .flag-peek-res {
+        background-color: #18181B;
+        border-color: #52525B;
+        color: #E4E4E7;
+      }
+      .ratiod-feedback-strip {
+        background-color: #202024;
+        border-color: #3F3F46;
+      }
+      .ratiod-feedback-prompt {
+        color: #F4F4F5;
+      }
+      .ratiod-feedback-sub {
+        color: #A1A1AA;
+      }
+      .ratiod-chip-btn {
+        background-color: #27272A;
+        color: #F4F4F5;
+        border-color: #3F3F46;
+        box-shadow: 1.5px 1.5px 0px #09090B;
+      }
+      .ratiod-chip-btn:hover {
+        background-color: #3F3F46;
+      }
+      .drawer-toggle {
+        background-color: #27272A;
+        color: #F4F4F5;
+        border-color: #3F3F46;
+      }
+      .vega-pill, .diag-row {
+        background-color: #202024;
+        border-color: #3F3F46;
+        color: #E4E4E7;
+      }
+      .privacy-footnote {
+        color: #A1A1AA;
+      }
     }
   `;
   shadowRoot.appendChild(styleElem);
