@@ -198,6 +198,92 @@
       margin-bottom: 12px;
     }
 
+    /* Inbox Quick Triage Card in Popup */
+    .triage-card {
+      background-color: #FFFFFF;
+      border: 2px solid #121212;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 2px 2px 0px #121212;
+      margin-bottom: 12px;
+    }
+
+    .triage-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .triage-card-title {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 800;
+      color: #121212;
+      letter-spacing: 0.5px;
+    }
+
+    .triage-card-hint {
+      font-size: 10px;
+      color: #6B7280;
+      font-weight: 600;
+    }
+
+    .triage-pills-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .triage-filter-btn {
+      flex: 1;
+      min-width: 58px;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 5px 3px;
+      border-radius: 6px;
+      border: 1.5px solid #121212;
+      background-color: #F8F7F2;
+      color: #121212;
+      cursor: pointer;
+      box-shadow: 1.5px 1.5px 0px #121212;
+      text-align: center;
+      transition: all 0.1s ease;
+      white-space: nowrap;
+    }
+
+    .triage-filter-btn:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 0.5px 0.5px 0px #121212;
+    }
+
+    .triage-filter-btn.active {
+      background-color: #121212 !important;
+      color: #FFFFFF !important;
+      box-shadow: 1.5px 1.5px 0px #121212;
+    }
+
+    .triage-filter-btn.btn-risk.active {
+      background-color: #EA3E2B !important;
+      color: #FFFFFF !important;
+    }
+
+    .triage-filter-btn.btn-susp.active {
+      background-color: #E8720C !important;
+      color: #FFFFFF !important;
+    }
+
+    .triage-filter-btn.btn-promo.active {
+      background-color: #FFD23F !important;
+      color: #121212 !important;
+    }
+
+    .triage-filter-btn.btn-safe.active {
+      background-color: #4ADE80 !important;
+      color: #121212 !important;
+    }
+
     .stat-card {
       border: 2px solid #121212;
       border-radius: 10px;
@@ -618,6 +704,7 @@
       }
       .hero-card,
       .telemetry-card,
+      .triage-card,
       .sender-summary-card,
       .add-rule-card,
       .rules-list-container {
@@ -625,6 +712,22 @@
         border-color: #3F3F46;
         box-shadow: 3px 3px 0px #09090B;
         color: #F4F4F5;
+      }
+      .triage-card-title {
+        color: #F4F4F5;
+      }
+      .triage-card-hint {
+        color: #A1A1AA;
+      }
+      .triage-filter-btn {
+        background-color: #202024;
+        border-color: #3F3F46;
+        color: #F4F4F5;
+        box-shadow: 1.5px 1.5px 0px #09090B;
+      }
+      .triage-filter-btn.active {
+        background-color: #3F3F46 !important;
+        color: #FFFFFF !important;
       }
       .hero-label {
         color: #A1A1AA;
@@ -825,6 +928,31 @@
         <div class="card-value" id="val-high_risk">0</div>
         <div class="card-name">Phishing Blocked</div>
         <div class="card-pct" id="pct-high_risk">0%</div>
+      </div>
+    </section>
+
+    <!-- Quick Inbox Triage Filter (Filters active Gmail view) -->
+    <section class="triage-card">
+      <div class="triage-card-header">
+        <span class="triage-card-title">⚡ QUICK INBOX TRIAGE</span>
+        <span class="triage-card-hint">Filter Gmail in 1 click</span>
+      </div>
+      <div class="triage-pills-row">
+        <button class="triage-filter-btn active" data-filter="all" type="button" title="Show all emails">
+          All (<span id="triage-cnt-all">0</span>)
+        </button>
+        <button class="triage-filter-btn btn-risk" data-filter="high_risk" type="button" title="Filter high risk scams">
+          🔴 Risk (<span id="triage-cnt-risk">0</span>)
+        </button>
+        <button class="triage-filter-btn btn-susp" data-filter="suspicious" type="button" title="Filter suspicious emails">
+          🟠 Susp (<span id="triage-cnt-susp">0</span>)
+        </button>
+        <button class="triage-filter-btn btn-promo" data-filter="promo_clutter" type="button" title="Filter promotional clutter">
+          🟡 Promo (<span id="triage-cnt-promo">0</span>)
+        </button>
+        <button class="triage-filter-btn btn-safe" data-filter="safe" type="button" title="Filter verified safe emails">
+          🟢 Safe (<span id="triage-cnt-safe">0</span>)
+        </button>
       </div>
     </section>
 

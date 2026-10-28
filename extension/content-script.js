@@ -580,123 +580,6 @@ function ensureInboxStyles() {
     }
 
     /* ==========================================================================
-       Ratio'd Quick-Filter Inbox Triage Bar
-       ========================================================================== */
-    .ratiod-triage-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      margin: 6px 16px;
-      background-color: #FFFFFF;
-      border: 2px solid #121212;
-      border-radius: 10px;
-      box-shadow: 3px 3px 0px #121212;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      z-index: 4;
-      flex-wrap: wrap;
-    }
-    .triage-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-right: 4px;
-    }
-    .triage-title {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 11px;
-      font-weight: 800;
-      color: #121212;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .triage-pills {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .triage-pill {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: 6px;
-      border: 1.5px solid #121212;
-      background-color: #F8F7F2;
-      color: #121212;
-      cursor: pointer;
-      box-shadow: 1.5px 1.5px 0px #121212;
-      transition: all 0.1s ease;
-      white-space: nowrap;
-    }
-    .triage-pill:hover {
-      transform: translate(1px, 1px);
-      box-shadow: 0.5px 0.5px 0px #121212;
-    }
-    .triage-pill.active {
-      background-color: #121212 !important;
-      color: #FFFFFF !important;
-      box-shadow: 1.5px 1.5px 0px #121212;
-    }
-    .triage-pill.pill-risk.active {
-      background-color: #EA3E2B !important;
-      color: #FFFFFF !important;
-    }
-    .triage-pill.pill-susp.active {
-      background-color: #E8720C !important;
-      color: #FFFFFF !important;
-    }
-    .triage-pill.pill-promo.active {
-      background-color: #FFD23F !important;
-      color: #121212 !important;
-    }
-    .triage-pill.pill-safe.active {
-      background-color: #4ADE80 !important;
-      color: #121212 !important;
-    }
-
-    /* Dark Mode for Triage Bar */
-    html[data-ratiod-theme="dark"] .ratiod-triage-bar {
-      background-color: #18181B;
-      border-color: #3F3F46;
-      box-shadow: 3px 3px 0px #09090B;
-    }
-    html[data-ratiod-theme="dark"] .triage-title {
-      color: #F4F4F5;
-    }
-    html[data-ratiod-theme="dark"] .triage-pill {
-      background-color: #27272A;
-      border-color: #3F3F46;
-      color: #F4F4F5;
-      box-shadow: 1.5px 1.5px 0px #09090B;
-    }
-    html[data-ratiod-theme="dark"] .triage-pill.active {
-      background-color: #3F3F46 !important;
-      color: #F4F4F5 !important;
-    }
-    @media (prefers-color-scheme: dark) {
-      .ratiod-triage-bar {
-        background-color: #18181B;
-        border-color: #3F3F46;
-        box-shadow: 3px 3px 0px #09090B;
-      }
-      .triage-title {
-        color: #F4F4F5;
-      }
-      .triage-pill {
-        background-color: #27272A;
-        border-color: #3F3F46;
-        color: #F4F4F5;
-        box-shadow: 1.5px 1.5px 0px #09090B;
-      }
-      .triage-pill.active {
-        background-color: #3F3F46 !important;
-        color: #F4F4F5 !important;
-      }
-    }
-
-    /* ==========================================================================
        Ratio'd Smart Link Shield Tooltip
        ========================================================================== */
     .ratiod-link-shield {
@@ -1753,6 +1636,11 @@ function triggerStaggeredScan(forceUpdate = true) {
 function executeScanPass(forceUpdate = false) {
   if (document.hidden) return;
   updateThemeDetection();
+
+  // Ensure any previous DOM triage bar is completely removed from Gmail screen
+  const oldTriageBar = document.getElementById("ratiod-triage-bar");
+  if (oldTriageBar) oldTriageBar.remove();
+
   const isEmailOpen = !!document.querySelector(
     ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
   );
@@ -1760,7 +1648,9 @@ function executeScanPass(forceUpdate = false) {
     scanAndAnalyzeGmail();
   }
   scanInboxRows(forceUpdate);
-  injectInboxTriageBar();
+  if (currentTriageFilter && currentTriageFilter !== "all") {
+    applyTriageFilter(currentTriageFilter);
+  }
 }
 
 function escapeHtml(str) {
@@ -1773,113 +1663,82 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------------------
-// Ratio'd Quick-Filter Inbox Triage Bar
+// Ratio'd Inbox Row Triage Filter (Controlled via Popup)
 // ---------------------------------------------------------------------------
 let currentTriageFilter = "all";
 
-function injectInboxTriageBar() {
-  if (typeof document === "undefined" || !document.querySelector || !document.querySelectorAll) return;
-  if (document.querySelector(".a3s, .ii.gt, .adn.ads, [role='main'] .h7")) {
-    const existing = document.getElementById("ratiod-triage-bar");
-    if (existing) existing.remove();
-    return;
-  }
-
-  const rows = document.querySelectorAll("tr.zA");
-  if (!rows || rows.length === 0) {
-    const existing = document.getElementById("ratiod-triage-bar");
-    if (existing) existing.remove();
-    return;
-  }
-
+function getInboxRowCounts() {
+  const rows = (typeof document !== "undefined" && document.querySelectorAll) ? document.querySelectorAll("tr.zA") : [];
   let safeCount = 0;
   let promoCount = 0;
   let suspCount = 0;
   let riskCount = 0;
-  let totalCount = rows.length;
 
-  rows.forEach(r => {
-    const v = r.getAttribute("data-ratiod-verdict");
-    if (v === "high_risk") riskCount++;
-    else if (v === "suspicious") suspCount++;
-    else if (v === "promo_clutter") promoCount++;
-    else safeCount++;
-  });
-
-  let triageBar = document.getElementById("ratiod-triage-bar");
-  if (!triageBar) {
-    triageBar = document.createElement("div");
-    triageBar.id = "ratiod-triage-bar";
-    triageBar.className = "ratiod-triage-bar";
-
-    triageBar.innerHTML = `
-      <div class="triage-header">
-        <span class="triage-title">RATIO'D TRIAGE</span>
-      </div>
-      <div class="triage-pills">
-        <button class="triage-pill pill-all ${currentTriageFilter === 'all' ? 'active' : ''}" data-filter="all" type="button">All (${totalCount})</button>
-        <button class="triage-pill pill-risk ${currentTriageFilter === 'high_risk' ? 'active' : ''}" data-filter="high_risk" type="button">🔴 Risk (${riskCount})</button>
-        <button class="triage-pill pill-susp ${currentTriageFilter === 'suspicious' ? 'active' : ''}" data-filter="suspicious" type="button">🟠 Suspicious (${suspCount})</button>
-        <button class="triage-pill pill-promo ${currentTriageFilter === 'promo_clutter' ? 'active' : ''}" data-filter="promo_clutter" type="button">🟡 Promo (${promoCount})</button>
-        <button class="triage-pill pill-safe ${currentTriageFilter === 'safe' ? 'active' : ''}" data-filter="safe" type="button">🟢 Safe (${safeCount})</button>
-      </div>
-    `;
-
-    if (triageBar.addEventListener) {
-      triageBar.addEventListener("click", (e) => {
-        const btn = e.target && e.target.closest ? e.target.closest(".triage-pill") : null;
-        if (!btn || !btn.getAttribute) return;
-        const filter = btn.getAttribute("data-filter");
-        applyTriageFilter(filter);
-      });
-    }
-
-    const anchor = document.querySelector(".G-atb, .AO .nH, .nH.oy8Mbf, table.F.cf.zT");
-    if (anchor && anchor.parentNode && anchor.parentNode.insertBefore) {
-      anchor.parentNode.insertBefore(triageBar, anchor);
-    }
-  } else if (triageBar.querySelector) {
-    const pAll = triageBar.querySelector(".pill-all");
-    const pRisk = triageBar.querySelector(".pill-risk");
-    const pSusp = triageBar.querySelector(".pill-susp");
-    const pPromo = triageBar.querySelector(".pill-promo");
-    const pSafe = triageBar.querySelector(".pill-safe");
-
-    if (pAll) pAll.textContent = `All (${totalCount})`;
-    if (pRisk) pRisk.textContent = `🔴 Risk (${riskCount})`;
-    if (pSusp) pSusp.textContent = `🟠 Suspicious (${suspCount})`;
-    if (pPromo) pPromo.textContent = `🟡 Promo (${promoCount})`;
-    if (pSafe) pSafe.textContent = `🟢 Safe (${safeCount})`;
-  }
-}
-
-function applyTriageFilter(filter) {
-  currentTriageFilter = filter;
-  const triageBar = document.getElementById("ratiod-triage-bar");
-  if (triageBar) {
-    triageBar.querySelectorAll(".triage-pill").forEach(p => {
-      if (p.getAttribute("data-filter") === filter) {
-        p.classList.add("active");
-      } else {
-        p.classList.remove("active");
-      }
+  if (rows && rows.forEach) {
+    rows.forEach(r => {
+      const v = r.getAttribute ? (r.getAttribute("data-ratiod-verdict") || "safe") : "safe";
+      if (v === "high_risk") riskCount++;
+      else if (v === "suspicious") suspCount++;
+      else if (v === "promo_clutter") promoCount++;
+      else safeCount++;
     });
   }
 
-  const rows = document.querySelectorAll("tr.zA");
+  return {
+    total: rows.length || 0,
+    safe: safeCount,
+    promo: promoCount,
+    suspicious: suspCount,
+    high_risk: riskCount
+  };
+}
+
+function applyTriageFilter(filter) {
+  currentTriageFilter = filter || "all";
+  const rows = (typeof document !== "undefined" && document.querySelectorAll) ? document.querySelectorAll("tr.zA") : [];
+  if (!rows || !rows.forEach) return;
+
   rows.forEach(r => {
-    if (filter === "all") {
-      r.style.removeProperty("display");
-    } else {
-      const v = r.getAttribute("data-ratiod-verdict") || "safe";
-      if (v === filter) {
+    if (!filter || filter === "all") {
+      if (r.style && r.style.removeProperty) {
         r.style.removeProperty("display");
-      } else {
-        r.style.setProperty("display", "none", "important");
+      } else if (r.style) {
+        r.style.display = "";
+      }
+    } else {
+      const v = r.getAttribute ? (r.getAttribute("data-ratiod-verdict") || "safe") : "safe";
+      if (v === filter) {
+        if (r.style && r.style.removeProperty) {
+          r.style.removeProperty("display");
+        } else if (r.style) {
+          r.style.display = "";
+        }
+      } else if (r.style) {
+        if (r.style.setProperty) {
+          r.style.setProperty("display", "none", "important");
+        } else {
+          r.style.display = "none";
+        }
       }
     }
   });
 }
+
+// Listen for triage filtering commands from extension popup
+try {
+  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (!request) return;
+      if (request.action === "ratiod_filter_inbox") {
+        applyTriageFilter(request.filter);
+        if (sendResponse) sendResponse({ success: true, filter: request.filter });
+      } else if (request.action === "ratiod_get_inbox_triage_counts") {
+        const counts = getInboxRowCounts();
+        if (sendResponse) sendResponse({ success: true, counts: counts, activeFilter: currentTriageFilter });
+      }
+    });
+  }
+} catch (e) {}
 
 // ---------------------------------------------------------------------------
 // Ratio'd Smart Link Shield Tooltip

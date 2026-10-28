@@ -141,6 +141,18 @@ function renderStats(stats) {
   const barSusp = document.getElementById("bar-suspicious");
   const barHigh = document.getElementById("bar-high_risk");
 
+  // Default triage counts from stats
+  const elTCntAll = document.getElementById("triage-cnt-all");
+  if (elTCntAll) elTCntAll.textContent = total.toLocaleString();
+  const elTCntRisk = document.getElementById("triage-cnt-risk");
+  if (elTCntRisk) elTCntRisk.textContent = highRisk.toLocaleString();
+  const elTCntSusp = document.getElementById("triage-cnt-susp");
+  if (elTCntSusp) elTCntSusp.textContent = suspicious.toLocaleString();
+  const elTCntPromo = document.getElementById("triage-cnt-promo");
+  if (elTCntPromo) elTCntPromo.textContent = promo.toLocaleString();
+  const elTCntSafe = document.getElementById("triage-cnt-safe");
+  if (elTCntSafe) elTCntSafe.textContent = safe.toLocaleString();
+
   if (total > 0) {
     if (barSafe) barSafe.style.width = `${(safe / total) * 100}%`;
     if (barPromo) barPromo.style.width = `${(promo / total) * 100}%`;
@@ -386,10 +398,75 @@ function clearAllSenderRules() {
 }
 
 // ---------------------------------------------------------------------------
+// Inbox Quick Triage Filter Controller
+// ---------------------------------------------------------------------------
+function updateActiveTriageFilterBtn(filter) {
+  if (typeof document === "undefined") return;
+  const buttons = document.querySelectorAll(".triage-filter-btn");
+  buttons.forEach(btn => {
+    if (btn.getAttribute("data-filter") === filter) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+}
+
+function syncActiveTabTriage() {
+  try {
+    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (!tabs || !tabs[0] || !tabs[0].id) return;
+        chrome.tabs.sendMessage(tabs[0].id, { action: "ratiod_get_inbox_triage_counts" }, (res) => {
+          if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
+          if (!res || !res.counts) return;
+          const c = res.counts;
+          const elAll = document.getElementById("triage-cnt-all");
+          if (elAll && c.total !== undefined) elAll.textContent = c.total;
+          const elRisk = document.getElementById("triage-cnt-risk");
+          if (elRisk && c.high_risk !== undefined) elRisk.textContent = c.high_risk;
+          const elSusp = document.getElementById("triage-cnt-susp");
+          if (elSusp && c.suspicious !== undefined) elSusp.textContent = c.suspicious;
+          const elPromo = document.getElementById("triage-cnt-promo");
+          if (elPromo && c.promo !== undefined) elPromo.textContent = c.promo;
+          const elSafe = document.getElementById("triage-cnt-safe");
+          if (elSafe && c.safe !== undefined) elSafe.textContent = c.safe;
+
+          if (res.activeFilter) {
+            updateActiveTriageFilterBtn(res.activeFilter);
+          }
+        });
+      });
+    }
+  } catch (e) {}
+}
+
+function initTriageFilterButtons() {
+  if (typeof document === "undefined") return;
+  const buttons = document.querySelectorAll(".triage-filter-btn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const filter = btn.getAttribute("data-filter");
+      updateActiveTriageFilterBtn(filter);
+      try {
+        if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (!tabs || !tabs[0] || !tabs[0].id) return;
+            chrome.tabs.sendMessage(tabs[0].id, { action: "ratiod_filter_inbox", filter: filter });
+          });
+        }
+      } catch (e) {}
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Initialization
 // ---------------------------------------------------------------------------
 function initPopup() {
   initTabs();
+  initTriageFilterButtons();
+  syncActiveTabTriage();
 
   // Load telemetry stats
   getStorage(["ratiod_stats"], (res) => {
