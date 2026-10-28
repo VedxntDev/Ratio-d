@@ -266,6 +266,10 @@ function renderSenderList(rules, query) {
   if (countBadge) {
     countBadge.textContent = `${rules.length} ${rules.length === 1 ? 'Rule' : 'Rules'}`;
   }
+  const tabCount = document.getElementById("tab-sender-count");
+  if (tabCount) {
+    tabCount.textContent = rules.length;
+  }
 
   if (filtered.length === 0) {
     container.innerHTML = `
@@ -402,7 +406,7 @@ function clearAllSenderRules() {
 // ---------------------------------------------------------------------------
 function updateActiveTriageFilterBtn(filter) {
   if (typeof document === "undefined") return;
-  const buttons = document.querySelectorAll(".triage-filter-btn");
+  const buttons = document.querySelectorAll(".triage-btn, .show-all-btn");
   buttons.forEach(btn => {
     if (btn.getAttribute("data-filter") === filter) {
       btn.classList.add("active");
@@ -421,16 +425,37 @@ function syncActiveTabTriage() {
           if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
           if (!res || !res.counts) return;
           const c = res.counts;
+
+          if (c.total > 0) {
+            const elTotal = document.getElementById("val-total");
+            if (elTotal) elTotal.textContent = c.total.toLocaleString();
+            const elSub = document.getElementById("hero-subtext");
+            if (elSub) elSub.textContent = `${c.safe} safe · ${c.promo} promo · ${c.suspicious + c.high_risk} flagged threats`;
+          }
+
+          const elSafe = document.getElementById("val-safe");
+          if (elSafe && c.safe !== undefined) elSafe.textContent = c.safe.toLocaleString();
+          const elPromo = document.getElementById("val-promo");
+          if (elPromo && c.promo !== undefined) elPromo.textContent = c.promo.toLocaleString();
+          const elSusp = document.getElementById("val-suspicious");
+          if (elSusp && c.suspicious !== undefined) elSusp.textContent = c.suspicious.toLocaleString();
+          const elRisk = document.getElementById("val-high_risk");
+          if (elRisk && c.high_risk !== undefined) elRisk.textContent = c.high_risk.toLocaleString();
+
           const elAll = document.getElementById("triage-cnt-all");
-          if (elAll && c.total !== undefined) elAll.textContent = c.total;
-          const elRisk = document.getElementById("triage-cnt-risk");
-          if (elRisk && c.high_risk !== undefined) elRisk.textContent = c.high_risk;
-          const elSusp = document.getElementById("triage-cnt-susp");
-          if (elSusp && c.suspicious !== undefined) elSusp.textContent = c.suspicious;
-          const elPromo = document.getElementById("triage-cnt-promo");
-          if (elPromo && c.promo !== undefined) elPromo.textContent = c.promo;
-          const elSafe = document.getElementById("triage-cnt-safe");
-          if (elSafe && c.safe !== undefined) elSafe.textContent = c.safe;
+          if (elAll && c.total !== undefined) elAll.textContent = c.total.toLocaleString();
+
+          // Update multi-segment progress bar based on live counts
+          const barSafe = document.getElementById("bar-safe");
+          const barPromo = document.getElementById("bar-promo");
+          const barSusp = document.getElementById("bar-suspicious");
+          const barHigh = document.getElementById("bar-high_risk");
+          if (c.total > 0) {
+            if (barSafe) barSafe.style.width = `${(c.safe / c.total) * 100}%`;
+            if (barPromo) barPromo.style.width = `${(c.promo / c.total) * 100}%`;
+            if (barSusp) barSusp.style.width = `${(c.suspicious / c.total) * 100}%`;
+            if (barHigh) barHigh.style.width = `${(c.high_risk / c.total) * 100}%`;
+          }
 
           if (res.activeFilter) {
             updateActiveTriageFilterBtn(res.activeFilter);
@@ -443,7 +468,7 @@ function syncActiveTabTriage() {
 
 function initTriageFilterButtons() {
   if (typeof document === "undefined") return;
-  const buttons = document.querySelectorAll(".triage-filter-btn");
+  const buttons = document.querySelectorAll(".triage-btn, .show-all-btn");
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const filter = btn.getAttribute("data-filter");
