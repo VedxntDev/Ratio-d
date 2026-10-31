@@ -587,21 +587,21 @@ function ensureInboxStyles() {
        Ratio'd Smart Link Shield Tooltip
        ========================================================================== */
     .ratiod-link-shield {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background-color: #FFFFFF;
-      border: 2px solid #121212;
-      border-radius: 10px;
-      box-shadow: 4px 4px 0px #121212;
-      color: #121212;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      color: #1F2937;
       padding: 10px 14px;
       min-width: 260px;
       max-width: 420px;
       pointer-events: auto;
-      animation: ratiod-pop 0.12s ease-out;
+      animation: ratiod-pop 0.14s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes ratiod-pop {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
     }
     .shield-header {
       display: flex;
@@ -611,26 +611,26 @@ function ensureInboxStyles() {
       margin-bottom: 6px;
     }
     .shield-title {
-      font-family: ui-monospace, Menlo, monospace;
+      font-family: 'Google Sans', Roboto, sans-serif;
       font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #374151;
     }
     .shield-status {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 9px;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid #121212;
+      font-family: 'Google Sans', Roboto, sans-serif;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 9999px;
       text-transform: uppercase;
     }
     .shield-dest {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 11px;
-      padding: 5px 8px;
-      background-color: #F8F7F2;
-      border: 1.5px dashed #121212;
+      font-family: 'Google Sans', Roboto, sans-serif;
+      font-size: 11.5px;
+      padding: 6px 9px;
+      background-color: #F9FAFB;
+      border: 1px solid #E5E7EB;
       border-radius: 6px;
       margin-bottom: 6px;
       word-break: break-all;
@@ -643,16 +643,16 @@ function ensureInboxStyles() {
       margin-bottom: 2px;
     }
     .shield-dest-url {
-      font-weight: 700;
-      color: #121212;
+      font-weight: 600;
+      color: #111827;
     }
     .shield-warning {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       color: #B91C1C;
       background-color: #FEF2F2;
-      border-left: 3px solid #EA3E2B;
-      padding: 4px 8px;
+      border-left: 3px solid #DC2626;
+      padding: 5px 8px;
       border-radius: 4px;
       margin-bottom: 6px;
       line-height: 1.35;
@@ -667,20 +667,20 @@ function ensureInboxStyles() {
       border-top: 1px dashed #E5E7EB;
     }
     .shield-copy-btn {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
+      font-family: 'Google Sans', Roboto, sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 10px;
       background-color: #FFFFFF;
-      color: #121212;
-      border: 1.5px solid #121212;
-      border-radius: 4px;
+      color: #374151;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 9999px;
       cursor: pointer;
-      box-shadow: 1px 1px 0px #121212;
-      text-transform: uppercase;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: background-color 0.15s ease;
     }
     .shield-copy-btn:hover {
-      background-color: #FACC15;
+      background-color: #F3F4F6;
     }
     .shield-tracking-note {
       font-size: 10px;
@@ -692,12 +692,12 @@ function ensureInboxStyles() {
     html[data-ratiod-theme="dark"] .ratiod-link-shield {
       background-color: #18181B;
       border-color: #3F3F46;
-      box-shadow: 4px 4px 0px #09090B;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       color: #F4F4F5;
     }
     html[data-ratiod-theme="dark"] .shield-dest {
       background-color: #27272A;
-      border-color: #52525B;
+      border-color: #3F3F46;
     }
     html[data-ratiod-theme="dark"] .shield-dest-url {
       color: #F4F4F5;
@@ -714,7 +714,7 @@ function ensureInboxStyles() {
       background-color: #27272A;
       color: #F4F4F5;
       border-color: #3F3F46;
-      box-shadow: 1px 1px 0px #09090B;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     html[data-ratiod-theme="dark"] .shield-copy-btn:hover {
       background-color: #3F3F46;
@@ -726,7 +726,7 @@ function ensureInboxStyles() {
       .ratiod-link-shield {
         background-color: #18181B;
         border-color: #3F3F46;
-        box-shadow: 4px 4px 0px #09090B;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         color: #F4F4F5;
       }
       .shield-dest {
@@ -1842,7 +1842,7 @@ function renderLinkShield(linkElem, displayedText, href, assessment) {
     </div>
     ${assessment.reason && assessment.risk !== 'safe' ? `<div class="shield-warning">${escapeHtml(assessment.reason)}</div>` : ''}
     <div class="shield-footer">
-      <button class="shield-copy-btn" type="button" title="Copy clean link without tracking parameters">[ 📋 COPY CLEAN LINK ]</button>
+      <button class="shield-copy-btn" type="button" title="Copy clean link without tracking parameters">📋 Copy Clean Link</button>
       <span class="shield-tracking-note">${cleanUrl !== href ? 'Tracking cleaned' : 'No tracking params'}</span>
     </div>
   `;
@@ -1873,7 +1873,7 @@ function renderLinkShield(linkElem, displayedText, href, assessment) {
       evt.preventDefault();
       evt.stopPropagation();
       navigator.clipboard.writeText(cleanUrl).then(() => {
-        copyBtn.textContent = "[ ✓ COPIED CLEAN LINK ]";
+        copyBtn.textContent = "✓ Copied Clean Link";
         setTimeout(() => removeLinkShield(), 1200);
       });
     });
