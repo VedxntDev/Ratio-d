@@ -198,12 +198,12 @@ function injectRatiodBanner(targetElement, data) {
 
   const styleElem = document.createElement("style");
   styleElem.textContent = `
-    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
 
     :host {
       all: initial;
       display: block;
-      font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
       margin: 6px 0 10px 0;
       width: 100%;
     }
@@ -213,60 +213,66 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     .ratiod-container {
-      background-color: #F8F9FA;
+      background-color: #FFFFFF;
       border: 1px solid rgba(0, 0, 0, 0.08);
       border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-      color: #202124;
-      padding: 12px 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+      color: #1F2937;
+      padding: 10px 14px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* Ambient Micro-Pill for Safe Emails (Zero Layout Displacement) */
     .ratiod-container.ambient-safe-mode {
       padding: 6px 14px;
       border-radius: 9999px;
-      background-color: #F0FDF4;
-      border: 1px solid #BBF7D0;
-      box-shadow: 0 1px 2px rgba(16, 185, 129, 0.06);
+      background-color: #FFFFFF;
+      border: 1px solid #D1FAE5;
+      border-left: 3.5px solid #10B981;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.06);
       margin: 4px 0 8px 0;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .ratiod-container.ambient-safe-mode.expanded {
       border-radius: 12px;
-      padding: 14px 18px;
+      padding: 12px 16px;
     }
 
+    /* Compact Sleek Mode for Promotional Newsletters */
     .ratiod-container.compact-promo-mode {
-      padding: 8px 16px;
+      padding: 6px 14px;
       border-radius: 12px;
-      background-color: #FEF9C3;
-      border: 1px solid #FDE047;
-      margin: 6px 0 10px 0;
+      background-color: #FFFFFF;
+      border: 1px solid #E0E7FF;
+      border-left: 3.5px solid #6366F1;
+      box-shadow: 0 1px 3px rgba(99, 102, 241, 0.06);
+      margin: 4px 0 8px 0;
     }
 
-    /* Themed backgrounds */
+    /* Themed edge accents */
     .ratiod-container.theme-promo_clutter {
-      background-color: #FEF9C3;
-      border-color: #FDE047;
+      border-left: 3.5px solid #6366F1;
+      border-color: #E0E7FF;
     }
 
     .ratiod-container.theme-safe {
-      background-color: #F0FDF4;
-      border-color: #BBF7D0;
+      border-left: 3.5px solid #10B981;
+      border-color: #D1FAE5;
     }
 
     .ratiod-container.theme-suspicious {
-      background-color: #FFF7ED;
-      border-color: #FDBA74;
+      border-left: 3.5px solid #F59E0B;
+      background-color: #FFFDF7;
+      border-color: #FED7AA;
     }
 
     .ratiod-container.theme-high_risk {
-      background-color: #FEF2F2;
-      border-color: #FCA5A5;
+      border-left: 3.5px solid #EF4444;
+      background-color: #FEF8F8;
+      border-color: #FECACA;
     }
 
     .ratiod-header {
@@ -285,26 +291,26 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     .ratiod-tag {
-      font-family: 'Google Sans', Roboto, -apple-system, sans-serif;
-      font-size: 12px;
+      font-family: inherit;
+      font-size: 11.5px;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 3px 10px;
       border-radius: 9999px;
       border: 1px solid transparent;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.1px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       white-space: nowrap;
     }
 
-    .tag-high_risk { background-color: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
-    .tag-promo_clutter { background-color: #FEF08A; color: #854D0E; border-color: #FACC15; }
-    .tag-suspicious { background-color: #FFEDD5; color: #9A3412; border-color: #FDBA74; }
-    .tag-safe { background-color: #DCFCE7; color: #166534; border-color: #86EFAC; }
-    .tag-auth-spoof { background-color: #FEE2E2; color: #991B1B; border-color: #FCA5A5; font-size: 11px; padding: 3px 8px; }
-    .tag-auth-verified { background-color: #DCFCE7; color: #166534; border-color: #86EFAC; font-size: 11px; padding: 3px 8px; }
-    .tag-auth-unverified { background-color: #F3F4F6; color: #4B5563; border-color: #E5E7EB; font-size: 11px; padding: 3px 8px; }
+    .tag-high_risk { background-color: #FEF2F2; color: #991B1B; border-color: #FECACA; }
+    .tag-promo_clutter { background-color: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
+    .tag-suspicious { background-color: #FFFBEB; color: #92400E; border-color: #FDE68A; }
+    .tag-safe { background-color: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
+    .tag-auth-spoof { background-color: #FEF2F2; color: #991B1B; border-color: #FECACA; font-size: 11px; padding: 2px 7px; }
+    .tag-auth-verified { background-color: #ECFDF5; color: #065F46; border-color: #A7F3D0; font-size: 11px; padding: 2px 7px; }
+    .tag-auth-unverified { background-color: #F3F4F6; color: #4B5563; border-color: #E5E7EB; font-size: 11px; padding: 2px 7px; }
 
     /* Brand mark */
     .ratiod-logo {
@@ -630,22 +636,28 @@ function injectRatiodBanner(targetElement, data) {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
     }
 
-    .ratiod-btn-primary { background-color: #111827; color: #FFFFFF; border-color: #111827; }
-    .ratiod-btn-primary:hover { background-color: #374151; }
-    .ratiod-btn-unsub { background-color: #FEF08A; color: #854D0E; border-color: #FACC15; }
-    .ratiod-btn-unsub:hover { background-color: #FDE047; }
-    .ratiod-btn-spam { background-color: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
-    .ratiod-btn-spam:hover { background-color: #FECACA; }
-
+    .ratiod-btn-primary { background-color: #F3F4F6; color: #1F2937; border-color: #E5E7EB; }
+    .ratiod-btn-primary:hover { background-color: #E5E7EB; color: #111827; }
+    .ratiod-btn-unsub,
     .btn-highlight-unsub {
-      background-color: #F59E0B !important;
+      background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
       color: #FFFFFF !important;
-      font-weight: 700 !important;
+      border: none !important;
+      font-weight: 600 !important;
+      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3) !important;
     }
+    .ratiod-btn-unsub:hover,
+    .btn-highlight-unsub:hover {
+      background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4) !important;
+    }
+    .ratiod-btn-spam { background-color: #FFFFFF; color: #DC2626; border-color: #FCA5A5; }
+    .ratiod-btn-spam:hover { background-color: #FEF2F2; }
     .btn-highlight-spam {
       background-color: #DC2626 !important;
       color: #FFFFFF !important;
-      font-weight: 700 !important;
+      border-color: #DC2626 !important;
+      font-weight: 600 !important;
     }
 
     .ratiod-feedback-strip {
@@ -864,35 +876,39 @@ function injectRatiodBanner(targetElement, data) {
     @media (prefers-color-scheme: dark) {
       .ratiod-container {
         background-color: #18181B;
-        border-color: #3F3F46;
+        border-color: rgba(255, 255, 255, 0.08);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         color: #F4F4F5;
       }
       .ratiod-container.ambient-safe-mode {
-        background-color: #052312;
-        border-color: #15803D;
+        background-color: #18181B;
+        border-color: rgba(255, 255, 255, 0.08);
+        border-left: 3.5px solid #10B981;
         color: #F4F4F5;
       }
       .ratiod-container.compact-promo-mode {
-        background-color: #272004;
-        border-color: #A16207;
+        background-color: #18181B;
+        border-color: rgba(255, 255, 255, 0.08);
+        border-left: 3.5px solid #6366F1;
         color: #F4F4F5;
       }
       .ratiod-container.theme-safe {
-        background-color: #052312;
-        border-color: #15803D;
+        background-color: #18181B;
+        border-left: 3.5px solid #10B981;
       }
       .ratiod-container.theme-promo_clutter {
-        background-color: #272004;
-        border-color: #A16207;
+        background-color: #18181B;
+        border-left: 3.5px solid #6366F1;
       }
       .ratiod-container.theme-suspicious {
-        background-color: #2D1404;
-        border-color: #C2410C;
+        background-color: #18181B;
+        border-left: 3.5px solid #F59E0B;
+        border-color: rgba(245, 158, 11, 0.25);
       }
       .ratiod-container.theme-high_risk {
-        background-color: #2D0B0E;
-        border-color: #B91C1C;
+        background-color: #18181B;
+        border-left: 3.5px solid #EF4444;
+        border-color: rgba(239, 68, 68, 0.25);
       }
       .ratiod-summary-card {
         background-color: #202024;
@@ -1018,8 +1034,8 @@ function injectRatiodBanner(targetElement, data) {
   container.className = "ratiod-container theme-" + (isPromo ? "promo_clutter" : (verdict || "safe")) +
     (isSafe ? " ambient-safe-mode" : (isPromo ? " compact-promo-mode" : ""));
 
-  let displayVerdictLabel = "Safe Email";
-  let verdictEmoji = "🟢";
+  let displayVerdictLabel = "Verified Safe";
+  let verdictEmoji = "🛡️";
   let riskLevelKey = "low";
   let riskLevelText = "LOW RISK";
   let simpleTitle = "Safe & Legitimate Email";
@@ -1044,12 +1060,12 @@ function injectRatiodBanner(targetElement, data) {
     simpleTip = "Do not enter passwords, credit card info, or personal verification codes (OTPs).";
   } else if (verdict === "promo_clutter") {
     displayVerdictLabel = "Promotional Newsletter";
-    verdictEmoji = "🟡";
+    verdictEmoji = "✨";
     riskLevelKey = "promo";
-    riskLevelText = "PROMO / CLUTTER";
-    simpleTitle = "Promotional Marketing / Newsletter";
-    simpleLead = "This email is promotional marketing or a newsletter. It is not dangerous or fraudulent, but it may clutter your inbox.";
-    simpleTip = "Want to stop receiving emails from this sender? Use the One-Click Unsubscribe button below.";
+    riskLevelText = "PROMO";
+    simpleTitle = "Promotional Newsletter";
+    simpleLead = "Legitimate marketing newsletter with clean links and zero security threats.";
+    simpleTip = "Use One-Click Unsubscribe to opt out directly.";
   }
 
   const qrData = data.qr || (window.__latestQrScanResult ? window.__latestQrScanResult : null);
@@ -1060,6 +1076,7 @@ function injectRatiodBanner(targetElement, data) {
   let qrPayload = "";
   let qrDefanged = "";
   let qrKind = "";
+  let hasQrThreat = false;
 
   if (qrData) {
     const rawQrScore = Number(qrData.score !== undefined ? qrData.score : (qrData.risk_score || 0));
@@ -1073,6 +1090,9 @@ function injectRatiodBanner(targetElement, data) {
     qrPayload = qrData.payload || "";
     qrDefanged = qrData.defanged || qrPayload;
     qrKind = qrData.payload_kind || "";
+    if (isHigh || isSuspicious || rawQrScore > 0 || qrFlags.length > 0) {
+      hasQrThreat = true;
+    }
   }
 
   let authBadgeHtml = "";
@@ -1105,17 +1125,20 @@ function injectRatiodBanner(targetElement, data) {
       <div class="ratiod-badge-group">
         <img class="ratiod-logo" src="${escapeHtml(logoSrc)}" alt="" width="22" height="22">
         <span class="ratiod-tag tag-${escapeHtml(verdict)}">${verdictEmoji} ${escapeHtml(displayVerdictLabel)}</span>
-        ${verdict !== 'safe'
-          ? `<button class="ratiod-header-action-btn btn-highlight-safe" id="btn-header-safe" data-feedback="safe" type="button" title="One-click: change tag to SAFE and submit feedback">🛡️ Mark as Safe</button>`
-          : `<button class="ratiod-header-action-btn btn-highlight-unsafe" id="btn-header-unsafe" data-feedback="unsafe" type="button" title="One-click: change tag to UNSAFE and submit feedback">⚠️ Mark as Unsafe</button>`
+        ${isPromo
+          ? `<button class="ratiod-btn ratiod-btn-unsub btn-highlight-unsub ratiod-header-action-btn" id="btn-header-unsub" type="button" title="One-Click Unsubscribe from this newsletter">✨ Unsubscribe</button>`
+          : (verdict !== 'safe'
+              ? `<button class="ratiod-header-action-btn btn-highlight-safe" id="btn-header-safe" data-feedback="safe" type="button" title="One-click: change tag to SAFE and submit feedback">🛡️ Mark as Safe</button>`
+              : ''
+            )
         }
         ${authBadgeHtml}
-        <span class="ratiod-score ratiod-score-mail" title="Mail Security Risk Score"><span class="score-type-badge">MAIL</span><span class="score-number">${escapeHtml(mailScore)}</span><span class="score-denom">/100</span> <span class="score-level-badge level-${escapeHtml(riskLevelKey)}">${escapeHtml(riskLevelText)}</span></span>
-        <span class="ratiod-score ratiod-score-qr ${escapeHtml(qrChipClass)}" id="banner-qr-score" title="QR Security Code Risk Score"><span class="score-type-badge">QR CODE</span><span id="banner-qr-score-val">${escapeHtml(qrScoreText)}</span></span>
+        <span class="ratiod-score ratiod-score-mail" title="Mail Security Risk Score"><span class="score-type-badge">Risk</span><span class="score-number">${escapeHtml(mailScore)}</span><span class="score-denom">/100</span></span>
+        <span class="ratiod-score ratiod-score-qr ${escapeHtml(qrChipClass)}" id="banner-qr-score" style="display: ${hasQrThreat ? 'inline-flex' : 'none'};" title="QR Security Code Risk Score"><span class="score-type-badge">QR</span><span id="banner-qr-score-val">${escapeHtml(qrScoreText)}</span></span>
       </div>
       <div class="ratiod-header-actions">
-        <button class="ratiod-iconbtn" id="btn-collapse" type="button" aria-expanded="${isSafe ? 'false' : 'true'}" aria-controls="ratiod-body" title="${isSafe ? 'Expand analysis' : 'Collapse analysis'}">
-          <span aria-hidden="true">${isSafe ? '&#9662;' : '&#9652;'}</span><span class="sr-only">Collapse analysis</span>
+        <button class="ratiod-iconbtn" id="btn-collapse" type="button" aria-expanded="${(isSafe || isPromo) ? 'false' : 'true'}" aria-controls="ratiod-body" title="${(isSafe || isPromo) ? 'Expand analysis' : 'Collapse analysis'}">
+          <span aria-hidden="true">${(isSafe || isPromo) ? '&#9662;' : '&#9652;'}</span><span class="sr-only">Collapse analysis</span>
         </button>
         <button class="ratiod-iconbtn" id="btn-dismiss" type="button" title="Dismiss Ratio'd for this email">
           <span aria-hidden="true">&#10005;</span><span class="sr-only">Dismiss Ratio'd</span>
@@ -1123,7 +1146,7 @@ function injectRatiodBanner(targetElement, data) {
       </div>
     </div>
 
-    <div class="ratiod-body ${isSafe ? 'collapsed' : ''}" id="ratiod-body">
+    <div class="ratiod-body ${(isSafe || isPromo) ? 'collapsed' : ''}" id="ratiod-body">
       <div class="ratiod-summary-card">
         <div class="ratiod-summary-header">
           <span class="ratiod-summary-icon" aria-hidden="true">${verdictEmoji}</span>
@@ -1133,17 +1156,17 @@ function injectRatiodBanner(targetElement, data) {
             ${simpleTip ? `<div class="ratiod-summary-tip"><strong>💡 Quick Tip:</strong> ${escapeHtml(simpleTip)}</div>` : ''}
           </div>
         </div>
-        <div class="ratiod-explanation"><span class="ratiod-explanation-label">Reason:</span> ${escapeHtml(explanation)}</div>
+        <div class="ratiod-explanation"><span class="ratiod-explanation-label">Analysis:</span> ${escapeHtml(explanation)}</div>
         <div class="ratiod-feedback-strip" id="ratiod-feedback-strip">
           <div class="ratiod-feedback-label-box">
-            <span class="ratiod-feedback-prompt">Wrong verdict or tag?</span>
-            <span class="ratiod-feedback-sub">Click once to change tag &amp; send feedback:</span>
+            <span class="ratiod-feedback-prompt">Help improve Ratio'd:</span>
+            <span class="ratiod-feedback-sub">Change classification with one click:</span>
           </div>
           <div class="ratiod-feedback-chips">
-            <button class="ratiod-chip-btn ${verdict === 'safe' ? 'chip-active' : ''}" type="button" data-feedback="safe" title="One-click: Change tag to Safe and send feedback">🛡️ Mark as Safe</button>
-            <button class="ratiod-chip-btn ${verdict === 'suspicious' ? 'chip-active' : ''}" type="button" data-feedback="suspicious" title="One-click: Change tag to Suspicious and send feedback">🟠 Suspicious</button>
-            <button class="ratiod-chip-btn ${verdict === 'promo_clutter' ? 'chip-active' : ''}" type="button" data-feedback="promo" title="One-click: Change tag to Promotional and send feedback">🟡 Promo</button>
-            <button class="ratiod-chip-btn ${verdict === 'high_risk' ? 'chip-active' : ''}" type="button" data-feedback="unsafe" title="One-click: Change tag to Unsafe / Phishing and send feedback">🔴 Unsafe</button>
+            <button class="ratiod-chip-btn ${verdict === 'safe' ? 'chip-active' : ''}" type="button" data-feedback="safe" title="One-click: Mark as Safe">🛡️ Safe</button>
+            <button class="ratiod-chip-btn ${verdict === 'promo_clutter' ? 'chip-active' : ''}" type="button" data-feedback="promo" title="One-click: Mark as Newsletter">✨ Newsletter</button>
+            <button class="ratiod-chip-btn ${verdict === 'suspicious' ? 'chip-active' : ''}" type="button" data-feedback="suspicious" title="One-click: Mark as Suspicious">🟠 Suspicious</button>
+            <button class="ratiod-chip-btn ${verdict === 'high_risk' ? 'chip-active' : ''}" type="button" data-feedback="unsafe" title="One-click: Mark as Phishing">🔴 Phishing</button>
           </div>
         </div>
         <div class="ratiod-feedback-toast" id="ratiod-feedback-toast" style="display:none;" role="status" aria-live="polite"></div>
@@ -1186,18 +1209,18 @@ function injectRatiodBanner(targetElement, data) {
           </div>
         </details>
 
-        <div class="drawer-section-title" style="margin-top: 14px;">[ 📱 QR SECURITY CODE ANALYSIS ]</div>
+        <div class="drawer-section-title" style="margin-top: 14px;">📱 QR Security Code Analysis</div>
         <div id="drawer-qr-section">
           ${qrData ? `
             <div class="qr-banner-card card-${escapeHtml(qrChipClass.replace('qr-', ''))}">
               <div class="qr-banner-card-header">
-                <div><strong>QR CODE VERDICT:</strong> <span class="ratiod-tag tag-${escapeHtml(qrChipClass.replace('qr-', ''))}">[ ${escapeHtml(qrVerdictLabel)} ]</span></div>
-                <span class="ratiod-score">QR RISK SCORE: ${escapeHtml(qrData.score !== undefined ? qrData.score : 0)}/100</span>
+                <div><strong>QR Code Status:</strong> <span class="ratiod-tag tag-${escapeHtml(qrChipClass.replace('qr-', ''))}">${escapeHtml(qrVerdictLabel)}</span></div>
+                <span class="ratiod-score">QR Risk Score: ${escapeHtml(qrData.score !== undefined ? qrData.score : 0)}/100</span>
               </div>
-              <div class="qr-banner-payload-label">DECODED QR PAYLOAD ${qrKind ? `(${escapeHtml(qrKind)})` : ''}:</div>
+              <div class="qr-banner-payload-label">Decoded QR Payload ${qrKind ? `(${escapeHtml(qrKind)})` : ''}:</div>
               <code class="qr-banner-code">${escapeHtml(qrDefanged || qrPayload)}</code>
-              ${qrPayload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(qrPayload)}">[ &#128269; Safe Peek QR Link ]</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
-              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-top:8px;">DETECTED QR CODE SIGNALS:</div>
+              ${qrPayload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(qrPayload)}">&#128269; Safe Peek QR Link</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-top:8px;">Detected QR Code Signals:</div>
               ${qrFlags.length > 0 ? qrFlags.map(f => `
                 <div class="flag-item" style="margin-top:4px;">
                   <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
@@ -1209,7 +1232,7 @@ function injectRatiodBanner(targetElement, data) {
           `}
         </div>
 
-        <div class="drawer-section-title" style="margin-top: 14px;">[ RECOMMENDED ACTION CHECKLIST ]</div>
+        <div class="drawer-section-title" style="margin-top: 14px;">📋 Recommended Actions</div>
         <ul class="checklist-list">
           ${nextSteps.map(step => `<li><strong>&bull;</strong> ${escapeHtml(step)}</li>`).join('')}
         </ul>
@@ -1237,11 +1260,18 @@ function injectRatiodBanner(targetElement, data) {
 
   const toggleBtn = shadowRoot.getElementById("toggle-drawer");
   const unsubBtn = shadowRoot.getElementById("btn-one-unsub");
+  const headerUnsubBtn = shadowRoot.getElementById("btn-header-unsub");
   const spamBtn = shadowRoot.getElementById("btn-move-spam");
   const drawer = shadowRoot.getElementById("analysis-drawer");
   const collapseBtn = shadowRoot.getElementById("btn-collapse");
   const dismissBtn = shadowRoot.getElementById("btn-dismiss");
   const body = shadowRoot.getElementById("ratiod-body");
+
+  if (headerUnsubBtn && unsubBtn) {
+    headerUnsubBtn.addEventListener("click", () => {
+      unsubBtn.click();
+    });
+  }
 
   if (toggleBtn && drawer) {
     toggleBtn.addEventListener("click", () => {
@@ -1636,11 +1666,20 @@ function injectRatiodBanner(targetElement, data) {
           ? candidate
           : (candidate.querySelector ? (candidate.querySelector('a, button, [role="button"], [role="link"], [act]') || candidate) : candidate);
 
+        function updateUnsubButton(txt, bg) {
+          unsubBtn.textContent = txt;
+          if (bg) unsubBtn.style.backgroundColor = bg;
+          const hBtn = shadowRoot.getElementById("btn-header-unsub");
+          if (hBtn) {
+            hBtn.textContent = txt;
+            if (bg) hBtn.style.backgroundColor = bg;
+          }
+        }
+
         try {
           dispatchElementClick(clickable);
           unsubSuccess = true;
-          unsubBtn.textContent = "[ ✨ UNSUBSCRIBED & CLEANED! ]";
-          unsubBtn.style.backgroundColor = "#8A8B5C";
+          updateUnsubButton("✨ Unsubscribed & Cleaned!", "#10B981");
 
           // Auto-confirm Gmail's native popup dialog if it opens
           setTimeout(() => {
@@ -1684,8 +1723,7 @@ function injectRatiodBanner(targetElement, data) {
           }
 
           unsubSuccess = true;
-          unsubBtn.textContent = "[ ✨ UNSUB LINK OPENED! ]";
-          unsubBtn.style.backgroundColor = "#8A8B5C";
+          updateUnsubButton("✨ Unsubscribe Link Opened!", "#10B981");
         }
       }
 
@@ -1696,17 +1734,14 @@ function injectRatiodBanner(targetElement, data) {
         if (mailtoMatch) {
           window.location.href = `mailto:${mailtoMatch[1]}?subject=Unsubscribe`;
           unsubSuccess = true;
-          unsubBtn.textContent = "[ ✨ UNSUB MAILTO SENT ]";
-          unsubBtn.style.backgroundColor = "#8A8B5C";
+          updateUnsubButton("✨ Unsubscribe Sent!", "#10B981");
         }
       }
 
       if (!unsubSuccess) {
-        unsubBtn.textContent = "[ ⚠️ NO UNSUB LINK FOUND ]";
-        unsubBtn.style.backgroundColor = "#EA3E2B";
+        updateUnsubButton("⚠️ No Unsubscribe Link Found", "#DC2626");
         setTimeout(() => {
-          unsubBtn.textContent = "[ ✨ UNSUBSCRIBE ]";
-          unsubBtn.style.backgroundColor = "#E8720C";
+          updateUnsubButton("✨ Unsubscribe", "");
         }, 3000);
       }
     });
@@ -1719,10 +1754,12 @@ function injectRatiodBanner(targetElement, data) {
       );
       if (gmailSpamBtn) {
         gmailSpamBtn.click();
-        spamBtn.textContent = "[ 🚫 SENT TO SPAM ]";
-        spamBtn.style.backgroundColor = "#8A8B5C";
+        spamBtn.textContent = "🚫 Sent to Spam";
+        spamBtn.style.backgroundColor = "#10B981";
       } else {
-        spamBtn.textContent = "[ 🚫 FLAGGED AS SPAM ]";
+        spamBtn.textContent = "🚫 Flagged as Spam";
+        spamBtn.style.backgroundColor = "#10B981";
+      }
         spamBtn.style.backgroundColor = "#8A8B5C";
       }
     });

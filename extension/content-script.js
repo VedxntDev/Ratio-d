@@ -587,7 +587,7 @@ function ensureInboxStyles() {
        Ratio'd Smart Link Shield Tooltip
        ========================================================================== */
     .ratiod-link-shield {
-      font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Inter', 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background-color: #FFFFFF;
       border: 1px solid rgba(0, 0, 0, 0.12);
       border-radius: 12px;
