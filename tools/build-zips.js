@@ -15,6 +15,8 @@ const { execFileSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
 const EXT_ZIP = path.join(ROOT, "ratiod-extension.zip");
+const FF_ZIP = path.join(ROOT, "ratiod-firefox.zip");
+const FF_XPI = path.join(ROOT, "ratiod-firefox.xpi");
 const FULL_ZIP = path.join(ROOT, "ratiod-full-project.zip");
 const JUNK = /(^|\/)(\.DS_Store|__MACOSOSX|Thumbs\.db)$/;
 
@@ -144,18 +146,27 @@ fs.rmSync(EXT_ZIP, { force: true });
 zipDirectory(EXT_ZIP, stage);
 fs.rmSync(stage, { recursive: true, force: true });
 
+// Packaging for Firefox AMO: both .zip and .xpi (identical MV3 bundle)
+fs.copyFileSync(EXT_ZIP, FF_ZIP);
+fs.copyFileSync(EXT_ZIP, FF_XPI);
+
 // ---- 2. full project zip: every tracked file except the archives ----
 const tracked = sh("git", "ls-files").split("\n").map((s) => s.trim()).filter(Boolean);
 const fullEntries = tracked.filter((f) => !JUNK.test(f) &&
-  f !== "ratiod-extension.zip" && f !== "ratiod-full-project.zip");
+  f !== "ratiod-extension.zip" && f !== "ratiod-full-project.zip" &&
+  f !== "ratiod-firefox.zip" && f !== "ratiod-firefox.xpi");
 
 const extSize = fs.statSync(EXT_ZIP).size;
+const ffZipSize = fs.statSync(FF_ZIP).size;
+const ffXpiSize = fs.statSync(FF_XPI).size;
 const fullSize = build(FULL_ZIP, fullEntries);
 
 console.log(`ratiod-extension.zip    ${String(extSize).padStart(7)} bytes  ${extEntries.length} files`);
+console.log(`ratiod-firefox.zip      ${String(ffZipSize).padStart(7)} bytes  ${extEntries.length} files`);
+console.log(`ratiod-firefox.xpi      ${String(ffXpiSize).padStart(7)} bytes  ${extEntries.length} files`);
 console.log(`ratiod-full-project.zip ${String(fullSize).padStart(7)} bytes  ${fullEntries.length} files`);
 
-// Confirm manifest really is at the root of the extension archive.
+// Confirm manifest really is at the root of the extension archives.
 const root = listZip(EXT_ZIP);
 if (!root.includes("manifest.json")) {
   console.error("manifest.json is not at the archive root - Chrome will refuse this zip");
@@ -165,6 +176,12 @@ if (root.some((f) => JUNK.test(f))) {
   console.error("archive contains OS junk files");
   process.exit(1);
 }
+
+const ffRoot = listZip(FF_ZIP);
+if (!ffRoot.includes("manifest.json") || ffRoot.some((f) => JUNK.test(f))) {
+  console.error("ratiod-firefox.zip is invalid or contains junk files");
+  process.exit(1);
+}
 console.log("manifest.json is at the archive root; no junk files present.");
 
 // Sync to Desktop extension folders if present on user machine
@@ -172,6 +189,8 @@ try {
   const home = process.env.HOME || process.env.USERPROFILE || "";
   const desktopFolder = path.join(home, "Desktop", "ratiod-extension-folder");
   const desktopExt = path.join(home, "Desktop", "ratiod-extension");
+  const desktopDir = path.join(home, "Desktop");
+  const downloadsDir = path.join(home, "Downloads");
 
   const syncDir = (srcDir, destDir) => {
     if (fs.existsSync(destDir)) {
@@ -181,7 +200,14 @@ try {
 
   syncDir(path.join(ROOT, "extension"), desktopFolder);
   syncDir(path.join(ROOT, "extension"), desktopExt);
-  if (fs.existsSync(path.join(home, "Desktop", "ratiod-extension.zip"))) {
-    fs.copyFileSync(EXT_ZIP, path.join(home, "Desktop", "ratiod-extension.zip"));
+  if (fs.existsSync(desktopDir)) {
+    fs.copyFileSync(EXT_ZIP, path.join(desktopDir, "ratiod-extension.zip"));
+    fs.copyFileSync(FF_ZIP, path.join(desktopDir, "ratiod-firefox.zip"));
+    fs.copyFileSync(FF_XPI, path.join(desktopDir, "ratiod-firefox.xpi"));
+  }
+  if (fs.existsSync(downloadsDir)) {
+    fs.copyFileSync(EXT_ZIP, path.join(downloadsDir, "ratiod-extension.zip"));
+    fs.copyFileSync(FF_ZIP, path.join(downloadsDir, "ratiod-firefox.zip"));
+    fs.copyFileSync(FF_XPI, path.join(downloadsDir, "ratiod-firefox.xpi"));
   }
 } catch (e) {}

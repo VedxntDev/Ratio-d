@@ -9,14 +9,23 @@ let cachedSenderRules = [];
 let currentSearchQuery = "";
 
 // ---------------------------------------------------------------------------
-// Chrome Storage Helpers (with fallback for standalone/test environments)
+// Cross-Browser Storage Helpers (Firefox browser.* & Chrome chrome.*)
 // ---------------------------------------------------------------------------
 function getStorage(keys, callback) {
   try {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(keys, (res) => {
-        callback(res || {});
+    const ext = (typeof browser !== "undefined" && browser.storage && browser.storage.local) ? browser.storage.local
+      : ((typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
+    if (ext) {
+      const res = ext.get(keys, (data) => {
+        if (callback) callback(data || {});
       });
+      if (res && typeof res.then === "function") {
+        res.then((data) => {
+          if (callback) callback(data || {});
+        }).catch(() => {
+          if (callback) callback({});
+        });
+      }
       return;
     }
   } catch (e) {}
@@ -37,10 +46,19 @@ function getStorage(keys, callback) {
 
 function setStorage(items, callback) {
   try {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.set(items, () => {
+    const ext = (typeof browser !== "undefined" && browser.storage && browser.storage.local) ? browser.storage.local
+      : ((typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
+    if (ext) {
+      const res = ext.set(items, () => {
         if (callback) callback();
       });
+      if (res && typeof res.then === "function") {
+        res.then(() => {
+          if (callback) callback();
+        }).catch(() => {
+          if (callback) callback();
+        });
+      }
       return;
     }
   } catch (e) {}
@@ -418,11 +436,13 @@ function updateActiveTriageFilterBtn(filter) {
 
 function syncActiveTabTriage() {
   try {
-    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const ext = (typeof browser !== "undefined" && browser.tabs) ? browser
+      : ((typeof chrome !== "undefined" && chrome.tabs) ? chrome : null);
+    if (ext && ext.tabs && ext.tabs.query) {
+      ext.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (!tabs || !tabs[0] || !tabs[0].id) return;
-        chrome.tabs.sendMessage(tabs[0].id, { action: "ratiod_get_inbox_triage_counts" }, (res) => {
-          if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
+        ext.tabs.sendMessage(tabs[0].id, { action: "ratiod_get_inbox_triage_counts" }, (res) => {
+          if (ext.runtime && ext.runtime.lastError) return;
           if (!res || !res.counts) return;
           const c = res.counts;
 
@@ -474,10 +494,12 @@ function initTriageFilterButtons() {
       const filter = btn.getAttribute("data-filter");
       updateActiveTriageFilterBtn(filter);
       try {
-        if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
-          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const ext = (typeof browser !== "undefined" && browser.tabs) ? browser
+          : ((typeof chrome !== "undefined" && chrome.tabs) ? chrome : null);
+        if (ext && ext.tabs && ext.tabs.query) {
+          ext.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (!tabs || !tabs[0] || !tabs[0].id) return;
-            chrome.tabs.sendMessage(tabs[0].id, { action: "ratiod_filter_inbox", filter: filter });
+            ext.tabs.sendMessage(tabs[0].id, { action: "ratiod_filter_inbox", filter: filter });
           });
         }
       } catch (e) {}
@@ -552,8 +574,10 @@ function initPopup() {
   if (btnGmail) {
     btnGmail.addEventListener("click", () => {
       try {
-        if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.create) {
-          chrome.tabs.create({ url: "https://mail.google.com" });
+        const ext = (typeof browser !== "undefined" && browser.tabs) ? browser
+          : ((typeof chrome !== "undefined" && chrome.tabs) ? chrome : null);
+        if (ext && ext.tabs && ext.tabs.create) {
+          ext.tabs.create({ url: "https://mail.google.com" });
           return;
         }
       } catch (e) {}
@@ -582,8 +606,10 @@ function initPopup() {
 
   // Live storage change listener
   try {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
-      chrome.storage.onChanged.addListener((changes, area) => {
+    const ext = (typeof browser !== "undefined" && browser.storage) ? browser
+      : ((typeof chrome !== "undefined" && chrome.storage) ? chrome : null);
+    if (ext && ext.storage && ext.storage.onChanged) {
+      ext.storage.onChanged.addListener((changes, area) => {
         if (area === "local") {
           if (changes.ratiod_stats) {
             renderStats(changes.ratiod_stats.newValue);

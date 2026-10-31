@@ -1016,7 +1016,12 @@ function injectRatiodBanner(targetElement, data) {
 
   let logoSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23EA3E2B'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFFFFF' font-size='28' font-weight='800' font-family='sans-serif'%3ER%3C/text%3E%3C/svg%3E";
   try {
-    if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getURL === "function") {
+    const ext = (typeof browser !== "undefined" && browser.runtime) ? browser
+      : ((typeof chrome !== "undefined" && chrome.runtime) ? chrome : null);
+    if (ext && typeof ext.runtime?.getURL === "function") {
+      const url = ext.runtime.getURL("icons/icon48.png");
+      if (url) logoSrc = url;
+    } else if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getURL === "function") {
       const url = chrome.runtime.getURL("icons/icon48.png");
       if (url) logoSrc = url;
     }
@@ -1306,8 +1311,10 @@ function injectRatiodBanner(targetElement, data) {
     if (hash) keysToOverride.push(hash);
 
     try {
-      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(["ratiod_user_overrides", "ratiod_sender_learning"], (res) => {
+      const ext = (typeof browser !== "undefined" && browser.storage && browser.storage.local) ? browser.storage.local
+        : ((typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
+      if (ext) {
+        ext.get(["ratiod_user_overrides", "ratiod_sender_learning"], (res) => {
           const overrides = (res && res.ratiod_user_overrides) || {};
           const senderLearning = (res && res.ratiod_sender_learning) || {};
           const record = {
@@ -1332,7 +1339,7 @@ function injectRatiodBanner(targetElement, data) {
               updatedAt: Date.now()
             };
           }
-          chrome.storage.local.set({
+          ext.set({
             ratiod_user_overrides: overrides,
             ratiod_sender_learning: senderLearning
           });

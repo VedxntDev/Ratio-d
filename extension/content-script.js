@@ -89,8 +89,10 @@ if (typeof window !== "undefined") {
 
 function syncContinuousLearningMemory() {
   try {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(["ratiod_sender_learning", "ratiod_user_overrides"], (res) => {
+    const ext = (typeof browser !== "undefined" && browser.storage && browser.storage.local) ? browser.storage.local
+      : ((typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
+    if (ext) {
+      ext.get(["ratiod_sender_learning", "ratiod_user_overrides"], (res) => {
         if (res) {
           memSenderLearning = res.ratiod_sender_learning || {};
           memUserOverrides = res.ratiod_user_overrides || {};
@@ -102,8 +104,10 @@ function syncContinuousLearningMemory() {
 syncContinuousLearningMemory();
 
 try {
-  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
-    chrome.storage.onChanged.addListener((changes, area) => {
+  const extStorage = (typeof browser !== "undefined" && browser.storage) ? browser.storage
+    : ((typeof chrome !== "undefined" && chrome.storage) ? chrome.storage : null);
+  if (extStorage && extStorage.onChanged) {
+    extStorage.onChanged.addListener((changes, area) => {
       if (area === "local") {
         if (changes.ratiod_sender_learning) memSenderLearning = changes.ratiod_sender_learning.newValue || {};
         if (changes.ratiod_user_overrides) memUserOverrides = changes.ratiod_user_overrides.newValue || {};
@@ -1023,8 +1027,10 @@ function extractGmailSender(container) {
 
 function recordAnalyticsScan(data, piiCount) {
   try {
-    if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) return;
-    chrome.storage.local.get(["ratiod_stats"], (res) => {
+    const ext = (typeof browser !== "undefined" && browser.storage && browser.storage.local) ? browser.storage.local
+      : ((typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
+    if (!ext) return;
+    ext.get(["ratiod_stats"], (res) => {
       const stats = res && res.ratiod_stats ? res.ratiod_stats : {
         total: 0,
         safe: 0,
@@ -1052,7 +1058,7 @@ function recordAnalyticsScan(data, piiCount) {
 
       stats.pii_redacted = (stats.pii_redacted || 0) + (piiCount || 0);
 
-      chrome.storage.local.set({ ratiod_stats: stats });
+      ext.set({ ratiod_stats: stats });
     });
   } catch (e) {}
 }
@@ -1274,8 +1280,10 @@ function scanAndAnalyzeGmail() {
     ].filter(Boolean);
 
     try {
-      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(["ratiod_user_overrides"], (res) => {
+      const ext = (typeof browser !== "undefined" && browser.storage && browser.storage.local) ? browser.storage.local
+        : ((typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
+      if (ext) {
+        ext.get(["ratiod_user_overrides"], (res) => {
           const overrides = (res && res.ratiod_user_overrides) || {};
           let matchedOverride = null;
           for (const k of overrideLookupKeys) {
@@ -1726,8 +1734,10 @@ function applyTriageFilter(filter) {
 
 // Listen for triage filtering commands from extension popup
 try {
-  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  const extRuntime = (typeof browser !== "undefined" && browser.runtime) ? browser.runtime
+    : ((typeof chrome !== "undefined" && chrome.runtime) ? chrome.runtime : null);
+  if (extRuntime && extRuntime.onMessage) {
+    extRuntime.onMessage.addListener((request, sender, sendResponse) => {
       if (!request) return;
       if (request.action === "ratiod_filter_inbox") {
         applyTriageFilter(request.filter);
