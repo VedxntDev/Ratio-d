@@ -180,7 +180,16 @@ function launchGlitterBurst(shadowRoot, originButton) {
 }
 
 function injectRatiodBanner(targetElement, data) {
-  if (!targetElement) return;
+  if (!targetElement || !document.body.contains(targetElement)) {
+    const candidate = document.querySelector(
+      ".adn.ads:not([style*='display: none']) .ii.gt, .adn.ads:not([style*='display: none']) .a3s, .ii.gt, .a3s.aiL, .a3s"
+    );
+    if (candidate && document.body.contains(candidate)) {
+      targetElement = candidate;
+    } else {
+      return;
+    }
+  }
 
   const existingHost = document.getElementById("ratiod-banner-host");
   if (existingHost) {
@@ -1252,7 +1261,10 @@ function injectRatiodBanner(targetElement, data) {
 
   shadowRoot.appendChild(container);
 
-  if (targetElement.parentElement) {
+  const insertAnchor = targetElement.closest(".ii.gt") || targetElement;
+  if (insertAnchor && insertAnchor.parentElement) {
+    insertAnchor.parentElement.insertBefore(host, insertAnchor);
+  } else if (targetElement.parentElement) {
     targetElement.parentElement.insertBefore(host, targetElement);
   } else {
     targetElement.prepend(host);

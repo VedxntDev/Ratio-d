@@ -1063,15 +1063,59 @@ function recordAnalyticsScan(data, piiCount) {
   } catch (e) {}
 }
 
-function scanAndAnalyzeGmail() {
-  const emailBodyElem = document.querySelector(
-    ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
-  );
-  
-  if (!emailBodyElem) return;
+function getActiveEmailElement() {
+  const doc = (typeof document !== "undefined") ? document : null;
+  if (!doc || typeof doc.querySelectorAll !== "function") return null;
 
+  const main = (typeof doc.querySelector === "function" && doc.querySelector("[role='main']")) || doc;
+  if (!main || typeof main.querySelectorAll !== "function") return null;
+  
+  // 1. In Gmail thread/conversation view, find expanded active message containers
+  const containers = Array.from(main.querySelectorAll(".adn.ads, .gs") || []);
+  const visibleContainers = containers.filter(el => {
+    if (!el) return false;
+    if (doc.body && typeof doc.body.contains === "function" && !doc.body.contains(el)) return false;
+    if (el.style && el.style.display === "none") return false;
+    const style = (typeof window !== "undefined" && typeof window.getComputedStyle === "function") ? window.getComputedStyle(el) : null;
+    if (style && (style.display === "none" || style.visibility === "hidden")) return false;
+    return el.offsetHeight > 0 || el.scrollHeight > 0 || (style && style.display !== "none");
+  });
+
+  if (visibleContainers.length > 0) {
+    const activeCont = visibleContainers[visibleContainers.length - 1];
+    const body = (typeof activeCont.querySelector === "function" && (activeCont.querySelector(".a3s.aiL, .a3s, .ii.gt, .ii") || activeCont)) || activeCont;
+    return { container: activeCont, bodyElem: body };
+  }
+
+  // 2. Visible body element fallback
+  const allBodies = Array.from(main.querySelectorAll(".a3s.aiL, .a3s, .ii.gt, [role='main'] .h7, .gs .ii") || []);
+  for (let i = allBodies.length - 1; i >= 0; i--) {
+    const el = allBodies[i];
+    if (el && (!doc.body || typeof doc.body.contains !== "function" || doc.body.contains(el))) {
+      const style = (typeof window !== "undefined" && typeof window.getComputedStyle === "function") ? window.getComputedStyle(el) : null;
+      if (!style || (style.display !== "none" && style.visibility !== "hidden")) {
+        return { container: (typeof el.closest === "function" && el.closest(".adn.ads, .gs")) || el.parentElement, bodyElem: el };
+      }
+    }
+  }
+
+  // 3. Fallback query
+  if (typeof main.querySelector === "function") {
+    const fallback = main.querySelector(".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, .gs .ii");
+    if (fallback && (!doc.body || typeof doc.body.contains !== "function" || doc.body.contains(fallback))) {
+      return { container: (typeof fallback.closest === "function" && fallback.closest(".adn.ads, .gs")) || fallback.parentElement, bodyElem: fallback };
+    }
+  }
+
+  return null;
+}
+
+function scanAndAnalyzeGmail(forceUpdate = false) {
+  const activeEmail = getActiveEmailElement();
+  if (!activeEmail || !activeEmail.bodyElem) return;
+
+  const emailBodyElem = activeEmail.bodyElem;
   const rawBodyText = emailBodyElem.innerText || "";
-  if (rawBodyText.length < 5) return;
 
   // Extract Subject and Sender from open email header
   const subjectElem = document.querySelector("h2.hP, .ha h2, [data-thread-perm-id] h2, [role='main'] h2, h1.ha, .hP");
@@ -1084,6 +1128,8 @@ function scanAndAnalyzeGmail() {
     ? (senderAddress ? `${senderName} <${senderAddress}>` : senderName)
     : senderAddress;
 
+  if (rawBodyText.length < 3 && !subject && !senderAddress) return;
+
   // Check if Gmail placed this in Spam or shows a quarantine warning
   const spamBanner = document.querySelector(".mE, .b8, div[role='alert'], .a2k");
   const isSpamLocation = isSpamViewActive();
@@ -1095,8 +1141,11 @@ function scanAndAnalyzeGmail() {
   if (subject) fullTextToAnalyze += `Subject: ${subject}\n\n`;
   fullTextToAnalyze += rawBodyText;
 
-  const currentHash = fullTextToAnalyze.substring(0, 100) + fullTextToAnalyze.length;
-  if (lastAnalyzedHash === currentHash) return;
+  const bannerHost = document.getElementById("ratiod-banner-host");
+  const currentHash = (subject || "") + "|" + (senderHeader || "") + "|" + fullTextToAnalyze.substring(0, 100) + fullTextToAnalyze.length;
+  if (!forceUpdate && lastAnalyzedHash === currentHash && bannerHost && document.body.contains(bannerHost)) {
+    return;
+  }
 
   lastAnalyzedHash = currentHash;
 
@@ -1186,8 +1235,15 @@ function scanAndAnalyzeGmail() {
 
     const renderAndPersist = (finalData) => {
       // 2. Inject in-email banner
-      if (window.injectRatiodBanner) {
-        window.injectRatiodBanner(emailBodyElem, finalData);
+      let targetElem = emailBodyElem;
+      if (!targetElem || !document.body.contains(targetElem)) {
+        const refreshed = getActiveEmailElement();
+        if (refreshed && refreshed.bodyElem) {
+          targetElem = refreshed.bodyElem;
+        }
+      }
+      if (targetElem && window.injectRatiodBanner) {
+        window.injectRatiodBanner(targetElem, finalData);
       }
       // 3. Persist authoritative verdict to cache across all subject & thread identifiers
       const keysToSave = [];
@@ -1329,43 +1385,66 @@ function scanAndAnalyzeGmail() {
     uninspected: true
   };
 
+  const cleanSender = extractCleanEmail(senderAddress || senderHeader);
+  const normSubj = subject ? normalizeSubjectKey(subject) : "";
+  const lookupKeys = [
+    subject,
+    subject ? subject.trim().toLowerCase() : "",
+    normSubj,
+    normSubj ? normSubj.slice(0, 30) : "",
+    cleanSender && normSubj ? `${cleanSender}|${normSubj}` : "",
+    cleanSender && subject ? `${cleanSender}|${subject.trim().toLowerCase()}` : "",
+    senderAddress && normSubj ? `${senderAddress}|${normSubj}` : "",
+    window.location.hash ? window.location.hash.replace(/^#/, "") : ""
+  ].filter(Boolean);
+
+  const cachedVerdict = getCachedVerdict(lookupKeys);
+  const instantInitial = cachedVerdict || (window.RatiodFallback ? window.RatiodFallback.analyze(redactedText, "email", authPayload) : {
+    score: 12, verdict: "safe", flags: [], explanation: "Analyzed with offline heuristic.", next_steps: []
+  });
+
+  if (instantInitial) {
+    onAnalysisComplete(instantInitial);
+  }
+
   const payload = {
     text: redactedText,
     channel: "email",
     auth: authPayload,
-    senderAddress: extractCleanEmail(senderAddress || senderHeader) || senderAddress || "",
+    senderAddress: cleanSender || senderAddress || "",
     senderName: senderName || ""
   };
 
-  // 3. Fast direct fetch to local security backend (http://127.0.0.1:3000/analyze) with 600ms timeout
+  // 3. Fast direct fetch to local security backend (http://127.0.0.1:3000/analyze) with 500ms timeout
   fetchWithTimeout("http://127.0.0.1:3000/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
-  }, 600)
+  }, 500)
     .then(res => {
       if (!res.ok) throw new Error("Local HTTP " + res.status);
       return res.json();
     })
     .then(data => onAnalysisComplete(data))
     .catch(() => {
-      // Fallback 1: Try Vercel deployed backend endpoint (1500ms timeout)
+      // Fallback 1: Try Vercel deployed backend endpoint (1200ms timeout)
       fetchWithTimeout("https://ratio-d.vercel.app/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
-      }, 1500)
+      }, 1200)
         .then(res => {
           if (!res.ok) throw new Error("Vercel HTTP " + res.status);
           return res.json();
         })
         .then(data => onAnalysisComplete(data))
         .catch(() => {
-          // Fallback 2: Client-side local fallback engine (instant 0ms)
-          const fb = window.RatiodFallback ? window.RatiodFallback.analyze(redactedText, "email", authPayload) : {
-            score: 12, verdict: "safe", flags: [], explanation: "Analyzed with offline heuristic.", next_steps: []
-          };
-          onAnalysisComplete(fb);
+          if (!instantInitial) {
+            const fb = window.RatiodFallback ? window.RatiodFallback.analyze(redactedText, "email", authPayload) : {
+              score: 12, verdict: "safe", flags: [], explanation: "Analyzed with offline heuristic.", next_steps: []
+            };
+            onAnalysisComplete(fb);
+          }
         });
     });
 }
@@ -1649,11 +1728,10 @@ function executeScanPass(forceUpdate = false) {
   const oldTriageBar = document.getElementById("ratiod-triage-bar");
   if (oldTriageBar) oldTriageBar.remove();
 
-  const isEmailOpen = !!document.querySelector(
-    ".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii"
-  );
+  const activeEmail = getActiveEmailElement();
+  const isEmailOpen = Boolean(activeEmail && activeEmail.bodyElem);
   if (isEmailOpen) {
-    scanAndAnalyzeGmail();
+    scanAndAnalyzeGmail(forceUpdate);
   }
   scanInboxRows(forceUpdate);
   if (currentTriageFilter && currentTriageFilter !== "all") {
@@ -1909,12 +1987,20 @@ observer.observe(document.body, {
 });
 
 // React instantly to Gmail SPA view transitions without 5-second delays
-window.addEventListener("hashchange", () => triggerStaggeredScan(true), { passive: true });
-window.addEventListener("popstate", () => triggerStaggeredScan(true), { passive: true });
+window.addEventListener("hashchange", () => {
+  lastAnalyzedHash = null;
+  triggerStaggeredScan(true);
+}, { passive: true });
+
+window.addEventListener("popstate", () => {
+  lastAnalyzedHash = null;
+  triggerStaggeredScan(true);
+}, { passive: true });
 
 // Listen for back button / view navigation / tab clicks to force instant multi-pass scan
 window.addEventListener("click", (e) => {
   if (e.target && e.target.closest && e.target.closest(".ar6, .T-I-J3, [aria-label*='Back' i], [data-tooltip*='Back' i], [role='tab'], .aKh, .nZ, a[href*='promotions'], a[href*='inbox']")) {
+    lastAnalyzedHash = null;
     triggerStaggeredScan(true);
   }
 }, { passive: true });
