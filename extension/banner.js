@@ -1,10 +1,10 @@
 /**
  * Ratio'd Shadow DOM Banner Injector for Gmail
  * Features:
- * - Isolated Shadow DOM Neo-Brutalist Banner
+ * - Isolated Shadow DOM Developer-Grade Security Banner
  * - One-Click Unsubscribe Engine
- * - Web Audio API Synthesized Sparkle Chime Sound Effect
- * - Glitter & Confetti Canvas Burst Particle System
+ * - Zero-PII Redacted Telemetry & Continuous Sender Learning
+ * - Native Dark Reader & System Dark Mode Compatibility
  */
 
 /** True when the OS requests reduced motion. */
@@ -50,133 +50,39 @@ function extractEmailDomain(email) {
 }
 
 function playUnsubscribeSparkleSound() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const now = ctx.currentTime;
-
-    // Chime Note 1: E5 (659.25Hz)
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(659.25, now);
-    gain1.gain.setValueAtTime(0.15, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.3);
-
-    // Chime Note 2: A5 (880Hz)
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(880, now + 0.08);
-    gain2.gain.setValueAtTime(0.2, now + 0.08);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.08);
-    osc2.stop(now + 0.4);
-
-    // Chime Note 3: C#6 Sparkling Chime (1108.73Hz)
-    const osc3 = ctx.createOscillator();
-    const gain3 = ctx.createGain();
-    osc3.type = "triangle";
-    osc3.frequency.setValueAtTime(1108.73, now + 0.16);
-    gain3.gain.setValueAtTime(0.25, now + 0.16);
-    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-    osc3.connect(gain3);
-    gain3.connect(ctx.destination);
-    osc3.start(now + 0.16);
-    osc3.stop(now + 0.55);
-  } catch (e) {
-    console.log("[AUDIO SYNTH] AudioContext playback:", e);
-  }
+  // Purged: professional developer tools do not synthesize toy chimes
 }
 
-function launchGlitterBurst(shadowRoot, originButton) {
-  const container = shadowRoot.querySelector(".ratiod-container");
-  if (!container) return;
+function launchGlitterBurst() {
+  // Purged: professional developer tools do not trigger toy particle confetti
+}
 
-  const canvas = document.createElement("canvas");
-  canvas.style.position = "absolute";
-  canvas.style.top = "0";
-  canvas.style.left = "0";
-  canvas.style.width = "100%";
-  canvas.style.height = "100%";
-  canvas.style.pointerEvents = "none";
-  canvas.style.zIndex = "999";
-  
-  const rect = container.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = rect.height;
-  container.appendChild(canvas);
-
-  const ctx = canvas.getContext("2d");
-  const particles = [];
-  const colors = ["#F5C242", "#EA3E2B", "#E8720C", "#FFFFFF", "#8A8B5C", "#121212"];
-
-  const btnRect = originButton.getBoundingClientRect();
-  const startX = (btnRect.left + btnRect.width / 2) - rect.left;
-  const startY = (btnRect.top + btnRect.height / 2) - rect.top;
-
-  // Create 45 glitter particles
-  for (let i = 0; i < 45; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 3 + Math.random() * 7;
-    particles.push({
-      x: startX,
-      y: startY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 1.5,
-      size: 4 + Math.random() * 6,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      alpha: 1,
-      rotation: Math.random() * Math.PI,
-      vRot: (Math.random() - 0.5) * 0.2
-    });
-  }
-
-  let startTime = null;
-
-  function animate(timestamp) {
-    if (!startTime) startTime = timestamp;
-    const elapsed = timestamp - startTime;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    let activeParticles = 0;
-    particles.forEach(p => {
-      if (p.alpha > 0) {
-        activeParticles++;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.15; // Gravity
-        p.alpha -= 0.018; // Fade
-        p.rotation += p.vRot;
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = p.color;
-
-        // Draw star/glitter square particle
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-        ctx.restore();
+function isDarkReaderOrDarkMode(data) {
+  try {
+    if (data && data.theme === "dark") return true;
+    if (typeof document !== "undefined") {
+      const htmlEl = document.documentElement;
+      const bodyEl = document.body;
+      if (htmlEl) {
+        if (htmlEl.getAttribute && htmlEl.getAttribute("data-ratiod-theme") === "dark") return true;
+        if (htmlEl.getAttribute && htmlEl.getAttribute("data-theme") === "dark") return true;
+        if (htmlEl.classList && htmlEl.classList.contains && htmlEl.classList.contains("dark")) return true;
+        if (htmlEl.hasAttribute && (htmlEl.hasAttribute("data-darkreader-scheme") || htmlEl.hasAttribute("data-darkreader-mode"))) return true;
+        if (htmlEl.getAttribute && htmlEl.getAttribute("data-darkreader-scheme") === "dark") return true;
       }
-    });
-
-    if (activeParticles > 0 && elapsed < 1500) {
-      requestAnimationFrame(animate);
-    } else {
-      canvas.remove();
+      if (bodyEl) {
+        if (bodyEl.getAttribute && bodyEl.getAttribute("data-theme") === "dark") return true;
+        if (bodyEl.classList && (bodyEl.classList.contains("dark") || bodyEl.classList.contains("aAU"))) return true;
+      }
+      if (typeof document.querySelector === "function" && document.querySelector('style.darkreader, meta[name="darkreader"]')) {
+        return true;
+      }
     }
-  }
-
-  requestAnimationFrame(animate);
+    if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return true;
+    }
+  } catch (e) {}
+  return false;
 }
 
 function injectRatiodBanner(targetElement, data) {
@@ -189,23 +95,78 @@ function injectRatiodBanner(targetElement, data) {
 
   const host = document.createElement("div");
   host.id = "ratiod-banner-host";
-  const isDarkTheme = (data && data.theme === "dark") ||
-                      (typeof document !== "undefined" && document.documentElement && document.documentElement.getAttribute("data-ratiod-theme") === "dark");
+  const isDarkTheme = isDarkReaderOrDarkMode(data);
   if (isDarkTheme) {
     host.setAttribute("data-theme", "dark");
+    host.setAttribute("data-darkreader", "true");
   }
   const shadowRoot = host.attachShadow({ mode: "open" });
 
+  if (typeof MutationObserver !== "undefined" && typeof document !== "undefined" && document.documentElement) {
+    try {
+      const themeObs = new MutationObserver(() => {
+        const darkNow = isDarkReaderOrDarkMode(data);
+        if (darkNow) {
+          host.setAttribute("data-theme", "dark");
+          host.setAttribute("data-darkreader", "true");
+        } else {
+          host.removeAttribute("data-darkreader");
+          if (data && data.theme === "dark") {
+            host.setAttribute("data-theme", "dark");
+          } else {
+            host.removeAttribute("data-theme");
+          }
+        }
+      });
+      themeObs.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-darkreader-scheme", "data-darkreader-mode", "data-ratiod-theme", "class"]
+      });
+    } catch (e) {}
+  }
+
   const styleElem = document.createElement("style");
   styleElem.textContent = `
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
 
     :host {
       all: initial;
       display: block;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-      margin: 6px 0 10px 0;
+      color-scheme: light dark;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 4px 0 8px 0;
       width: 100%;
+      --rd-bg: #FFFFFF;
+      --rd-surface: #F8FAFC;
+      --rd-surface-card: #FFFFFF;
+      --rd-surface-subtle: #F1F5F9;
+      --rd-border: rgba(15, 23, 42, 0.08);
+      --rd-border-subtle: rgba(15, 23, 42, 0.05);
+      --rd-text-primary: #0F172A;
+      --rd-text-secondary: #475569;
+      --rd-text-muted: #64748B;
+      --rd-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      /* Semantic status tokens - Light mode */
+      --rd-safe-bg: rgba(16, 185, 129, 0.08);
+      --rd-safe-border: rgba(16, 185, 129, 0.25);
+      --rd-safe-text: #065F46;
+      --rd-safe-dot: #10B981;
+
+      --rd-promo-bg: rgba(99, 102, 241, 0.08);
+      --rd-promo-border: rgba(99, 102, 241, 0.25);
+      --rd-promo-text: #4338CA;
+      --rd-promo-dot: #6366F1;
+
+      --rd-susp-bg: rgba(245, 158, 11, 0.08);
+      --rd-susp-border: rgba(245, 158, 11, 0.25);
+      --rd-susp-text: #92400E;
+      --rd-susp-dot: #F59E0B;
+
+      --rd-threat-bg: rgba(239, 68, 68, 0.08);
+      --rd-threat-border: rgba(239, 68, 68, 0.25);
+      --rd-threat-text: #991B1B;
+      --rd-threat-dot: #EF4444;
     }
 
     * {
@@ -213,66 +174,56 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     .ratiod-container {
-      background-color: #FFFFFF;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-      color: #1F2937;
-      padding: 10px 14px;
+      background-color: var(--rd-bg);
+      border: 1px solid var(--rd-border);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      color: var(--rd-text-primary);
+      padding: 8px 12px;
       position: relative;
       overflow: hidden;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, border-color 0.15s ease;
     }
 
-    /* Ambient Micro-Pill for Safe Emails (Zero Layout Displacement) */
+    /* Ambient Micro-Pill for Safe Emails */
     .ratiod-container.ambient-safe-mode {
-      padding: 6px 14px;
-      border-radius: 9999px;
-      background-color: #FFFFFF;
-      border: 1px solid #D1FAE5;
-      border-left: 3.5px solid #10B981;
-      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.06);
-      margin: 4px 0 8px 0;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 5px 12px;
+      border-radius: 6px;
+      background-color: var(--rd-bg);
+      border: 1px solid var(--rd-border);
+      border-left: 3px solid var(--rd-safe-dot);
+      box-shadow: 0 1px 2px rgba(16, 185, 129, 0.04);
+      margin: 3px 0 6px 0;
     }
 
     .ratiod-container.ambient-safe-mode.expanded {
-      border-radius: 12px;
-      padding: 12px 16px;
+      border-radius: 8px;
+      padding: 10px 14px;
     }
 
     /* Compact Sleek Mode for Promotional Newsletters */
     .ratiod-container.compact-promo-mode {
-      padding: 6px 14px;
-      border-radius: 12px;
-      background-color: #FFFFFF;
-      border: 1px solid #E0E7FF;
-      border-left: 3.5px solid #6366F1;
-      box-shadow: 0 1px 3px rgba(99, 102, 241, 0.06);
-      margin: 4px 0 8px 0;
+      padding: 5px 12px;
+      border-radius: 6px;
+      background-color: var(--rd-bg);
+      border: 1px solid var(--rd-border);
+      border-left: 3px solid var(--rd-promo-dot);
+      box-shadow: 0 1px 2px rgba(99, 102, 241, 0.04);
+      margin: 3px 0 6px 0;
     }
 
     /* Themed edge accents */
-    .ratiod-container.theme-promo_clutter {
-      border-left: 3.5px solid #6366F1;
-      border-color: #E0E7FF;
-    }
-
     .ratiod-container.theme-safe {
-      border-left: 3.5px solid #10B981;
-      border-color: #D1FAE5;
+      border-left: 3px solid var(--rd-safe-dot);
     }
-
+    .ratiod-container.theme-promo_clutter {
+      border-left: 3px solid var(--rd-promo-dot);
+    }
     .ratiod-container.theme-suspicious {
-      border-left: 3.5px solid #F59E0B;
-      background-color: #FFFDF7;
-      border-color: #FED7AA;
+      border-left: 3px solid var(--rd-susp-dot);
     }
-
     .ratiod-container.theme-high_risk {
-      border-left: 3.5px solid #EF4444;
-      background-color: #FEF8F8;
-      border-color: #FECACA;
+      border-left: 3px solid var(--rd-threat-dot);
     }
 
     .ratiod-header {
@@ -280,46 +231,125 @@ function injectRatiodBanner(targetElement, data) {
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .ratiod-badge-group {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     .ratiod-tag {
       font-family: inherit;
-      font-size: 11.5px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
       border: 1px solid transparent;
-      letter-spacing: 0.1px;
+      letter-spacing: 0.2px;
       display: inline-flex;
       align-items: center;
       gap: 5px;
       white-space: nowrap;
+      line-height: 1.3;
     }
 
-    .tag-high_risk { background-color: #FEF2F2; color: #991B1B; border-color: #FECACA; }
-    .tag-promo_clutter { background-color: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
-    .tag-suspicious { background-color: #FFFBEB; color: #92400E; border-color: #FDE68A; }
-    .tag-safe { background-color: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
-    .tag-auth-spoof { background-color: #FEF2F2; color: #991B1B; border-color: #FECACA; font-size: 11px; padding: 2px 7px; }
-    .tag-auth-verified { background-color: #ECFDF5; color: #065F46; border-color: #A7F3D0; font-size: 11px; padding: 2px 7px; }
-    .tag-auth-unverified { background-color: #F3F4F6; color: #4B5563; border-color: #E5E7EB; font-size: 11px; padding: 2px 7px; }
+    .status-dot-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
 
-    /* Brand mark */
+    .tag-safe {
+      background-color: var(--rd-safe-bg);
+      color: var(--rd-safe-text);
+      border-color: var(--rd-safe-border);
+    }
+    .tag-safe .status-dot-indicator { background-color: var(--rd-safe-dot); }
+
+    .tag-promo_clutter {
+      background-color: var(--rd-promo-bg);
+      color: var(--rd-promo-text);
+      border-color: var(--rd-promo-border);
+    }
+    .tag-promo_clutter .status-dot-indicator { background-color: var(--rd-promo-dot); }
+
+    .tag-suspicious {
+      background-color: var(--rd-susp-bg);
+      color: var(--rd-susp-text);
+      border-color: var(--rd-susp-border);
+    }
+    .tag-suspicious .status-dot-indicator { background-color: var(--rd-susp-dot); }
+
+    .tag-high_risk {
+      background-color: var(--rd-threat-bg);
+      color: var(--rd-threat-text);
+      border-color: var(--rd-threat-border);
+    }
+    .tag-high_risk .status-dot-indicator { background-color: var(--rd-threat-dot); }
+
+    .tag-auth-spoof {
+      background-color: var(--rd-threat-bg);
+      color: var(--rd-threat-text);
+      border-color: var(--rd-threat-border);
+      font-family: var(--rd-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .tag-auth-verified {
+      background-color: var(--rd-safe-bg);
+      color: var(--rd-safe-text);
+      border-color: var(--rd-safe-border);
+      font-family: var(--rd-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .tag-auth-unverified {
+      background-color: var(--rd-surface-subtle);
+      color: var(--rd-text-muted);
+      border-color: var(--rd-border);
+      font-family: var(--rd-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .tag-user-safe {
+      background-color: var(--rd-safe-bg) !important;
+      color: var(--rd-safe-text) !important;
+      border-color: var(--rd-safe-border) !important;
+    }
+    .tag-user-promo {
+      background-color: var(--rd-promo-bg) !important;
+      color: var(--rd-promo-text) !important;
+      border-color: var(--rd-promo-border) !important;
+    }
+    .tag-user-suspicious {
+      background-color: var(--rd-susp-bg) !important;
+      color: var(--rd-susp-text) !important;
+      border-color: var(--rd-susp-border) !important;
+    }
+    .tag-user-unsafe {
+      background-color: var(--rd-threat-bg) !important;
+      color: var(--rd-threat-text) !important;
+      border-color: var(--rd-threat-border) !important;
+    }
+
     .ratiod-logo {
-      border-radius: 6px;
+      border-radius: 4px;
       flex: 0 0 auto;
       display: block;
     }
 
-    /* Visually hidden text for screen readers on icon-only buttons. */
     .sr-only {
       position: absolute;
       width: 1px; height: 1px;
@@ -330,72 +360,71 @@ function injectRatiodBanner(targetElement, data) {
       border: 0;
     }
 
-    .ratiod-header-actions { display: flex; align-items: center; gap: 6px; }
+    .ratiod-header-actions { display: flex; align-items: center; gap: 4px; }
 
     .ratiod-iconbtn {
       display: inline-grid;
       place-items: center;
-      width: 24px; height: 24px;
+      width: 22px; height: 22px;
       padding: 0;
-      border-radius: 9999px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      background-color: #FFFFFF;
-      color: #374151;
-      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid var(--rd-border);
+      background-color: var(--rd-surface-card);
+      color: var(--rd-text-secondary);
+      font-size: 11px;
       line-height: 1;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      transition: background-color 0.12s ease, border-color 0.12s ease;
     }
-    .ratiod-iconbtn:hover { background-color: #F3F4F6; }
+    .ratiod-iconbtn:hover {
+      background-color: var(--rd-surface-subtle);
+      color: var(--rd-text-primary);
+    }
     .ratiod-iconbtn:focus-visible,
     .ratiod-btn:focus-visible,
     .ratiod-cred:focus-visible {
-      outline: 2px solid #EA3E2B;
-      outline-offset: 2px;
+      outline: 2px solid var(--rd-text-primary);
+      outline-offset: 1px;
     }
 
-    /* Collapsed state: keep the score visible, hide the advice + actions. */
     .ratiod-body.collapsed { display: none; }
 
-    /* Author credit, mirroring the site footer. */
     .ratiod-credit {
-      margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 10.5px;
-      color: #6B7280;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid var(--rd-border-subtle);
+      font-size: 10px;
+      color: var(--rd-text-muted);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       flex-wrap: wrap;
     }
-    .ratiod-cred { color: #1F2937; font-weight: 600; text-decoration: underline; }
-    .ratiod-cred:hover { color: #EA3E2B; }
+    .ratiod-cred { color: var(--rd-text-secondary); font-weight: 500; text-decoration: underline; }
+    .ratiod-cred:hover { color: var(--rd-text-primary); }
 
-    /* Respect the OS "reduce motion" setting: no confetti, no sound surprises. */
     @media (prefers-reduced-motion: reduce) {
       .ratiod-container, .ratiod-btn { transition: none; }
     }
 
     .ratiod-score {
-      font-family: 'Google Sans', Roboto, -apple-system, sans-serif;
-      font-size: 11.5px;
+      font-family: var(--rd-mono);
+      font-size: 11px;
       font-weight: 600;
-      background-color: #FFFFFF;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      padding: 3px 8px;
-      border-radius: 9999px;
+      background-color: var(--rd-surface-card);
+      border: 1px solid var(--rd-border);
+      padding: 2px 7px;
+      border-radius: 4px;
       display: inline-flex;
       align-items: center;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-      gap: 5px;
+      gap: 4px;
       white-space: nowrap;
+      color: var(--rd-text-primary);
     }
 
     .ratiod-score-mail {
-      background-color: #FFFFFF;
-      color: #1F2937;
+      background-color: var(--rd-surface-card);
+      color: var(--rd-text-primary);
     }
 
     .score-type-badge {
@@ -403,101 +432,82 @@ function injectRatiodBanner(targetElement, data) {
       font-size: 9px;
       font-weight: 700;
       letter-spacing: 0.3px;
-      padding: 1px 5px;
-      border-radius: 4px;
-      background: #F3F4F6;
-      color: #374151;
+      color: var(--rd-text-muted);
       text-transform: uppercase;
       vertical-align: middle;
     }
 
     .score-number {
-      font-size: 13px;
-      font-weight: 800;
-      color: #111827;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--rd-text-primary);
     }
 
     .score-denom {
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #6B7280;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--rd-text-muted);
     }
 
     .score-level-badge {
       font-size: 9px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 9999px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
       text-transform: uppercase;
     }
-    .level-low { background-color: #DCFCE7; color: #166534; }
-    .level-promo { background-color: #FEF08A; color: #854D0E; }
-    .level-med { background-color: #FFEDD5; color: #9A3412; }
-    .level-high { background-color: #FEE2E2; color: #991B1B; }
+    .level-low { background-color: var(--rd-safe-bg); color: var(--rd-safe-text); }
+    .level-promo { background-color: var(--rd-promo-bg); color: var(--rd-promo-text); }
+    .level-med { background-color: var(--rd-susp-bg); color: var(--rd-susp-text); }
+    .level-high { background-color: var(--rd-threat-bg); color: var(--rd-threat-text); }
 
     .ratiod-score-qr {
-      background-color: #FFFFFF;
-      color: #1F2937;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      background-color: var(--rd-surface-card);
+      color: var(--rd-text-primary);
     }
-
     .ratiod-score-qr.qr-high_risk, .ratiod-score-qr.qr-malicious {
-      background-color: #FEE2E2;
-      color: #991B1B;
-      border-color: #FCA5A5;
+      background-color: var(--rd-threat-bg);
+      color: var(--rd-threat-text);
+      border-color: var(--rd-threat-border);
     }
-
     .ratiod-score-qr.qr-suspicious {
-      background-color: #FFEDD5;
-      color: #9A3412;
-      border-color: #FDBA74;
+      background-color: var(--rd-susp-bg);
+      color: var(--rd-susp-text);
+      border-color: var(--rd-susp-border);
     }
-
     .ratiod-score-qr.qr-safe {
-      background-color: #DCFCE7;
-      color: #166534;
-      border-color: #86EFAC;
+      background-color: var(--rd-safe-bg);
+      color: var(--rd-safe-text);
+      border-color: var(--rd-safe-border);
     }
-
     .ratiod-score-qr.qr-none {
-      background-color: #FFFFFF;
-      color: #6B7280;
-    }
-
-    .ratiod-score-qr.qr-high_risk .score-type-badge,
-    .ratiod-score-qr.qr-malicious .score-type-badge {
-      background: #FFFFFF;
-      color: #DC2626;
-      border-color: #FCA5A5;
+      color: var(--rd-text-muted);
     }
 
     .drawer-sub-heading {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      color: #4A4741;
-      margin: 4px 0 8px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-family: var(--rd-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--rd-text-muted);
+      margin: 3px 0 6px 0;
+      letter-spacing: 0.3px;
     }
 
     .qr-banner-card {
-      background: #FFFFFF;
-      border: 1.5px solid #121212;
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin: 6px 0 10px 0;
-      box-shadow: 2px 2px 0 #121212;
+      background: var(--rd-surface);
+      border: 1px solid var(--rd-border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin: 6px 0;
     }
-
     .qr-banner-card.card-high_risk, .qr-banner-card.card-malicious {
-      border-left: 6px solid #EA3E2B;
+      border-left: 3px solid var(--rd-threat-dot);
     }
     .qr-banner-card.card-suspicious {
-      border-left: 6px solid #E8720C;
+      border-left: 3px solid var(--rd-susp-dot);
     }
     .qr-banner-card.card-safe {
-      border-left: 6px solid #9BE86D;
+      border-left: 3px solid var(--rd-safe-dot);
     }
 
     .qr-banner-card-header {
@@ -510,49 +520,41 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     .qr-banner-payload-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 800;
-      color: #121212;
+      font-family: var(--rd-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--rd-text-muted);
       text-transform: uppercase;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .qr-banner-code {
       display: block;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
+      font-family: var(--rd-mono);
+      font-size: 11px;
       word-break: break-all;
-      background: #F8F7F2;
-      border: 1.5px dashed #121212;
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin: 6px 0;
-      color: #121212;
+      background: var(--rd-surface-card);
+      border: 1px dashed var(--rd-border);
+      padding: 5px 8px;
+      border-radius: 4px;
+      margin: 4px 0;
+      color: var(--rd-text-primary);
     }
 
-    .ratiod-body { margin-top: 12px; }
+    .ratiod-body { margin-top: 8px; }
 
     .ratiod-summary-card {
-      background-color: #FFFFFF;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 10px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-      padding: 12px 14px;
-      margin-top: 8px;
+      background-color: var(--rd-surface);
+      border: 1px solid var(--rd-border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-top: 6px;
     }
 
     .ratiod-summary-header {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-    }
-
-    .ratiod-summary-icon {
-      font-size: 20px;
-      line-height: 1;
-      flex-shrink: 0;
-      margin-top: 1px;
+      gap: 8px;
     }
 
     .ratiod-summary-content {
@@ -560,104 +562,153 @@ function injectRatiodBanner(targetElement, data) {
     }
 
     .ratiod-summary-title {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 3px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--rd-text-primary);
+      margin-bottom: 2px;
+      line-height: 1.3;
     }
 
     .ratiod-summary-lead {
-      font-size: 13px;
-      line-height: 1.5;
-      color: #4B5563;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--rd-text-secondary);
       font-weight: 400;
     }
 
     .ratiod-summary-tip {
       margin-top: 6px;
-      padding: 6px 10px;
-      background-color: #F9FAFB;
-      border-left: 3px solid #16A34A;
+      padding: 5px 8px;
+      background-color: var(--rd-surface-card);
+      border-left: 2.5px solid var(--rd-safe-dot);
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 11.5px;
       line-height: 1.4;
-      color: #374151;
+      color: var(--rd-text-secondary);
     }
 
     .ratiod-explanation {
-      margin-top: 8px;
-      padding-top: 6px;
-      border-top: 1px dashed #E5E7EB;
-      font-size: 12px;
-      line-height: 1.5;
-      color: #4B5563;
-      font-weight: 400;
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 1px dashed var(--rd-border);
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: var(--rd-text-secondary);
     }
 
     .ratiod-explanation-label {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 10.5px;
-      font-weight: 700;
+      font-family: var(--rd-mono);
+      font-size: 10px;
+      font-weight: 600;
       text-transform: uppercase;
-      background-color: #F3F4F6;
-      color: #374151;
-      padding: 1px 6px;
-      border-radius: 9999px;
-      margin-right: 5px;
+      background-color: var(--rd-surface-subtle);
+      color: var(--rd-text-muted);
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 4px;
     }
 
     .ratiod-actions {
       display: flex;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 6px;
+      margin-top: 8px;
       flex-wrap: wrap;
     }
 
     .ratiod-btn {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 9999px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      background-color: #FFFFFF;
-      color: #374151;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 5px 11px;
+      border-radius: 6px;
+      border: 1px solid var(--rd-border);
+      background-color: var(--rd-surface-card);
+      color: var(--rd-text-primary);
       cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      transition: all 0.12s ease;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
+      line-height: 1.2;
     }
 
     .ratiod-btn:hover {
-      background-color: #F3F4F6;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+      background-color: var(--rd-surface-subtle);
+      border-color: var(--rd-border);
     }
 
-    .ratiod-btn-primary { background-color: #F3F4F6; color: #1F2937; border-color: #E5E7EB; }
-    .ratiod-btn-primary:hover { background-color: #E5E7EB; color: #111827; }
+    .ratiod-btn-primary {
+      background-color: var(--rd-surface-subtle);
+      color: var(--rd-text-primary);
+    }
+    .ratiod-btn-primary:hover {
+      filter: brightness(0.97);
+    }
+
     .ratiod-btn-unsub,
     .btn-highlight-unsub {
-      background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
-      color: #FFFFFF !important;
-      border: none !important;
+      background-color: var(--rd-promo-bg) !important;
+      color: var(--rd-promo-text) !important;
+      border: 1px solid var(--rd-promo-border) !important;
       font-weight: 600 !important;
-      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3) !important;
     }
     .ratiod-btn-unsub:hover,
     .btn-highlight-unsub:hover {
-      background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
-      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4) !important;
+      filter: brightness(0.95);
     }
-    .ratiod-btn-spam { background-color: #FFFFFF; color: #DC2626; border-color: #FCA5A5; }
-    .ratiod-btn-spam:hover { background-color: #FEF2F2; }
+
+    .ratiod-btn-spam {
+      background-color: transparent;
+      color: var(--rd-threat-text);
+      border-color: var(--rd-threat-border);
+    }
+    .ratiod-btn-spam:hover {
+      background-color: var(--rd-threat-bg);
+    }
     .btn-highlight-spam {
-      background-color: #DC2626 !important;
-      color: #FFFFFF !important;
-      border-color: #DC2626 !important;
+      background-color: var(--rd-threat-bg) !important;
+      color: var(--rd-threat-text) !important;
+      border-color: var(--rd-threat-border) !important;
       font-weight: 600 !important;
+    }
+
+    .btn-highlight-safe {
+      background-color: var(--rd-safe-bg) !important;
+      color: var(--rd-safe-text) !important;
+      border-color: var(--rd-safe-border) !important;
+      font-weight: 600 !important;
+    }
+    .btn-highlight-unsafe {
+      background-color: var(--rd-threat-bg) !important;
+      color: var(--rd-threat-text) !important;
+      border-color: var(--rd-threat-border) !important;
+      font-weight: 600 !important;
+    }
+
+    .ratiod-header-action-btn {
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--rd-border);
+      cursor: pointer;
+      transition: all 0.12s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 4px;
+      line-height: 1.2;
+    }
+    .ratiod-header-action-btn.btn-highlight-safe {
+      background-color: var(--rd-safe-bg);
+      color: var(--rd-safe-text);
+      border-color: var(--rd-safe-border);
+    }
+    .ratiod-header-action-btn.btn-highlight-unsafe {
+      background-color: var(--rd-threat-bg);
+      color: var(--rd-threat-text);
+      border-color: var(--rd-threat-border);
     }
 
     .ratiod-feedback-strip {
@@ -666,343 +717,232 @@ function injectRatiodBanner(targetElement, data) {
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 8px;
+      margin-top: 6px;
       padding-top: 6px;
-      border-top: 1px dashed #E5E7EB;
+      border-top: 1px dashed var(--rd-border);
     }
 
     .ratiod-feedback-prompt {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
-      color: #6B7280;
-    }
-
-    .ratiod-feedback-chips {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .ratiod-chip-btn {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 9999px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      background: #FFFFFF;
-      color: #374151;
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-      transition: background 0.15s ease;
-    }
-
-    .ratiod-chip-btn:hover {
-      background: #F3F4F6;
-    }
-
-    .ratiod-chip-btn.chip-active {
-      background: #111827;
-      color: #FFFFFF;
-      border-color: #111827;
-    }
-
-    .ratiod-feedback-toast {
-      margin-top: 6px;
-      padding: 6px 10px;
-      background: #ECFDF5;
-      border: 1px solid #10B981;
-      border-radius: 6px;
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #065F46;
-    }
-
-    .btn-highlight-safe {
-      background-color: #DCFCE7 !important;
-      color: #166534 !important;
-      border-color: #86EFAC !important;
-      font-weight: 600 !important;
-    }
-
-    .btn-highlight-unsafe {
-      background-color: #FEE2E2 !important;
-      color: #991B1B !important;
-      border-color: #FCA5A5 !important;
-      font-weight: 600 !important;
-    }
-
-    .tag-user-safe {
-      background-color: #DCFCE7 !important;
-      color: #166534 !important;
-      border-color: #86EFAC !important;
-    }
-
-    .tag-user-unsafe {
-      background-color: #FEE2E2 !important;
-      color: #991B1B !important;
-      border-color: #FCA5A5 !important;
-    }
-
-    .tag-user-promo {
-      background-color: #FEF08A !important;
-      color: #854D0E !important;
-      border-color: #FACC15 !important;
-    }
-
-    .tag-user-suspicious {
-      background-color: #FFEDD5 !important;
-      color: #9A3412 !important;
-      border-color: #FDBA74 !important;
-    }
-
-    .ratiod-header-action-btn {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 11.5px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 9999px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-      cursor: pointer;
-      transition: background-color 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin-left: 4px;
-    }
-
-    .ratiod-header-action-btn.btn-highlight-safe {
-      background-color: #DCFCE7;
-      color: #166534;
-      border-color: #86EFAC;
-    }
-    .ratiod-header-action-btn.btn-highlight-safe:hover {
-      background-color: #BBF7D0;
-    }
-    .ratiod-header-action-btn.btn-highlight-unsafe {
-      background-color: #FEE2E2;
-      color: #991B1B;
-      border-color: #FCA5A5;
-    }
-    .ratiod-header-action-btn.btn-highlight-unsafe:hover {
-      background-color: #FECACA;
+      color: var(--rd-text-secondary);
     }
 
     .ratiod-feedback-label-box {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
     }
 
     .ratiod-feedback-sub {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 11px;
-      color: #6B7280;
+      font-size: 10px;
+      color: var(--rd-text-muted);
+    }
+
+    .ratiod-feedback-chips {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .ratiod-chip-btn {
+      font-family: inherit;
+      font-size: 10.5px;
       font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--rd-border);
+      background: var(--rd-surface-card);
+      color: var(--rd-text-secondary);
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .ratiod-chip-btn:hover {
+      background: var(--rd-surface-subtle);
+      color: var(--rd-text-primary);
+    }
+    .ratiod-chip-btn.chip-active {
+      background: var(--rd-text-primary);
+      color: var(--rd-bg);
+      border-color: var(--rd-text-primary);
+      font-weight: 600;
+    }
+
+    .ratiod-feedback-toast {
+      margin-top: 5px;
+      padding: 4px 8px;
+      background: var(--rd-safe-bg);
+      border: 1px solid var(--rd-safe-border);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--rd-safe-text);
     }
 
     .ratiod-drawer {
       display: none;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px dashed rgba(0, 0, 0, 0.12);
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--rd-border);
     }
-
     .ratiod-drawer.open { display: block; }
 
     .drawer-section-title {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      margin-bottom: 6px;
-      color: #374151;
+      margin-bottom: 5px;
+      color: var(--rd-text-secondary);
+      letter-spacing: 0.3px;
     }
 
     .flag-item {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      background: #FFFFFF;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-bottom: 6px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    }
-
-    .flag-span { font-weight: 700; color: #DC2626; text-decoration: underline; }
-    .flag-peek-btn {
-      font-family: 'Google Sans', Roboto, sans-serif;
-      font-size: 10.5px;
-      font-weight: 600;
-      padding: 2px 8px;
-      margin-left: 8px;
-      border: 1px solid rgba(0, 0, 0, 0.12);
-      background: #FFFFFF;
-      color: #374151;
-      border-radius: 9999px;
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    }
-    .flag-peek-btn:hover { background: #F3F4F6; }
-    .flag-peek-res {
-      margin-top: 6px;
-      padding: 6px 8px;
-      background: #F9FAFB;
-      border: 1px dashed #D1D5DB;
-      border-radius: 4px;
+      font-family: var(--rd-mono);
       font-size: 11px;
+      background: var(--rd-surface);
+      border: 1px solid var(--rd-border);
+      padding: 5px 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      color: var(--rd-text-primary);
       line-height: 1.4;
     }
 
-    .checklist-list { padding-left: 18px; margin: 6px 0; font-size: 13px; }
-    .checklist-list li { margin-bottom: 4px; }
+    .flag-span { font-weight: 700; color: var(--rd-threat-text); }
+    .flag-peek-btn {
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 6px;
+      margin-left: 6px;
+      border: 1px solid var(--rd-border);
+      background: var(--rd-surface-card);
+      color: var(--rd-text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .flag-peek-btn:hover {
+      background: var(--rd-surface-subtle);
+      color: var(--rd-text-primary);
+    }
+    .flag-peek-res {
+      margin-top: 5px;
+      padding: 5px 7px;
+      background: var(--rd-surface-subtle);
+      border: 1px dashed var(--rd-border);
+      border-radius: 4px;
+      font-size: 10.5px;
+      line-height: 1.4;
+      color: var(--rd-text-secondary);
+    }
+
+    .checklist-list { padding-left: 16px; margin: 4px 0; font-size: 12px; color: var(--rd-text-secondary); }
+    .checklist-list li { margin-bottom: 3px; }
 
     .privacy-footnote {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: #8A8B5C;
-      margin-top: 10px;
+      font-family: var(--rd-mono);
+      font-size: 10.5px;
+      color: var(--rd-text-muted);
+      margin-top: 8px;
+      line-height: 1.4;
     }
 
     /* ==========================================================================
-       Dark Mode Adaptive Styling
-       Applies when Gmail theme is dark OR OS prefers dark
+       Native Dark Mode & Dark Reader Target Styling
+       Applies when Gmail theme is dark, Dark Reader is active, or OS prefers dark
        ========================================================================== */
+    :host([data-theme="dark"]),
+    :host([data-darkreader="true"]),
+    :host-context([data-darkreader-scheme="dark"]),
+    :host-context(html[data-ratiod-theme="dark"]) {
+      color-scheme: dark;
+      --rd-bg: #111318;
+      --rd-surface: #181B22;
+      --rd-surface-card: #18181B;
+      --rd-surface-subtle: #202024;
+      --rd-border: rgba(255, 255, 255, 0.08);
+      --rd-border-subtle: rgba(255, 255, 255, 0.04);
+      --rd-text-primary: #F1F5F9;
+      --rd-text-secondary: #CBD5E1;
+      --rd-text-muted: #94A3B8;
+
+      --rd-safe-bg: rgba(16, 185, 129, 0.12);
+      --rd-safe-border: rgba(16, 185, 129, 0.3);
+      --rd-safe-text: #34D399;
+      --rd-safe-dot: #10B981;
+
+      --rd-promo-bg: rgba(99, 102, 241, 0.12);
+      --rd-promo-border: rgba(99, 102, 241, 0.3);
+      --rd-promo-text: #A5B4FC;
+      --rd-promo-dot: #818CF8;
+
+      --rd-susp-bg: rgba(245, 158, 11, 0.12);
+      --rd-susp-border: rgba(245, 158, 11, 0.3);
+      --rd-susp-text: #FCD34D;
+      --rd-susp-dot: #F59E0B;
+
+      --rd-threat-bg: rgba(239, 68, 68, 0.12);
+      --rd-threat-border: rgba(239, 68, 68, 0.3);
+      --rd-threat-text: #FCA5A5;
+      --rd-threat-dot: #EF4444;
+    }
+
     :host([data-theme="dark"]) .ratiod-container,
+    :host([data-darkreader="true"]) .ratiod-container {
+      background-color: #18181B;
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #F4F4F5;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    :host([data-theme="dark"]) .ratiod-summary-card,
+    :host([data-darkreader="true"]) .ratiod-summary-card {
+      background-color: #202024;
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #F4F4F5;
+    }
+
     @media (prefers-color-scheme: dark) {
+      :host(:not([data-theme="light"])) {
+        color-scheme: dark;
+        --rd-bg: #111318;
+        --rd-surface: #181B22;
+        --rd-surface-card: #18181B;
+        --rd-surface-subtle: #202024;
+        --rd-border: rgba(255, 255, 255, 0.08);
+        --rd-border-subtle: rgba(255, 255, 255, 0.04);
+        --rd-text-primary: #F1F5F9;
+        --rd-text-secondary: #CBD5E1;
+        --rd-text-muted: #94A3B8;
+
+        --rd-safe-bg: rgba(16, 185, 129, 0.12);
+        --rd-safe-border: rgba(16, 185, 129, 0.3);
+        --rd-safe-text: #34D399;
+        --rd-safe-dot: #10B981;
+
+        --rd-promo-bg: rgba(99, 102, 241, 0.12);
+        --rd-promo-border: rgba(99, 102, 241, 0.3);
+        --rd-promo-text: #A5B4FC;
+        --rd-promo-dot: #818CF8;
+
+        --rd-susp-bg: rgba(245, 158, 11, 0.12);
+        --rd-susp-border: rgba(245, 158, 11, 0.3);
+        --rd-susp-text: #FCD34D;
+        --rd-susp-dot: #F59E0B;
+
+        --rd-threat-bg: rgba(239, 68, 68, 0.12);
+        --rd-threat-border: rgba(239, 68, 68, 0.3);
+        --rd-threat-text: #FCA5A5;
+        --rd-threat-dot: #EF4444;
+      }
       .ratiod-container {
         background-color: #18181B;
         border-color: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         color: #F4F4F5;
-      }
-      .ratiod-container.ambient-safe-mode {
-        background-color: #18181B;
-        border-color: rgba(255, 255, 255, 0.08);
-        border-left: 3.5px solid #10B981;
-        color: #F4F4F5;
-      }
-      .ratiod-container.compact-promo-mode {
-        background-color: #18181B;
-        border-color: rgba(255, 255, 255, 0.08);
-        border-left: 3.5px solid #6366F1;
-        color: #F4F4F5;
-      }
-      .ratiod-container.theme-safe {
-        background-color: #18181B;
-        border-left: 3.5px solid #10B981;
-      }
-      .ratiod-container.theme-promo_clutter {
-        background-color: #18181B;
-        border-left: 3.5px solid #6366F1;
-      }
-      .ratiod-container.theme-suspicious {
-        background-color: #18181B;
-        border-left: 3.5px solid #F59E0B;
-        border-color: rgba(245, 158, 11, 0.25);
-      }
-      .ratiod-container.theme-high_risk {
-        background-color: #18181B;
-        border-left: 3.5px solid #EF4444;
-        border-color: rgba(239, 68, 68, 0.25);
       }
       .ratiod-summary-card {
         background-color: #202024;
-        border-color: #3F3F46;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.08);
         color: #F4F4F5;
-      }
-      .ratiod-summary-title {
-        color: #F4F4F5;
-      }
-      .ratiod-summary-lead {
-        color: #E4E4E7;
-      }
-      .ratiod-summary-tip {
-        background-color: #27272A;
-        border-left-color: #10B981;
-        color: #D4D4D8;
-      }
-      .ratiod-explanation {
-        border-top-color: #3F3F46;
-        color: #A1A1AA;
-      }
-      .ratiod-explanation-label {
-        background-color: #3F3F46;
-        color: #F4F4F5;
-      }
-      .ratiod-btn {
-        background-color: #27272A;
-        color: #F4F4F5;
-        border-color: #3F3F46;
-      }
-      .ratiod-btn:hover {
-        background-color: #3F3F46;
-      }
-      .flag-item {
-        background-color: #27272A;
-        border-color: #3F3F46;
-        color: #F4F4F5;
-      }
-      .flag-peek-res {
-        background-color: #18181B;
-        border-color: #52525B;
-        color: #E4E4E7;
-      }
-      .ratiod-feedback-strip {
-        background-color: #202024;
-        border-color: #3F3F46;
-      }
-      .ratiod-feedback-prompt {
-        color: #F4F4F5;
-      }
-      .ratiod-feedback-sub {
-        color: #A1A1AA;
-      }
-      .ratiod-chip-btn {
-        background-color: #27272A;
-        color: #F4F4F5;
-        border-color: #3F3F46;
-      }
-      .ratiod-chip-btn:hover {
-        background-color: #3F3F46;
-      }
-      .drawer-toggle {
-        background-color: #27272A;
-        color: #F4F4F5;
-        border-color: #3F3F46;
-      }
-      .vega-pill, .diag-row {
-        background-color: #202024;
-        border-color: #3F3F46;
-        color: #E4E4E7;
-      }
-      .privacy-footnote {
-        color: #A1A1AA;
-      }
-      .ratiod-iconbtn {
-        background-color: #27272A;
-        color: #F4F4F5;
-        border-color: #3F3F46;
-      }
-      .ratiod-iconbtn:hover {
-        background-color: #3F3F46;
-      }
-      .ratiod-score-mail {
-        background-color: #27272A;
-        color: #F4F4F5;
-        border-color: #3F3F46;
-      }
-      .score-type-badge {
-        background-color: #3F3F46;
-        color: #F4F4F5;
-      }
-      .score-number {
-        color: #FFFFFF;
       }
     }
   `;
@@ -1035,37 +975,33 @@ function injectRatiodBanner(targetElement, data) {
     (isSafe ? " ambient-safe-mode" : (isPromo ? " compact-promo-mode" : ""));
 
   let displayVerdictLabel = "Verified Safe";
-  let verdictEmoji = "🛡️";
   let riskLevelKey = "low";
   let riskLevelText = "LOW RISK";
-  let simpleTitle = "Safe & Legitimate Email";
-  let simpleLead = "No phishing lures or security risks found. This email appears authentic and safe to interact with.";
-  let simpleTip = "You can open links and interact with this email normally.";
+  let simpleTitle = "Verified Authentic Message";
+  let simpleLead = "No malicious lures, domain mismatches, or spoofing vectors detected.";
+  let simpleTip = "Safe to open links and interact with sender.";
 
   if (verdict === "high_risk") {
-    displayVerdictLabel = "High-Risk Scam / Phishing";
-    verdictEmoji = "🔴";
+    displayVerdictLabel = "High-Risk Threat";
     riskLevelKey = "high";
     riskLevelText = "HIGH RISK";
-    simpleTitle = "⚠️ Warning: High-Risk Scam / Phishing";
-    simpleLead = "Danger: This email shows strong signs of phishing, fake urgency, or credential theft designed to steal your account or money.";
-    simpleTip = "Do NOT click any links or download attachments. We strongly recommend reporting it as spam.";
+    simpleTitle = "High-Risk Phishing / Threat Detected";
+    simpleLead = "Critical warning: Active threat vectors, deception techniques, or credential harvesting detected.";
+    simpleTip = "Do not open links, download attachments, or disclose credentials. Report as spam.";
   } else if (verdict === "suspicious") {
-    displayVerdictLabel = "Suspicious Email";
-    verdictEmoji = "🟠";
+    displayVerdictLabel = "Suspicious Signals";
     riskLevelKey = "med";
     riskLevelText = "SUSPICIOUS";
-    simpleTitle = "Caution: Suspicious Signs Detected";
-    simpleLead = "This email has warning signs (such as unusual links or unfamiliar sender domains). It may be trying to mislead you.";
-    simpleTip = "Do not enter passwords, credit card info, or personal verification codes (OTPs).";
+    simpleTitle = "Suspicious Signals Detected";
+    simpleLead = "Anomalies found in sender domains, URL redirect patterns, or verification records.";
+    simpleTip = "Verify sender authenticity before clicking links or submitting credentials.";
   } else if (verdict === "promo_clutter") {
-    displayVerdictLabel = "Promotional Newsletter";
-    verdictEmoji = "✨";
+    displayVerdictLabel = "Newsletter";
     riskLevelKey = "promo";
-    riskLevelText = "PROMO";
-    simpleTitle = "Promotional Newsletter";
-    simpleLead = "Legitimate marketing newsletter with clean links and zero security threats.";
-    simpleTip = "Use One-Click Unsubscribe to opt out directly.";
+    riskLevelText = "NEWSLETTER";
+    simpleTitle = "Marketing Newsletter";
+    simpleLead = "Commercial mailing list or notification feed with valid authentication.";
+    simpleTip = "Use 1-Click Unsubscribe to opt out directly.";
   }
 
   const qrData = data.qr || (window.__latestQrScanResult ? window.__latestQrScanResult : null);
@@ -1099,11 +1035,11 @@ function injectRatiodBanner(targetElement, data) {
   const authSummary = data.auth || (data.engine && data.engine.auth_status ? { status: data.engine.auth_status } : null);
   if (authSummary && authSummary.status) {
     if (authSummary.status === "spoof") {
-      authBadgeHtml = `<span class="ratiod-tag tag-auth-spoof">⚠️ DKIM Spoof Warning</span>`;
+      authBadgeHtml = `<span class="ratiod-tag tag-auth-spoof">DKIM: SPOOF DETECTED</span>`;
     } else if (authSummary.status === "verified") {
-      authBadgeHtml = `<span class="ratiod-tag tag-auth-verified">🔒 DKIM Verified</span>`;
+      authBadgeHtml = `<span class="ratiod-tag tag-auth-verified">DKIM: VERIFIED</span>`;
     } else if (authSummary.status === "unverified") {
-      authBadgeHtml = `<span class="ratiod-tag tag-auth-unverified">Auth: Unverified</span>`;
+      authBadgeHtml = `<span class="ratiod-tag tag-auth-unverified">DKIM: UNVERIFIED</span>`;
     }
   }
 
@@ -1123,18 +1059,18 @@ function injectRatiodBanner(targetElement, data) {
   container.innerHTML = `
     <div class="ratiod-header">
       <div class="ratiod-badge-group">
-        <img class="ratiod-logo" src="${escapeHtml(logoSrc)}" alt="" width="22" height="22">
-        <span class="ratiod-tag tag-${escapeHtml(verdict)}">${verdictEmoji} ${escapeHtml(displayVerdictLabel)}</span>
+        <img class="ratiod-logo" src="${escapeHtml(logoSrc)}" alt="" width="20" height="20">
+        <span class="ratiod-tag tag-${escapeHtml(verdict)}"><span class="status-dot-indicator"></span>${escapeHtml(displayVerdictLabel)}</span>
         ${isPromo
-          ? `<button class="ratiod-btn ratiod-btn-unsub btn-highlight-unsub ratiod-header-action-btn" id="btn-header-unsub" type="button" title="One-Click Unsubscribe from this newsletter">✨ Unsubscribe</button>`
+          ? `<button class="ratiod-btn ratiod-btn-unsub btn-highlight-unsub ratiod-header-action-btn" id="btn-header-unsub" type="button" title="1-Click Unsubscribe from this newsletter">1-Click Unsubscribe</button>`
           : (verdict !== 'safe'
-              ? `<button class="ratiod-header-action-btn btn-highlight-safe" id="btn-header-safe" data-feedback="safe" type="button" title="One-click: change tag to SAFE and submit feedback">🛡️ Mark as Safe</button>`
+              ? `<button class="ratiod-header-action-btn btn-highlight-safe" id="btn-header-safe" data-feedback="safe" type="button" title="One-click: change tag to SAFE and submit feedback">Mark Safe</button>`
               : ''
             )
         }
         ${authBadgeHtml}
         <span class="ratiod-score ratiod-score-mail" title="Mail Security Risk Score"><span class="score-type-badge">Risk</span><span class="score-number">${escapeHtml(mailScore)}</span><span class="score-denom">/100</span></span>
-        <span class="ratiod-score ratiod-score-qr ${escapeHtml(qrChipClass)}" id="banner-qr-score" style="display: ${hasQrThreat ? 'inline-flex' : 'none'};" title="QR Security Code Risk Score"><span class="score-type-badge">QR</span><span id="banner-qr-score-val">${escapeHtml(qrScoreText)}</span></span>
+        <span class="ratiod-score ratiod-score-qr ${escapeHtml(qrChipClass)}" id="banner-qr-score" style="display: ${hasQrThreat ? 'inline-flex' : 'none'};" title="QR Security Risk Score"><span class="score-type-badge">QR</span><span id="banner-qr-score-val">${escapeHtml(qrScoreText)}</span></span>
       </div>
       <div class="ratiod-header-actions">
         <button class="ratiod-iconbtn" id="btn-collapse" type="button" aria-expanded="${(isSafe || isPromo) ? 'false' : 'true'}" aria-controls="ratiod-body" title="${(isSafe || isPromo) ? 'Expand analysis' : 'Collapse analysis'}">
@@ -1149,57 +1085,56 @@ function injectRatiodBanner(targetElement, data) {
     <div class="ratiod-body ${(isSafe || isPromo) ? 'collapsed' : ''}" id="ratiod-body">
       <div class="ratiod-summary-card">
         <div class="ratiod-summary-header">
-          <span class="ratiod-summary-icon" aria-hidden="true">${verdictEmoji}</span>
           <div class="ratiod-summary-content">
             <div class="ratiod-summary-title">${escapeHtml(simpleTitle)}</div>
             <div class="ratiod-summary-lead">${escapeHtml(simpleLead)}</div>
-            ${simpleTip ? `<div class="ratiod-summary-tip"><strong>💡 Quick Tip:</strong> ${escapeHtml(simpleTip)}</div>` : ''}
+            ${simpleTip ? `<div class="ratiod-summary-tip"><strong>Recommendation:</strong> ${escapeHtml(simpleTip)}</div>` : ''}
           </div>
         </div>
-        <div class="ratiod-explanation"><span class="ratiod-explanation-label">Analysis:</span> ${escapeHtml(explanation)}</div>
+        <div class="ratiod-explanation"><span class="ratiod-explanation-label">Diagnostic:</span> ${escapeHtml(explanation)}</div>
         <div class="ratiod-feedback-strip" id="ratiod-feedback-strip">
           <div class="ratiod-feedback-label-box">
-            <span class="ratiod-feedback-prompt">Help improve Ratio'd:</span>
-            <span class="ratiod-feedback-sub">Change classification with one click:</span>
+            <span class="ratiod-feedback-prompt">Continuous Learning:</span>
+            <span class="ratiod-feedback-sub">Submit classification override:</span>
           </div>
           <div class="ratiod-feedback-chips">
-            <button class="ratiod-chip-btn ${verdict === 'safe' ? 'chip-active' : ''}" type="button" data-feedback="safe" title="One-click: Mark as Safe">🛡️ Safe</button>
-            <button class="ratiod-chip-btn ${verdict === 'promo_clutter' ? 'chip-active' : ''}" type="button" data-feedback="promo" title="One-click: Mark as Newsletter">✨ Newsletter</button>
-            <button class="ratiod-chip-btn ${verdict === 'suspicious' ? 'chip-active' : ''}" type="button" data-feedback="suspicious" title="One-click: Mark as Suspicious">🟠 Suspicious</button>
-            <button class="ratiod-chip-btn ${verdict === 'high_risk' ? 'chip-active' : ''}" type="button" data-feedback="unsafe" title="One-click: Mark as Phishing">🔴 Phishing</button>
+            <button class="ratiod-chip-btn ${verdict === 'safe' ? 'chip-active' : ''}" type="button" data-feedback="safe" title="Override: Mark as Safe">Safe</button>
+            <button class="ratiod-chip-btn ${verdict === 'promo_clutter' ? 'chip-active' : ''}" type="button" data-feedback="promo" title="Override: Mark as Newsletter">Newsletter</button>
+            <button class="ratiod-chip-btn ${verdict === 'suspicious' ? 'chip-active' : ''}" type="button" data-feedback="suspicious" title="Override: Mark as Suspicious">Suspicious</button>
+            <button class="ratiod-chip-btn ${verdict === 'high_risk' ? 'chip-active' : ''}" type="button" data-feedback="unsafe" title="Override: Mark as Phishing">Phishing</button>
           </div>
         </div>
         <div class="ratiod-feedback-toast" id="ratiod-feedback-toast" style="display:none;" role="status" aria-live="polite"></div>
       </div>
 
       <div class="ratiod-actions">
-        <button class="ratiod-btn ratiod-btn-primary" id="toggle-drawer" type="button" aria-expanded="false" aria-controls="analysis-drawer">See Details ▾</button>
+        <button class="ratiod-btn ratiod-btn-primary" id="toggle-drawer" type="button" aria-expanded="false" aria-controls="analysis-drawer">Inspection Details</button>
         ${verdict === 'safe'
-          ? '<button class="ratiod-btn ratiod-btn-feedback btn-highlight-unsafe" id="btn-quick-feedback" data-feedback="unsafe" type="button" title="Mark this email as unsafe and submit feedback">⚠️ Mark as Unsafe</button>'
-          : '<button class="ratiod-btn ratiod-btn-feedback btn-highlight-safe" id="btn-quick-feedback" data-feedback="safe" type="button" title="Mark this email as safe and submit feedback">🛡️ Mark as Safe</button>'
+          ? '<button class="ratiod-btn ratiod-btn-feedback btn-highlight-unsafe" id="btn-quick-feedback" data-feedback="unsafe" type="button" title="Mark this email as unsafe and submit feedback">Mark Unsafe</button>'
+          : '<button class="ratiod-btn ratiod-btn-feedback btn-highlight-safe" id="btn-quick-feedback" data-feedback="safe" type="button" title="Mark this email as safe and submit feedback">Mark Safe</button>'
         }
-        <button class="ratiod-btn ratiod-btn-unsub ${verdict === 'promo_clutter' ? 'btn-highlight-unsub' : ''}" id="btn-one-unsub" type="button">✨ Unsubscribe</button>
-        <button class="ratiod-btn ratiod-btn-spam ${verdict === 'high_risk' ? 'btn-highlight-spam' : ''}" id="btn-move-spam" type="button">🚫 Report Spam</button>
+        <button class="ratiod-btn ratiod-btn-unsub ${verdict === 'promo_clutter' ? 'btn-highlight-unsub' : ''}" id="btn-one-unsub" type="button">1-Click Unsubscribe</button>
+        <button class="ratiod-btn ratiod-btn-spam ${verdict === 'high_risk' ? 'btn-highlight-spam' : ''}" id="btn-move-spam" type="button">Report Spam</button>
       </div>
 
       <div class="ratiod-drawer" id="analysis-drawer" role="region" aria-label="Full Ratio'd analysis">
-        <div class="drawer-section-title">✉️ MAIL SECURITY ANALYSIS</div>
-        <div class="drawer-sub-heading">Mail Risk Score: ${escapeHtml(mailScore)}/100 &bull; Status: ${escapeHtml(displayVerdictLabel)}</div>
+        <div class="drawer-section-title">EMAIL THREAT ANALYSIS</div>
+        <div class="drawer-sub-heading">Risk Score: ${escapeHtml(mailScore)}/100 &bull; Status: ${escapeHtml(displayVerdictLabel)}</div>
         <div id="drawer-mail-flags">
           ${flags.length > 0 ? flags.map(f => `
             <div class="flag-item">
               <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
-              ${(f.span && (f.span.includes("http") || f.span.includes("bit.ly") || f.span.includes("."))) ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(f.span)}">&#128269; Safe Peek</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
+              ${(f.span && (f.span.includes("http") || f.span.includes("bit.ly") || f.span.includes("."))) ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(f.span)}">Safe Peek</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
             </div>
           `).join('') : '<div class="flag-item">No explicit email threat rules triggered.</div>'}
         </div>
 
-        <details class="ratiod-telemetry-details" style="margin-top: 14px;">
+        <details class="ratiod-telemetry-details" style="margin-top: 12px;">
           <summary class="drawer-section-title" style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;">
-            <span>⚙️ ADVANCED VEGAML PHYSICS TELEMETRY</span>
-            <span style="font-size:10px;font-weight:600;opacity:0.7;">▾</span>
+            <span>VEGAML CONFORMAL TELEMETRY</span>
+            <span style="font-size:10px;font-weight:600;opacity:0.7;">&#9662;</span>
           </summary>
-          <div id="drawer-vegaml-section" style="margin-top:8px;">
+          <div id="drawer-vegaml-section" style="margin-top:6px;">
             <div class="flag-item" style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6;">
               <div><strong>MODEL:</strong> VegaML 64-D Hamiltonian Dynamics (${escapeHtml(vegaSource)})</div>
               <div><strong>THREAT BASIN:</strong> <span class="flag-span">${escapeHtml(vegaThreatBasin)}</span> &bull; <strong>CONVERGENCE:</strong> ${escapeHtml(vegaConvergence)}</div>
@@ -1209,7 +1144,7 @@ function injectRatiodBanner(targetElement, data) {
           </div>
         </details>
 
-        <div class="drawer-section-title" style="margin-top: 14px;">📱 QR Security Code Analysis</div>
+        <div class="drawer-section-title" style="margin-top: 12px;">QR CODE ANALYSIS</div>
         <div id="drawer-qr-section">
           ${qrData ? `
             <div class="qr-banner-card card-${escapeHtml(qrChipClass.replace('qr-', ''))}">
@@ -1219,8 +1154,8 @@ function injectRatiodBanner(targetElement, data) {
               </div>
               <div class="qr-banner-payload-label">Decoded QR Payload ${qrKind ? `(${escapeHtml(qrKind)})` : ''}:</div>
               <code class="qr-banner-code">${escapeHtml(qrDefanged || qrPayload)}</code>
-              ${qrPayload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(qrPayload)}">&#128269; Safe Peek QR Link</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
-              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-top:8px;">Detected QR Code Signals:</div>
+              ${qrPayload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(qrPayload)}">Safe Peek QR Link</button><div class="flag-peek-res" style="display:none;"></div>` : ''}
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;margin-top:6px;">Detected QR Code Signals:</div>
               ${qrFlags.length > 0 ? qrFlags.map(f => `
                 <div class="flag-item" style="margin-top:4px;">
                   <span class="flag-span">${escapeHtml(f.span)}</span> &mdash; ${escapeHtml(f.reason)}
@@ -1232,19 +1167,19 @@ function injectRatiodBanner(targetElement, data) {
           `}
         </div>
 
-        <div class="drawer-section-title" style="margin-top: 14px;">📋 Recommended Actions</div>
+        <div class="drawer-section-title" style="margin-top: 12px;">RECOMMENDED ACTIONS</div>
         <ul class="checklist-list">
           ${nextSteps.map(step => `<li><strong>&bull;</strong> ${escapeHtml(step)}</li>`).join('')}
         </ul>
 
         <div class="privacy-footnote">
-          &#10003; Real-time PII redaction active: ${escapeHtml(privacy.phones_masked || 0)} phone(s), ${escapeHtml(privacy.emails_masked || 0)} email(s), ${escapeHtml(privacy.otp_masked || 0)} code(s) &mdash; ${escapeHtml(totalMasked)} item(s) masked before analysis. Zero message text stored.
+          Real-time PII redaction active: ${escapeHtml(privacy.phones_masked || 0)} phone(s), ${escapeHtml(privacy.emails_masked || 0)} email(s), ${escapeHtml(privacy.otp_masked || 0)} code(s) &mdash; ${escapeHtml(totalMasked)} item(s) masked before analysis. Zero message text stored.
         </div>
       </div>
     </div>
 
     <div class="ratiod-credit">
-      <span>Ratio'd &middot; developed by
+      <span>Ratio'd &middot; Developed by
         <a class="ratiod-cred" href="https://github.com/VedxntDev" target="_blank" rel="noopener noreferrer">Vedant</a>
       </span>
     </div>
@@ -1279,7 +1214,7 @@ function injectRatiodBanner(targetElement, data) {
     toggleBtn.addEventListener("click", () => {
       const open = drawer.classList.toggle("open");
       toggleBtn.setAttribute("aria-expanded", String(open));
-      toggleBtn.textContent = open ? "Hide Details ▴" : "See Details ▾";
+      toggleBtn.textContent = open ? "Hide Details" : "Inspection Details";
     });
   }
 
@@ -1296,8 +1231,7 @@ function injectRatiodBanner(targetElement, data) {
     });
   }
 
-  // Dismiss: the user is not going to read this banner for this message, and a
-  // banner they cannot get rid of trains people to ignore every banner.
+  // Dismiss: allow dismissing the banner for current email.
   if (dismissBtn) {
     dismissBtn.addEventListener("click", () => {
       if (host.parentElement) host.parentElement.removeChild(host);
@@ -1323,29 +1257,22 @@ function injectRatiodBanner(targetElement, data) {
 
     if (toast) {
       toast.style.display = "block";
-      toast.textContent = `✓ Feedback saved: Marked as ${feedbackType.toUpperCase()}. Thanks for helping Ratio'd learn!`;
-    }
-
-    if (!prefersReducedMotion()) {
-      playUnsubscribeSparkleSound();
-      if (feedbackType === "safe" && originBtn) {
-        launchGlitterBurst(shadowRoot, originBtn);
-      }
+      toast.textContent = `Feedback recorded: Marked as ${feedbackType.toUpperCase()}. Local model updated.`;
     }
 
     if (headerTag) {
       if (feedbackType === "safe") {
         headerTag.className = "ratiod-tag tag-safe tag-user-safe";
-        headerTag.textContent = "🛡️ User Override: Safe";
+        headerTag.innerHTML = `<span class="status-dot-indicator"></span>Override: Safe`;
       } else if (feedbackType === "suspicious") {
         headerTag.className = "ratiod-tag tag-suspicious tag-user-suspicious";
-        headerTag.textContent = "🟠 User Override: Suspicious";
+        headerTag.innerHTML = `<span class="status-dot-indicator"></span>Override: Suspicious`;
       } else if (feedbackType === "promo") {
         headerTag.className = "ratiod-tag tag-promo_clutter tag-user-promo";
-        headerTag.textContent = "🏷️ User Override: Promo";
+        headerTag.innerHTML = `<span class="status-dot-indicator"></span>Override: Newsletter`;
       } else if (feedbackType === "unsafe" || feedbackType === "high_risk") {
         headerTag.className = "ratiod-tag tag-high_risk tag-user-unsafe";
-        headerTag.textContent = "⚠️ User Override: Unsafe";
+        headerTag.innerHTML = `<span class="status-dot-indicator"></span>Override: Unsafe`;
       }
     }
 
@@ -1357,12 +1284,12 @@ function injectRatiodBanner(targetElement, data) {
       const newScore = feedbackType === "safe" ? 0 : (feedbackType === "promo" ? 25 : (feedbackType === "suspicious" ? 45 : 85));
       const newLevelKey = feedbackType === "safe" ? "low" : (feedbackType === "promo" ? "promo" : (feedbackType === "suspicious" ? "med" : "high"));
       const newLevelText = feedbackType === "safe" ? "LOW RISK" : (feedbackType === "promo" ? "PROMO / CLUTTER" : (feedbackType === "suspicious" ? "SUSPICIOUS" : "HIGH RISK"));
-      mailScoreVal.innerHTML = `<span class="score-type-badge">MAIL</span><span class="score-number">${newScore}</span><span class="score-denom">/100</span> <span class="score-level-badge level-${newLevelKey}">${newLevelText}</span>`;
+      mailScoreVal.innerHTML = `<span class="score-type-badge">Risk</span><span class="score-number">${newScore}</span><span class="score-denom">/100</span> <span class="score-level-badge level-${newLevelKey}">${newLevelText}</span>`;
     }
 
     if (explanationEl) {
       const explType = feedbackType === "safe" ? "safe" : (feedbackType === "promo" ? "promotional newsletter" : (feedbackType === "suspicious" ? "suspicious" : "unsafe / phishing"));
-      explanationEl.innerHTML = `<span class="ratiod-explanation-label">User Feedback:</span> Marked as ${explType} by user. Local override applied.`;
+      explanationEl.innerHTML = `<span class="ratiod-explanation-label">Feedback Override:</span> Marked as ${explType} by user. Local override applied.`;
     }
 
     const headerOverrideBtn = shadowRoot.getElementById("btn-header-safe") || shadowRoot.getElementById("btn-header-unsafe");
@@ -1371,12 +1298,12 @@ function injectRatiodBanner(targetElement, data) {
         headerOverrideBtn.id = "btn-header-unsafe";
         headerOverrideBtn.className = "ratiod-header-action-btn btn-highlight-unsafe";
         headerOverrideBtn.setAttribute("data-feedback", "unsafe");
-        headerOverrideBtn.textContent = "⚠️ Mark as Unsafe";
+        headerOverrideBtn.textContent = "Mark Unsafe";
       } else {
         headerOverrideBtn.id = "btn-header-safe";
         headerOverrideBtn.className = "ratiod-header-action-btn btn-highlight-safe";
         headerOverrideBtn.setAttribute("data-feedback", "safe");
-        headerOverrideBtn.textContent = "🛡️ Mark as Safe";
+        headerOverrideBtn.textContent = "Mark Safe";
       }
     }
 
@@ -1384,11 +1311,11 @@ function injectRatiodBanner(targetElement, data) {
       if (feedbackType === "safe") {
         quickFeedbackBtn.className = "ratiod-btn ratiod-btn-feedback btn-highlight-unsafe";
         quickFeedbackBtn.setAttribute("data-feedback", "unsafe");
-        quickFeedbackBtn.textContent = "⚠️ Mark as Unsafe";
+        quickFeedbackBtn.textContent = "Mark Unsafe";
       } else {
         quickFeedbackBtn.className = "ratiod-btn ratiod-btn-feedback btn-highlight-safe";
         quickFeedbackBtn.setAttribute("data-feedback", "safe");
-        quickFeedbackBtn.textContent = "🛡️ Mark as Safe";
+        quickFeedbackBtn.textContent = "Mark Safe";
       }
     }
 
@@ -1554,16 +1481,16 @@ function injectRatiodBanner(targetElement, data) {
           const dest = escapeHtml(unmasked.finalDomain || unmasked.finalUrl);
           const v = escapeHtml(unmasked.risk?.verdict?.toUpperCase() || 'SAFE');
           const sc = escapeHtml(unmasked.risk?.score || 0);
-          const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EA3E2B' : '#8A8B5C';
+          const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EF4444' : '#10B981';
           resContainer.innerHTML = `
             <strong>Safe Peek:</strong> ${escapeHtml(unmasked.hops)} hop(s) &rarr; Destination: <strong>${dest}</strong><br>
-            Risk Verdict: <span style="font-weight:800;color:${vColor}">${v}</span> (Score: ${sc}/100)
+            Risk Verdict: <span style="font-weight:700;color:${vColor}">${v}</span> (Score: ${sc}/100)
           `;
         } else {
           resContainer.textContent = "Could not trace route (offline or unresolvable).";
         }
         btn.disabled = false;
-        btn.textContent = "🔍 Safe Peek";
+        btn.textContent = "Safe Peek";
       });
     });
   }
@@ -1640,17 +1567,21 @@ function injectRatiodBanner(targetElement, data) {
     }
   }
 
-  // Robust One-Click Unsubscribe Click Handler + Glitter Burst + Sparkle Chime Sound
+  // Robust One-Click Unsubscribe Click Handler
   if (unsubBtn) {
     unsubBtn.addEventListener("click", () => {
-      // 1. Play Web Audio API Sparkle Chime Sound Effect & Glitter Burst
-      if (!prefersReducedMotion()) {
-        playUnsubscribeSparkleSound();
-        launchGlitterBurst(shadowRoot, unsubBtn);
-      }
-
-      // 2. Multi-Strategy Unsubscribe Handler
       let unsubSuccess = false;
+
+      function updateUnsubButton(msg, bgColor) {
+        if (unsubBtn) {
+          unsubBtn.textContent = msg;
+          if (bgColor) unsubBtn.style.backgroundColor = bgColor;
+        }
+        if (headerUnsubBtn) {
+          headerUnsubBtn.textContent = msg;
+          if (bgColor) headerUnsubBtn.style.backgroundColor = bgColor;
+        }
+      }
 
       // Strategy A: Gmail Native Header Unsubscribe Action
       const headerArea = document.querySelector(".gE, .ha, .gD, .iv, .adn, [role='main']") || document;
@@ -1668,32 +1599,20 @@ function injectRatiodBanner(targetElement, data) {
           ? candidate
           : (candidate.querySelector ? (candidate.querySelector('a, button, [role="button"], [role="link"], [act]') || candidate) : candidate);
 
-        function updateUnsubButton(txt, bg) {
-          unsubBtn.textContent = txt;
-          if (bg) unsubBtn.style.backgroundColor = bg;
-          const hBtn = shadowRoot.getElementById("btn-header-unsub");
-          if (hBtn) {
-            hBtn.textContent = txt;
-            if (bg) hBtn.style.backgroundColor = bg;
-          }
-        }
-
-        try {
+        if (clickable) {
           dispatchElementClick(clickable);
           unsubSuccess = true;
-          updateUnsubButton("✨ Unsubscribed & Cleaned!", "#10B981");
+          updateUnsubButton("Unsubscribe Requested", "#10B981");
 
-          // Auto-confirm Gmail's native popup dialog if it opens
           setTimeout(() => {
-            const dialogConfirmBtn = document.querySelector(
-              'div[role="dialog"] button[name="ok"], div[role="dialog"] button[aria-label*="Unsubscribe" i], div[role="dialog"] .T-I-ATL, div[role="dialog"] button:not([aria-label*="Cancel" i])'
+            const confirmButtons = document.querySelectorAll(
+              'button[name="ok"], button[name="unsubscribe"], div[role="alertdialog"] button, [data-mdc-dialog-action="ok"], .Kj-JD-jl button'
             );
-            if (dialogConfirmBtn) {
-              dispatchElementClick(dialogConfirmBtn);
+            if (confirmButtons.length > 0) {
+              const confirmBtn = confirmButtons[confirmButtons.length - 1];
+              dispatchElementClick(confirmBtn);
             }
           }, 350);
-        } catch (e) {
-          console.log("[NATIVE UNSUB ERROR]", e);
         }
       }
 
@@ -1725,7 +1644,7 @@ function injectRatiodBanner(targetElement, data) {
           }
 
           unsubSuccess = true;
-          updateUnsubButton("✨ Unsubscribe Link Opened!", "#10B981");
+          updateUnsubButton("Unsubscribe Link Opened", "#10B981");
         }
       }
 
@@ -1736,14 +1655,14 @@ function injectRatiodBanner(targetElement, data) {
         if (mailtoMatch) {
           window.location.href = `mailto:${mailtoMatch[1]}?subject=Unsubscribe`;
           unsubSuccess = true;
-          updateUnsubButton("✨ Unsubscribe Sent!", "#10B981");
+          updateUnsubButton("Unsubscribe Mail Sent", "#10B981");
         }
       }
 
       if (!unsubSuccess) {
-        updateUnsubButton("⚠️ No Unsubscribe Link Found", "#DC2626");
+        updateUnsubButton("No Unsubscribe Link Found", "#DC2626");
         setTimeout(() => {
-          updateUnsubButton("✨ Unsubscribe", "");
+          updateUnsubButton("1-Click Unsubscribe", "");
         }, 3000);
       }
     });
@@ -1756,10 +1675,10 @@ function injectRatiodBanner(targetElement, data) {
       );
       if (gmailSpamBtn) {
         gmailSpamBtn.click();
-        spamBtn.textContent = "🚫 Sent to Spam";
+        spamBtn.textContent = "Reported to Spam";
         spamBtn.style.backgroundColor = "#10B981";
       } else {
-        spamBtn.textContent = "🚫 Flagged as Spam";
+        spamBtn.textContent = "Flagged as Spam";
         spamBtn.style.backgroundColor = "#10B981";
       }
     });
@@ -1794,7 +1713,7 @@ function updateRatiodBannerQr(qrResult) {
     const verdictTag = root.querySelector(".ratiod-tag");
     if (verdictTag && !verdictTag.classList.contains("tag-high_risk")) {
       verdictTag.className = "ratiod-tag tag-high_risk";
-      verdictTag.textContent = "[ 🔴 HIGH RISK (QR PHISH) ]";
+      verdictTag.innerHTML = `<span class="status-dot-indicator"></span>HIGH RISK (QR PHISH)`;
     }
     const container = root.querySelector(".ratiod-container");
     if (container) {
@@ -1803,7 +1722,7 @@ function updateRatiodBannerQr(qrResult) {
     const explanationEl = root.querySelector(".ratiod-explanation");
     if (explanationEl && !explanationEl.textContent.includes("QR CODE SECURITY ALERT")) {
       const alertStrong = document.createElement("strong");
-      alertStrong.textContent = "[ ⚠️ QR CODE SECURITY ALERT ]: ";
+      alertStrong.textContent = "[ QR CODE SECURITY ALERT ]: ";
       const alertText = document.createTextNode("Quishing payload detected in email image. ");
       explanationEl.prepend(alertStrong, alertText);
     }
@@ -1826,7 +1745,7 @@ function updateRatiodBannerQr(qrResult) {
       `).join('');
     }
 
-    const peekBtnHtml = payload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(payload)}">[ &#128269; Safe Peek QR Link ]</button><div class="flag-peek-res" style="display:none;"></div>` : '';
+    const peekBtnHtml = payload ? `<button type="button" class="flag-peek-btn" data-peek-url="${escapeHtml(payload)}">Safe Peek QR Link</button><div class="flag-peek-res" style="display:none;"></div>` : '';
 
     qrSection.innerHTML = `
       <div class="qr-banner-card ${cardBorderClass}">
@@ -1876,16 +1795,16 @@ function updateRatiodBannerQr(qrResult) {
           const dest = escapeHtml(unmasked.finalDomain || unmasked.finalUrl);
           const v = escapeHtml(unmasked.risk?.verdict?.toUpperCase() || 'SAFE');
           const sc = escapeHtml(unmasked.risk?.score || 0);
-          const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EA3E2B' : '#8A8B5C';
+          const vColor = unmasked.risk?.verdict === 'high_risk' ? '#EF4444' : '#10B981';
           resContainer.innerHTML = `
             <strong>Safe Peek:</strong> ${escapeHtml(unmasked.hops)} hop(s) &rarr; Destination: <strong>${dest}</strong><br>
-            Risk Verdict: <span style="font-weight:800;color:${vColor}">${v}</span> (Score: ${sc}/100)
+            Risk Verdict: <span style="font-weight:700;color:${vColor}">${v}</span> (Score: ${sc}/100)
           `;
         } else {
           resContainer.textContent = "Could not trace route (offline or unresolvable).";
         }
         btn.disabled = false;
-        btn.textContent = "🔍 Safe Peek";
+        btn.textContent = "Safe Peek";
       });
     });
   }

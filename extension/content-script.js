@@ -399,10 +399,25 @@ function isGmailDarkTheme() {
   try {
     const htmlEl = document.documentElement;
     const bodyEl = document.body;
-    if (htmlEl && ((htmlEl.getAttribute && htmlEl.getAttribute("data-theme") === "dark") || (htmlEl.classList && htmlEl.classList.contains && htmlEl.classList.contains("dark")) || (htmlEl.hasAttribute && htmlEl.hasAttribute("data-darkreader-scheme")))) {
-      return true;
+    if (htmlEl) {
+      if ((htmlEl.getAttribute && htmlEl.getAttribute("data-theme") === "dark") ||
+          (htmlEl.classList && htmlEl.classList.contains && htmlEl.classList.contains("dark")) ||
+          (htmlEl.hasAttribute && htmlEl.hasAttribute("data-darkreader-scheme")) ||
+          (htmlEl.hasAttribute && htmlEl.hasAttribute("data-darkreader-mode")) ||
+          (htmlEl.getAttribute && htmlEl.getAttribute("data-darkreader-scheme") === "dark")) {
+        return true;
+      }
     }
-    if (bodyEl && ((bodyEl.getAttribute && bodyEl.getAttribute("data-theme") === "dark") || (bodyEl.classList && bodyEl.classList.contains && bodyEl.classList.contains("dark")))) {
+    if (bodyEl) {
+      if ((bodyEl.getAttribute && bodyEl.getAttribute("data-theme") === "dark") ||
+          (bodyEl.classList && bodyEl.classList.contains && bodyEl.classList.contains("dark")) ||
+          (bodyEl.classList && bodyEl.classList.contains && bodyEl.classList.contains("aAU"))) {
+        return true;
+      }
+    }
+
+    // Inspect style and meta tags injected by Dark Reader extension
+    if (typeof document !== "undefined" && document.querySelector && document.querySelector('style.darkreader, meta[name="darkreader"]')) {
       return true;
     }
 
@@ -443,13 +458,19 @@ function updateThemeDetection() {
   try {
     const isDark = isGmailDarkTheme();
     const theme = isDark ? "dark" : "light";
-    if (document.documentElement && typeof document.documentElement.getAttribute === "function" && document.documentElement.getAttribute("data-ratiod-theme") !== theme) {
-      if (typeof document.documentElement.setAttribute === "function") {
+    if (document.documentElement && typeof document.documentElement.getAttribute === "function") {
+      if (document.documentElement.getAttribute("data-ratiod-theme") !== theme) {
         document.documentElement.setAttribute("data-ratiod-theme", theme);
       }
       const host = document.getElementById && document.getElementById("ratiod-banner-host");
       if (host && typeof host.setAttribute === "function") {
-        host.setAttribute("data-theme", theme);
+        if (isDark) {
+          host.setAttribute("data-theme", "dark");
+          host.setAttribute("data-darkreader", "true");
+        } else {
+          host.removeAttribute("data-theme");
+          host.removeAttribute("data-darkreader");
+        }
       }
     }
     return isDark;
@@ -517,32 +538,40 @@ function ensureInboxStyles() {
       transition: background-color 0.15s ease !important;
     }
 
-    /* True Dark Mode Theme: applied when Gmail theme is dark */
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) {
+    /* True Dark Mode Theme: applied when Gmail theme is dark or Dark Reader is active */
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]),
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]) {
       background-color: rgba(34, 197, 94, 0.15) !important;
     }
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover {
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover,
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="safe"]:not(.aqw):not([aria-selected="true"]):hover {
       background-color: rgba(34, 197, 94, 0.25) !important;
     }
 
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) {
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]),
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]) {
       background-color: rgba(234, 179, 8, 0.15) !important;
     }
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover {
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover,
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="promo_clutter"]:not(.aqw):not([aria-selected="true"]):hover {
       background-color: rgba(234, 179, 8, 0.25) !important;
     }
 
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) {
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]),
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]) {
       background-color: rgba(249, 115, 22, 0.18) !important;
     }
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover {
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover,
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="suspicious"]:not(.aqw):not([aria-selected="true"]):hover {
       background-color: rgba(249, 115, 22, 0.28) !important;
     }
 
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) {
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]),
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]) {
       background-color: rgba(239, 68, 68, 0.20) !important;
     }
-    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover {
+    html[data-ratiod-theme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover,
+    html[data-darkreader-scheme="dark"] tr.zA[data-ratiod-verdict="high_risk"]:not(.aqw):not([aria-selected="true"]):hover {
       background-color: rgba(239, 68, 68, 0.30) !important;
     }
 
@@ -688,38 +717,46 @@ function ensureInboxStyles() {
       font-weight: 500;
     }
 
-    /* Dark Mode for Link Shield */
-    html[data-ratiod-theme="dark"] .ratiod-link-shield {
+    /* Dark Mode & Dark Reader for Link Shield */
+    html[data-ratiod-theme="dark"] .ratiod-link-shield,
+    html[data-darkreader-scheme="dark"] .ratiod-link-shield {
       background-color: #18181B;
       border-color: #3F3F46;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       color: #F4F4F5;
     }
-    html[data-ratiod-theme="dark"] .shield-dest {
+    html[data-ratiod-theme="dark"] .shield-dest,
+    html[data-darkreader-scheme="dark"] .shield-dest {
       background-color: #27272A;
       border-color: #3F3F46;
     }
-    html[data-ratiod-theme="dark"] .shield-dest-url {
+    html[data-ratiod-theme="dark"] .shield-dest-url,
+    html[data-darkreader-scheme="dark"] .shield-dest-url {
       color: #F4F4F5;
     }
-    html[data-ratiod-theme="dark"] .shield-warning {
+    html[data-ratiod-theme="dark"] .shield-warning,
+    html[data-darkreader-scheme="dark"] .shield-warning {
       background-color: #2D0B0E;
       border-left-color: #EF4444;
       color: #FCA5A5;
     }
-    html[data-ratiod-theme="dark"] .shield-footer {
+    html[data-ratiod-theme="dark"] .shield-footer,
+    html[data-darkreader-scheme="dark"] .shield-footer {
       border-top-color: #3F3F46;
     }
-    html[data-ratiod-theme="dark"] .shield-copy-btn {
+    html[data-ratiod-theme="dark"] .shield-copy-btn,
+    html[data-darkreader-scheme="dark"] .shield-copy-btn {
       background-color: #27272A;
       color: #F4F4F5;
       border-color: #3F3F46;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
-    html[data-ratiod-theme="dark"] .shield-copy-btn:hover {
+    html[data-ratiod-theme="dark"] .shield-copy-btn:hover,
+    html[data-darkreader-scheme="dark"] .shield-copy-btn:hover {
       background-color: #3F3F46;
     }
-    html[data-ratiod-theme="dark"] .shield-tracking-note {
+    html[data-ratiod-theme="dark"] .shield-tracking-note,
+    html[data-darkreader-scheme="dark"] .shield-tracking-note {
       color: #A1A1AA;
     }
     @media (prefers-color-scheme: dark) {
@@ -1857,20 +1894,20 @@ function renderLinkShield(linkElem, displayedText, href, assessment) {
     cleanUrl = u.toString();
   } catch (err) {}
 
-  let badgeColor = "#4ADE80";
+  let badgeColor = "#10B981";
   let badgeLabel = "VERIFIED LINK";
   if (assessment.risk === "high_risk") {
-    badgeColor = "#EA3E2B";
-    badgeLabel = "⚠️ HIGH RISK / DECEPTIVE";
+    badgeColor = "#EF4444";
+    badgeLabel = "DECEPTIVE / HIGH RISK";
   } else if (assessment.risk === "suspicious") {
-    badgeColor = "#F97316";
-    badgeLabel = "⚠️ SUSPICIOUS ROUTING";
+    badgeColor = "#F59E0B";
+    badgeLabel = "SUSPICIOUS ROUTING";
   }
 
   shield.innerHTML = `
     <div class="shield-header">
-      <span class="shield-title">🛡️ LINK SHIELD</span>
-      <span class="shield-status" style="background-color:${badgeColor}; color:${assessment.risk === 'high_risk' || assessment.risk === 'suspicious' ? '#FFFFFF' : '#121212'};">${badgeLabel}</span>
+      <span class="shield-title">LINK SHIELD</span>
+      <span class="shield-status" style="background-color:${badgeColor}; color:#FFFFFF;">${badgeLabel}</span>
     </div>
     <div class="shield-dest">
       <span class="shield-dest-label">DESTINATION:</span>
@@ -1878,8 +1915,8 @@ function renderLinkShield(linkElem, displayedText, href, assessment) {
     </div>
     ${assessment.reason && assessment.risk !== 'safe' ? `<div class="shield-warning">${escapeHtml(assessment.reason)}</div>` : ''}
     <div class="shield-footer">
-      <button class="shield-copy-btn" type="button" title="Copy clean link without tracking parameters">📋 Copy Clean Link</button>
-      <span class="shield-tracking-note">${cleanUrl !== href ? 'Tracking cleaned' : 'No tracking params'}</span>
+      <button class="shield-copy-btn" type="button" title="Copy clean link without tracking parameters">Copy Clean Link</button>
+      <span class="shield-tracking-note">${cleanUrl !== href ? 'Tracking cleaned' : 'Direct link'}</span>
     </div>
   `;
 

@@ -7,6 +7,10 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
+    :root {
+      color-scheme: light dark;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -792,8 +796,8 @@
 
   <!-- Navigation Tabs -->
   <nav class="tab-nav">
-    <button class="tab-btn active" id="tab-btn-telemetry" data-tab="telemetry" type="button">⚡ Live Inbox</button>
-    <button class="tab-btn" id="tab-btn-senders" data-tab="senders" type="button">🛡️ Senders (<span id="tab-sender-count">0</span>)</button>
+    <button class="tab-btn active" id="tab-btn-telemetry" data-tab="telemetry" type="button">Live Inbox</button>
+    <button class="tab-btn" id="tab-btn-senders" data-tab="senders" type="button">Senders (<span id="tab-sender-count">0</span>)</button>
   </nav>
 
   <!-- ================= TAB 1: LIVE INBOX OVERVIEW ================= -->
@@ -816,7 +820,7 @@
     <!-- Interactive Triage & Category Card -->
     <section class="filter-section">
       <div class="filter-header">
-        <span class="filter-title">⚡ Filter Gmail Rows</span>
+        <span class="filter-title">Filter Gmail Rows</span>
         <span class="filter-hint">Tap to filter view</span>
       </div>
 
@@ -825,7 +829,7 @@
         <!-- Safe -->
         <button class="triage-btn btn-safe" data-filter="safe" type="button" title="Show only verified safe emails">
           <div class="triage-info">
-            <span class="triage-tag">🟢 Safe</span>
+            <span class="triage-tag">Safe</span>
             <span class="triage-count" id="val-safe">0</span>
           </div>
         </button>
@@ -833,7 +837,7 @@
         <!-- Promo -->
         <button class="triage-btn btn-promo" data-filter="promo_clutter" type="button" title="Show only promotional marketing">
           <div class="triage-info">
-            <span class="triage-tag">🟡 Promo</span>
+            <span class="triage-tag">Promo</span>
             <span class="triage-count" id="val-promo">0</span>
           </div>
         </button>
@@ -841,7 +845,7 @@
         <!-- Suspicious -->
         <button class="triage-btn btn-susp" data-filter="suspicious" type="button" title="Show only suspicious emails">
           <div class="triage-info">
-            <span class="triage-tag">🟠 Caution</span>
+            <span class="triage-tag">Caution</span>
             <span class="triage-count" id="val-suspicious">0</span>
           </div>
         </button>
@@ -849,7 +853,7 @@
         <!-- High Risk / Scam -->
         <button class="triage-btn btn-risk" data-filter="high_risk" type="button" title="Show only scam threats">
           <div class="triage-info">
-            <span class="triage-tag">🔴 Scam</span>
+            <span class="triage-tag">Threat</span>
             <span class="triage-count" id="val-high_risk">0</span>
           </div>
         </button>
@@ -857,22 +861,22 @@
 
       <!-- Show All Reset Button -->
       <button class="show-all-btn active" data-filter="all" type="button" title="Show all inbox rows">
-        <span>👁️</span> Show All (<span id="triage-cnt-all">0</span>)
+        Show All (<span id="triage-cnt-all">0</span>)
       </button>
     </section>
 
     <!-- Minimal Privacy Trust Tag -->
     <div class="privacy-badge">
-      <span>🔒</span> 100% On-Device · Zero Telemetry Sent
+      100% On-Device · Zero Telemetry Sent
     </div>
 
     <!-- Quick Actions -->
     <div class="actions-row">
       <button class="btn btn-primary" id="btn-open-gmail" type="button">
-        ✉️ Open Gmail
+        Open Gmail
       </button>
       <button class="btn btn-secondary" id="btn-reset" type="button" title="Reset counters">
-        🔄 Reset
+        Reset
       </button>
     </div>
   </main>
@@ -887,21 +891,21 @@
 
     <!-- Filter Search Box -->
     <div class="search-box">
-      <input type="text" id="sender-search-input" class="input-field" placeholder="🔍 Search rules by email or domain..." />
+      <input type="text" id="sender-search-input" class="input-field" placeholder="Search rules by email or domain..." />
     </div>
 
     <!-- Quick Add Sender / Domain Form -->
     <section class="add-rule-card">
       <div class="add-rule-title">
-        <span>➕</span> Add Sender / Domain
+        Add Sender / Domain
       </div>
       <input type="text" id="new-sender-address" class="input-field" placeholder="e.g. news@domain.com or @company.com" />
       <div class="add-rule-row">
         <select id="new-sender-verdict" class="select-field" style="flex: 1.2;">
-          <option value="safe">🟢 Safe (Score 0)</option>
-          <option value="promo_clutter">🟡 Promotional</option>
-          <option value="suspicious">🟠 Suspicious</option>
-          <option value="high_risk">🔴 Scam / Threat</option>
+          <option value="safe">Safe (Score 0)</option>
+          <option value="promo_clutter">Promotional</option>
+          <option value="suspicious">Suspicious</option>
+          <option value="high_risk">Scam / Threat</option>
         </select>
         <button id="btn-add-rule" class="btn btn-secondary" type="button" style="flex: 0.9;">
           + Add
@@ -920,7 +924,7 @@
     <!-- Clear All Rules Button -->
     <div class="actions-row">
       <button class="btn btn-danger" id="btn-clear-rules" type="button">
-        🧹 Clear All Rules
+        Clear All Rules
       </button>
     </div>
   </main>
