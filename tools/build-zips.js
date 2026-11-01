@@ -184,22 +184,26 @@ if (!ffRoot.includes("manifest.json") || ffRoot.some((f) => JUNK.test(f))) {
 }
 console.log("manifest.json is at the archive root; no junk files present.");
 
-// Sync to Desktop extension folders if present on user machine
+// Sync to Desktop and Downloads extension folders if present on user machine
 try {
   const home = process.env.HOME || process.env.USERPROFILE || "";
-  const desktopFolder = path.join(home, "Desktop", "ratiod-extension-folder");
-  const desktopExt = path.join(home, "Desktop", "ratiod-extension");
+  const syncTargets = [
+    path.join(home, "Desktop", "ratiod-extension"),
+    path.join(home, "Desktop", "ratiod-extension-folder"),
+    path.join(home, "Downloads", "ratiod-extension"),
+    path.join(home, "Downloads", "ratiod-extension (2)"),
+    path.join(home, "Downloads", "ratiodnewui")
+  ];
   const desktopDir = path.join(home, "Desktop");
   const downloadsDir = path.join(home, "Downloads");
 
-  const syncDir = (srcDir, destDir) => {
-    if (fs.existsSync(destDir)) {
-      fs.cpSync(srcDir, destDir, { recursive: true });
+  for (const target of syncTargets) {
+    if (fs.existsSync(target)) {
+      fs.rmSync(target, { recursive: true, force: true });
+      fs.cpSync(path.join(ROOT, "extension"), target, { recursive: true });
     }
-  };
+  }
 
-  syncDir(path.join(ROOT, "extension"), desktopFolder);
-  syncDir(path.join(ROOT, "extension"), desktopExt);
   if (fs.existsSync(desktopDir)) {
     fs.copyFileSync(EXT_ZIP, path.join(desktopDir, "ratiod-extension.zip"));
     fs.copyFileSync(FF_ZIP, path.join(desktopDir, "ratiod-firefox.zip"));
@@ -210,4 +214,6 @@ try {
     fs.copyFileSync(FF_ZIP, path.join(downloadsDir, "ratiod-firefox.zip"));
     fs.copyFileSync(FF_XPI, path.join(downloadsDir, "ratiod-firefox.xpi"));
   }
-} catch (e) {}
+} catch (e) {
+  console.warn("Desktop/Downloads sync warning:", e.message);
+}

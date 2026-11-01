@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ratio'd Modern Banner Preview</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #0d0e12;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      color: #f1f5f9;
+    }
+    h2 {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .preview-box {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-box">
+    <h1>Ratio'd Modern UI Preview</h1>
+    <p>Testing Dark Mode & Bento Grid Layout</p>
+    <div id="target-safe"></div>
+    <h2>Promotional / Newsletter State</h2>
+    <div id="target-promo"></div>
+    <h2>Suspicious / High Risk State</h2>
+    <div id="target-threat"></div>
+  </div>
+
+  <script src="../extension/banner.js"></script>
+  <script>
+    // Preview sample data
+    const safeData = {
+      verdict: "safe",
+      score: 3,
+      mail_score: 3,
+      auth: { status: "verified" },
+      flags: [],
+      explanation: "Official authentic communication with cryptographic DKIM signature and zero threat markers.",
+      next_steps: ["Authentic sender domain verified.", "Safe to open links and interact."],
+      privacy: { phones_masked: 0, emails_masked: 0, otp_masked: 0 },
+      emailMeta: { from: "Google Security <no-reply@accounts.google.com>", subject: "Security alert" }
+    };
+
+    const promoData = {
+      verdict: "promo_clutter",
+      score: 25,
+      mail_score: 25,
+      auth: { status: "verified" },
+      flags: [{ span: "50% Off Weekend Sale", reason: "Retail promotional marketing offer" }],
+      explanation: "Promotional marketing newsletter. Safe commercial content with valid sender authentication.",
+      next_steps: ["Use 1-Click Unsubscribe to opt out immediately."],
+      privacy: { phones_masked: 0, emails_masked: 0, otp_masked: 0 },
+      emailMeta: { from: "Figma Updates <news@figma.com>", subject: "What's new in Figma" }
+    };
+
+    const threatData = {
+      verdict: "high_risk",
+      score: 94,
+      mail_score: 94,
+      auth: { status: "spoof" },
+      flags: [
+        { span: "m1crosoft-support.com", reason: "Homoglyph brand impersonation" },
+        { span: "Action Required in 24 hours", reason: "Psychological urgency pressure" },
+        { span: "http://bit.ly/3xYqz", reason: "Concealed shortened link" }
+      ],
+      explanation: "Critical phishing threat: Brand spoofing, deceptive homoglyph domain, and credential harvesting attempt.",
+      next_steps: ["Do NOT open links or attachments.", "Report as Spam immediately."],
+      privacy: { phones_masked: 1, emails_masked: 2, otp_masked: 0 },
+      emailMeta: { from: "Microsoft Account Team <security@m1crosoft-support.com>", subject: "URGENT: Verify your account" }
+    };
+
+    window.injectRatiodBanner(document.getElementById("target-safe"), safeData);
+    window.injectRatiodBanner(document.getElementById("target-promo"), promoData);
+    window.injectRatiodBanner(document.getElementById("target-threat"), threatData);
+  </script>
+</body>
+</html>
