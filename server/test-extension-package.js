@@ -5,6 +5,7 @@
  */
 const fs = require("fs");
 const path = require("path");
+const vm = require("vm");
 const { execFileSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
@@ -88,6 +89,22 @@ check(`all ${referenced.length} manifest-referenced files packaged`, missing.len
   check(`${f} packaged and non-empty`,
     listing.includes(f) &&
       fs.statSync(path.join(ROOT, "extension", f)).size > 100);
+});
+
+// All packaged extension JavaScript scripts must be syntactically valid with zero syntax errors.
+["content-script.js", "banner.js", "popup.js", "fallback-engine.js", "qr-core.js", "qr-gmail.js"].forEach((f) => {
+  const p = path.join(ROOT, "extension", f);
+  if (fs.existsSync(p)) {
+    let syntaxOk = true;
+    let errDetail = "";
+    try {
+      new vm.Script(fs.readFileSync(p, "utf8"), { filename: f });
+    } catch (e) {
+      syntaxOk = false;
+      errDetail = e.message;
+    }
+    check(`${f} JavaScript syntax clean (zero parse errors)`, syntaxOk, errDetail);
+  }
 });
 
 // The zip must match the source of truth, not a stale build.

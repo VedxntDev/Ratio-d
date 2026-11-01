@@ -1762,8 +1762,6 @@ function injectRatiodBanner(targetElement, data) {
         spamBtn.textContent = "🚫 Flagged as Spam";
         spamBtn.style.backgroundColor = "#10B981";
       }
-        spamBtn.style.backgroundColor = "#8A8B5C";
-      }
     });
   }
 }
