@@ -1063,59 +1063,38 @@ function recordAnalyticsScan(data, piiCount) {
   } catch (e) {}
 }
 
-function getActiveEmailElement() {
+function findActiveEmailBody() {
   const doc = (typeof document !== "undefined") ? document : null;
-  if (!doc || typeof doc.querySelectorAll !== "function") return null;
+  if (!doc) return null;
 
-  const main = (typeof doc.querySelector === "function" && doc.querySelector("[role='main']")) || doc;
-  if (!main || typeof main.querySelectorAll !== "function") return null;
-  
-  // 1. In Gmail thread/conversation view, find expanded active message containers
-  const containers = Array.from(main.querySelectorAll(".adn.ads, .gs") || []);
-  const visibleContainers = containers.filter(el => {
-    if (!el) return false;
-    if (doc.body && typeof doc.body.contains === "function" && !doc.body.contains(el)) return false;
-    if (el.style && el.style.display === "none") return false;
-    const style = (typeof window !== "undefined" && typeof window.getComputedStyle === "function") ? window.getComputedStyle(el) : null;
-    if (style && (style.display === "none" || style.visibility === "hidden")) return false;
-    return el.offsetHeight > 0 || el.scrollHeight > 0 || (style && style.display !== "none");
-  });
-
-  if (visibleContainers.length > 0) {
-    const activeCont = visibleContainers[visibleContainers.length - 1];
-    const body = (typeof activeCont.querySelector === "function" && (activeCont.querySelector(".a3s.aiL, .a3s, .ii.gt, .ii") || activeCont)) || activeCont;
-    return { container: activeCont, bodyElem: body };
-  }
-
-  // 2. Visible body element fallback
-  const allBodies = Array.from(main.querySelectorAll(".a3s.aiL, .a3s, .ii.gt, [role='main'] .h7, .gs .ii") || []);
-  for (let i = allBodies.length - 1; i >= 0; i--) {
-    const el = allBodies[i];
-    if (el && (!doc.body || typeof doc.body.contains !== "function" || doc.body.contains(el))) {
-      const style = (typeof window !== "undefined" && typeof window.getComputedStyle === "function") ? window.getComputedStyle(el) : null;
-      if (!style || (style.display !== "none" && style.visibility !== "hidden")) {
-        return { container: (typeof el.closest === "function" && el.closest(".adn.ads, .gs")) || el.parentElement, bodyElem: el };
+  // 1. In Gmail thread/conversation view, query message bodies directly
+  if (typeof doc.querySelectorAll === "function") {
+    const list = doc.querySelectorAll(".a3s.aiL, .a3s, .ii.gt, [role='main'] .a3s, [role='main'] .h7");
+    if (list && list.length > 0) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        const item = list[i];
+        if (item && (item.innerText || item.textContent || "").trim().length >= 5) {
+          return item;
+        }
       }
+      return list[list.length - 1];
     }
   }
 
-  // 3. Fallback query
-  if (typeof main.querySelector === "function") {
-    const fallback = main.querySelector(".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, .gs .ii");
-    if (fallback && (!doc.body || typeof doc.body.contains !== "function" || doc.body.contains(fallback))) {
-      return { container: (typeof fallback.closest === "function" && fallback.closest(".adn.ads, .gs")) || fallback.parentElement, bodyElem: fallback };
-    }
+  // 2. Fallback query
+  if (typeof doc.querySelector === "function") {
+    return doc.querySelector(".a3s.aiL, .a3s, .ii.gt, .adn.ads, [role='main'] .h7, [role='main'] .a3s, .gs .ii");
   }
 
   return null;
 }
 
-function scanAndAnalyzeGmail(forceUpdate = false) {
-  const activeEmail = getActiveEmailElement();
-  if (!activeEmail || !activeEmail.bodyElem) return;
+function scanAndAnalyzeGmail() {
+  const emailBodyElem = findActiveEmailBody();
+  if (!emailBodyElem) return;
 
-  const emailBodyElem = activeEmail.bodyElem;
-  const rawBodyText = emailBodyElem.innerText || "";
+  const rawBodyText = (emailBodyElem.innerText || emailBodyElem.textContent || "").trim();
+  if (rawBodyText.length < 5) return;
 
   // Extract Subject and Sender from open email header
   const subjectElem = document.querySelector("h2.hP, .ha h2, [data-thread-perm-id] h2, [role='main'] h2, h1.ha, .hP");
@@ -1127,8 +1106,6 @@ function scanAndAnalyzeGmail(forceUpdate = false) {
   const senderHeader = senderName
     ? (senderAddress ? `${senderName} <${senderAddress}>` : senderName)
     : senderAddress;
-
-  if (rawBodyText.length < 3 && !subject && !senderAddress) return;
 
   // Check if Gmail placed this in Spam or shows a quarantine warning
   const spamBanner = document.querySelector(".mE, .b8, div[role='alert'], .a2k");
@@ -1143,7 +1120,7 @@ function scanAndAnalyzeGmail(forceUpdate = false) {
 
   const bannerHost = document.getElementById("ratiod-banner-host");
   const currentHash = (subject || "") + "|" + (senderHeader || "") + "|" + fullTextToAnalyze.substring(0, 100) + fullTextToAnalyze.length;
-  if (!forceUpdate && lastAnalyzedHash === currentHash && bannerHost && document.body.contains(bannerHost)) {
+  if (lastAnalyzedHash === currentHash && bannerHost) {
     return;
   }
 
@@ -1235,13 +1212,7 @@ function scanAndAnalyzeGmail(forceUpdate = false) {
 
     const renderAndPersist = (finalData) => {
       // 2. Inject in-email banner
-      let targetElem = emailBodyElem;
-      if (!targetElem || !document.body.contains(targetElem)) {
-        const refreshed = getActiveEmailElement();
-        if (refreshed && refreshed.bodyElem) {
-          targetElem = refreshed.bodyElem;
-        }
-      }
+      const targetElem = findActiveEmailBody() || emailBodyElem;
       if (targetElem && window.injectRatiodBanner) {
         window.injectRatiodBanner(targetElem, finalData);
       }
@@ -1318,14 +1289,14 @@ function scanAndAnalyzeGmail(forceUpdate = false) {
         }
       });
 
-      // 4. Trigger multi-pass staggered scan to update inbox list view instantly
-      triggerStaggeredScan(true);
+      // 4. Synchronize matching inbox rows without re-triggering open-email scan
+      scanInboxRows(false);
 
       // 5. Update local analytics telemetry for extension popup
       recordAnalyticsScan(finalData, piiRedactedCount);
     };
 
-    // Check user overrides from chrome.storage.local before rendering
+    // Check user overrides immediately from synchronized continuous memory
     const overrideLookupKeys = [
       cleanSender ? cleanSender.toLowerCase() : "",
       cleanSender ? ("sender:" + cleanSender.toLowerCase()) : "",
@@ -1335,32 +1306,20 @@ function scanAndAnalyzeGmail(forceUpdate = false) {
       window.location.hash ? window.location.hash.replace(/^#/, "").toLowerCase() : ""
     ].filter(Boolean);
 
-    try {
-      const ext = (typeof browser !== "undefined" && browser.storage && browser.storage.local) ? browser.storage.local
-        : ((typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) ? chrome.storage.local : null);
-      if (ext) {
-        ext.get(["ratiod_user_overrides"], (res) => {
-          const overrides = (res && res.ratiod_user_overrides) || {};
-          let matchedOverride = null;
-          for (const k of overrideLookupKeys) {
-            if (overrides[k]) {
-              matchedOverride = overrides[k];
-              break;
-            }
-          }
-          if (matchedOverride) {
-            data.verdict = matchedOverride.verdict;
-            data.score = matchedOverride.score;
-            data.mail_score = matchedOverride.score;
-            data.isUserOverride = true;
-            data.explanation = `User Override: You previously marked this email as ${matchedOverride.feedback || matchedOverride.verdict}.`;
-          }
-          renderAndPersist(data);
-        });
-        return;
+    let matchedOverride = null;
+    for (const k of overrideLookupKeys) {
+      if (memUserOverrides && memUserOverrides[k]) {
+        matchedOverride = memUserOverrides[k];
+        break;
       }
-    } catch (e) {}
-
+    }
+    if (matchedOverride) {
+      data.verdict = matchedOverride.verdict;
+      data.score = matchedOverride.score;
+      data.mail_score = matchedOverride.score;
+      data.isUserOverride = true;
+      data.explanation = `User Override: You previously marked this email as ${matchedOverride.feedback || matchedOverride.verdict}.`;
+    }
     renderAndPersist(data);
   };
 
@@ -1728,10 +1687,9 @@ function executeScanPass(forceUpdate = false) {
   const oldTriageBar = document.getElementById("ratiod-triage-bar");
   if (oldTriageBar) oldTriageBar.remove();
 
-  const activeEmail = getActiveEmailElement();
-  const isEmailOpen = Boolean(activeEmail && activeEmail.bodyElem);
-  if (isEmailOpen) {
-    scanAndAnalyzeGmail(forceUpdate);
+  const emailBody = findActiveEmailBody();
+  if (emailBody) {
+    scanAndAnalyzeGmail();
   }
   scanInboxRows(forceUpdate);
   if (currentTriageFilter && currentTriageFilter !== "all") {
